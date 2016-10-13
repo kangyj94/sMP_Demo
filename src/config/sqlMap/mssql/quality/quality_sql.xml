@@ -1,0 +1,2305 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="quality">
+    <select id="bmtManageList_count" resultType="int">
+        /* quality.bmtManageList_count */
+		SELECT 	COUNT(1)
+		FROM	SMPSOURCING A
+    </select>
+    <select id="bmtManageList" resultType="hashmap">
+        /* quality.bmtManageList */
+    	SELECT 	I.QUALITYID
+    	,		A.SOURCINGID
+		,		A.SOURCINGNM
+		,		A.SPEC
+		,		B.CODENM1 AS PRODTYPE1
+		,		C.CODENM1 AS PRODTYPE2
+		,		D.CODENM1 AS QUALITYSTD
+		,		E.USERNM AS MANAGERNM
+		,		ISNULL(F.VEN_CNT,0) AS VENDORCNT
+		,		G.ATTACH_SEQ AS SPEC_FILE_SEQ
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'NAME') AS SPEC_FILE_NAME
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'PATH') AS SPEC_FILE_PATH
+        ,		H.ATTACH_SEQ AS PROC_FILE_SEQ
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(H.ATTACH_SEQ, 'NAME') AS PROC_FILE_NAME
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(H.ATTACH_SEQ, 'PATH') AS PROC_FILE_PATH
+		FROM	SMPSOURCING A
+		LEFT OUTER JOIN SMPCODES B
+		ON B.CODETYPECD = 'SMPITEM_ITEMTYPE1'
+		AND A.PRODTYPE1 = B.CODEVAL1
+		LEFT OUTER JOIN SMPCODES C
+		ON C.CODETYPECD = 'SMPITEM_ITEMTYPE2'
+		AND A.PRODTYPE2 = C.CODEVAL1
+		LEFT OUTER JOIN SMPCODES D
+		ON D.CODETYPECD = 'SMPITEM_QUALITYSTD'
+		AND A.QUALITYSTD = D.CODEVAL1
+		INNER JOIN SMPUSERS E
+		ON A.MANAGERID = E.USERID
+		LEFT OUTER JOIN 
+		(
+            SELECT SOURCINGID, COUNT(1) AS VEN_CNT
+            FROM SMPSOURCINGVENDOR Z
+            GROUP BY SOURCINGID
+		) F
+		ON A.SOURCINGID = F.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPSOURCING A
+            LEFT OUTER JOIN	SMPSTANDARDFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) G
+        ON A.SOURCINGID = G.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPSOURCING A
+            LEFT OUTER JOIN	SMPPROCESSFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) H
+        on a.SOURCINGID = h.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.QUALITYID
+			,	A.SOURCINGID
+            FROM	SMPQUALITY A
+            WHERE	A.QUALITYYYYY = #{qualityYYYY}
+        ) I
+        on a.SOURCINGID = I.SOURCINGID        
+		WHERE 1=1
+        <if test="srcItemNm != null and srcItemNm != ''">
+		AND	A.SOURCINGNM LIKE '%'+#{srcItemNm}+'%'
+        </if>
+        <if test="srcItemType1 != null and srcItemType1 != ''">
+        AND A.PRODTYPE1 = #{srcItemType1}
+        </if>
+        <if test="srcItemType2 != null and srcItemType2 != ''">
+        AND A.PRODTYPE2 = #{srcItemType2}
+        </if>
+        <if test="srcChargerNm != null and srcChargerNm != ''">
+		AND E.USERNM  LIKE '%' + #{srcChargerNm} + '%'
+        </if>
+        <if test="srcVendorNm != null and srcVendorNm != ''">
+        AND EXISTS( 
+                SELECT 1 FROM (
+                    SELECT 
+                        ROW_NUMBER() OVER(PARTITION BY Z.SOURCINGID, X.BUSINESSNUM  ORDER BY Z.REGDATE  DESC) AS ROW_NUMBER_CNT
+                        ,Z.SOURCINGID
+                    FROM 	SMPSOURCINGVENDOR Z
+                    LEFT OUTER JOIN 	VIEW_TOTAL_VENDOR X
+                        ON 	Z.BUSINESSNUM = X.BUSINESSNUM
+                    WHERE  	Z.SOURCINGID = A.SOURCINGID
+                        AND X.BUSSINESSNM LIKE '%'+#{srcVendorNm}+'%'
+                )AA 
+                WHERE AA.ROW_NUMBER_CNT = 1
+                AND AA.SOURCINGID	=	A.SOURCINGID
+			)
+        </if>
+		ORDER BY SOURCINGID DESC
+    </select>
+    <select id="standardFileList_count" resultType="int">
+        /* quality.standardFileList_count */
+		SELECT 	COUNT(1)
+		FROM	SMPSOURCING A
+		LEFT OUTER JOIN	SMPSTANDARDFILE B
+		ON	A.SOURCINGID = B.SOURCINGID 
+		WHERE	A.SOURCINGNM LIKE '%'+#{sourcingnm}+'%'
+		AND		A.SPEC LIKE '%'+#{spec}+'%'
+		
+    </select>
+    <select id="standardFileList" resultType="hashmap">
+        /* quality.standardFileList */
+    	SELECT 	
+    	
+    			A.SOURCINGID
+        ,		A.SPEC
+        ,		A.SOURCINGNM
+        ,		B.REGID
+        ,		B.ATTACH_SEQ
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(B.ATTACH_SEQ, 'NAME') AS FILE_NAME
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(B.ATTACH_SEQ, 'PATH') AS FILE_PATH
+        ,		C.USERNM + ' ('+CONVERT(VARCHAR(10), B.REGDATE, 120)+')'  AS REGUSER
+        ,		(	
+        			CASE WHEN
+                        ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID  ORDER BY B.REGDATE  DESC) = 1
+                    THEN 'Y'
+                    ELSE 'N' END	
+                ) AS ISDISPLAYFILE 
+                
+        FROM	SMPSOURCING A
+        LEFT OUTER JOIN	SMPSTANDARDFILE B 
+            ON A.SOURCINGID = B.SOURCINGID 
+        LEFT OUTER JOIN SMPUSERS C
+            ON B.REGID = C.USERID
+		WHERE	A.SOURCINGNM LIKE '%'+#{sourcingnm}+'%'
+		AND		A.SPEC LIKE '%'+#{spec}+'%'
+		ORDER BY A.SOURCINGNM , B.REGDATE DESC
+    </select>
+    <select id="processFileList_count" resultType="int">
+        /* quality.processFileList_count */
+		SELECT 	COUNT(1)
+		FROM	SMPSOURCING A
+		LEFT OUTER JOIN	SMPPROCESSFILE B
+		ON	A.SOURCINGID = B.SOURCINGID 
+		WHERE	A.SOURCINGID = #{sourcingId}
+		
+    </select>
+    <select id="processFileList" resultType="hashmap">
+        /* quality.processFileList */
+    	SELECT 	A.SOURCINGID
+        ,		A.SPEC
+        ,		A.SOURCINGNM
+        ,		B.REGID
+        ,		B.ATTACH_SEQ
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(B.ATTACH_SEQ, 'NAME') AS FILE_NAME
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(B.ATTACH_SEQ, 'PATH') AS FILE_PATH
+        ,		C.USERNM + ' ('+CONVERT(VARCHAR(10), B.REGDATE, 120)+')'  AS REGUSER
+        ,		(	
+        			CASE WHEN
+                        ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID  ORDER BY B.REGDATE  DESC) = 1
+                    THEN 'Y'
+                    ELSE 'N' END	
+                ) AS ISDISPLAYFILE 
+        FROM	SMPSOURCING A
+        LEFT OUTER JOIN	SMPPROCESSFILE B 
+            ON A.SOURCINGID = B.SOURCINGID 
+        LEFT OUTER JOIN SMPUSERS C
+            ON B.REGID = C.USERID
+		WHERE	A.SOURCINGNM LIKE '%'+#{sourcingnm}+'%'
+		AND		A.SPEC LIKE '%'+#{spec}+'%'
+		ORDER BY A.SOURCINGNM , B.REGDATE DESC
+    </select>
+    
+    <select id="qualityVendorInfo_count" resultType="int">
+        /* quality.qualityVendorInfo_count */
+        SELECT COUNT(1)
+        <include refid="qualityVendorInfoSql"/>
+    </select>
+    <select id="qualityVendorInfo" resultType="hashmap">
+        /* quality.qualityVendorInfo */
+        SELECT	A.BUSINESSNUM
+        ,		A.BUSSINESSNM
+        ,		A.SUGGESTPHONE
+        ,		A.STATE_NM
+        <include refid="qualityVendorInfoSql"/>
+    </select>
+    <sql id="qualityVendorInfoSql"> 
+        FROM	VIEW_TOTAL_VENDOR A
+        WHERE 1=1
+		<if test="businessnum != null and businessnum != '' and businessnum neq '0'.toString() ">
+        AND A.BUSINESSNUM = #{businessnum}
+		</if>
+		<if test="bussinessnm != null and bussinessnm != '' and bussinessnm neq '0'.toString() ">
+        AND A.BUSSINESSNM LIKE '%'+#{bussinessnm}+'%'
+		</if>
+    </sql>
+    <select id="selectSourcingVendorExists" resultType="hashmap">
+        /* quality.selectSourcingVendorExists */
+        SELECT 
+            BUSINESSNUM
+        ,	SOURCINGID
+        FROM SMPSOURCINGVENDOR
+        WHERE 	BUSINESSNUM = #{businessnum}
+        AND		SOURCINGID = #{sourcingid}
+    </select>
+    
+    <!-- Bmt 관리현황 서브 그리드 조회 -->
+    <select id="selectSourcingVendorList_count" resultType="int">
+        /* quality.selectSourcingVendorList_count */
+        SELECT 
+        	COUNT(1)
+        <include refid="selectSourcingVendorListSql"/>
+    </select>
+    <select id="selectSourcingVendorList" resultType="hashmap">
+        /* quality.selectSourcingVendorList */
+        SELECT 
+        	AA.SOURCINGID
+        ,	AA.BUSINESSNUM
+        ,	AA.BUSSINESSNM
+        ,	AA.LAB_YN_NM
+        ,	AA.FIELD_YN_NM
+        ,	AA.FINAL_YN
+        
+        ,	AA.SOURCINGNM
+        ,	AA.SPEC
+        ,	AA.SOURCINGDESC
+        ,	AA.SUGGESTPHONE
+        <include refid="selectSourcingVendorListSql"/>
+        ORDER BY AA.REGDATE DESC
+    </select>
+    <sql id="selectSourcingVendorListSql"> 
+    	FROM (
+            SELECT 
+                B.SOURCINGID
+            ,	B.BUSINESSNUM
+            ,	C.BUSSINESSNM
+            ,	ISNULL((SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_RESULT1' AND CODEVAL1 = B.LAB_YN) , ' ') AS LAB_YN_NM
+            ,	ISNULL((SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_RESULT1' AND CODEVAL1 = B.FIELD_YN) , ' ') AS FIELD_YN_NM
+<!--             ,	ISNULL(B.FINAL_APPKIND2, ISNULL(B.FINAL_APPKIND1, B.FINAL_REQKIND))  AS FINAL_YN -->
+            ,	B.FINAL_REQKIND  AS FINAL_YN
+            ,	ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID, B.BUSINESSNUM  ORDER BY B.REGDATE  DESC) AS DUPL_CHK
+            
+            ,	A.SOURCINGNM
+            ,	A.SPEC
+            ,	B.SOURCINGDESC
+            ,	C.SUGGESTPHONE
+            
+            ,	B.REGDATE
+            FROM SMPSOURCING A
+            INNER JOIN SMPSOURCINGVENDOR B
+                ON A.SOURCINGID = B.SOURCINGID
+            INNER JOIN VIEW_TOTAL_VENDOR C
+                ON B.BUSINESSNUM = C.BUSINESSNUM
+            WHERE A.SOURCINGID = #{sourcingid}
+            <if test="businessnum != null and businessnum != '' and businessnum neq '0'.toString() ">
+            AND   B.BUSINESSNUM = #{businessnum}
+            </if>
+        ) AA
+        WHERE AA.DUPL_CHK = '1'
+    </sql>
+    <select id="selectSourcingLabFieldInfo" resultType="hashmap">
+        /* quality.selectSourcingLabFieldInfo */
+        SELECT 
+            AA.SOURCINGID
+        ,	AA.BUSINESSNUM
+        ,	AA.SOURCINGNM
+        ,	AA.SPEC
+        ,	AA.PRODTYPE1
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE1' AND CODEVAL1 = AA.PRODTYPE1) AS PRODTYPE1_NM
+        ,	AA.PRODTYPE2
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE2' AND CODEVAL1 = AA.PRODTYPE2) AS PRODTYPE2_NM
+        ,	AA.QUALITYSTD
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_QUALITYSTD' AND CODEVAL1 = AA.QUALITYSTD) AS QUALITYSTD_NM
+        ,	G.ATTACH_SEQ AS SPEC_FILE_SEQ
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'NAME') AS SPEC_FILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'PATH') AS SPEC_FILE_PATH
+        ,	H.ATTACH_SEQ AS PROC_FILE_SEQ
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(H.ATTACH_SEQ, 'NAME') AS PROC_FILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(H.ATTACH_SEQ, 'PATH') AS PROC_FILE_PATH
+        
+        ,	AA.BUSSINESSNM
+        ,	AA.LAB_PURPOSE
+        ,	AA.LAB_YN
+        ,	I.CODENM1  AS LAB_YN_NM
+        ,	AA.LAB_DATE_FROM
+        ,	AA.LAB_DATE_TO
+        ,	AA.LAB_FILE1
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.LAB_FILE1, 'NAME') AS LAB_FILE1_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.LAB_FILE1, 'PATH') AS LAB_FILE1_PATH
+        ,	AA.LAB_FILE2
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.LAB_FILE2, 'NAME') AS LAB_FILE2_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.LAB_FILE2, 'PATH') AS LAB_FILE2_PATH
+        ,	AA.LAB_DESC
+        
+        ,	AA.FIELD_PURPOSE
+        ,	AA.FIELD_YN
+        ,	J.CODENM1  AS FIELD_YN_NM
+        ,	AA.FIELD_DATE_FROM
+        ,	AA.FIELD_DATE_TO
+        ,	AA.FIELD_FILE1
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.FIELD_FILE1, 'NAME') AS FIELD_FILE1_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.FIELD_FILE1, 'PATH') AS FIELD_FILE1_PATH
+        ,	AA.FIELD_FILE2
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.FIELD_FILE2, 'NAME') AS FIELD_FILE2_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.FIELD_FILE2, 'PATH') AS FIELD_FILE2_PATH
+        ,	AA.FIELD_DESC
+        
+        ,	I.CODENM1+' '+AA.LAB_DATE_FROM+' ~ '++AA.LAB_DATE_TO AS LAB_TEST
+        ,	J.CODENM1+' '+AA.FIELD_DATE_FROM+' ~ '++AA.FIELD_DATE_TO AS FIELD_TEST
+        ,	AA.FINAL_YN
+        ,	AA.FINAL_REQKIND
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_RESULT1' AND CODEVAL1 = AA.FINAL_YN) AS FIELD_YN_NM
+        ,	AA.FINAL_GRADEFILE
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.FINAL_GRADEFILE, 'NAME') AS FINAL_GRADEFILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(AA.FINAL_GRADEFILE, 'PATH') AS FINAL_GRADEFILE_PATH
+        ,	AA.FINAL_APPID1
+        ,	(SELECT USERNM FROM SMPUSERS WHERE USERID = AA.FINAL_APPID1) AS FINAL_APPID1_NM
+        ,	AA.FINAL_APPKIND1
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPQUALITY_APP' AND CODEVAL1 = AA.FINAL_APPKIND1) AS FINAL_APPKIND1_NM
+        ,	AA.FINAL_APPCOMMENT1
+        ,	AA.FINAL_APPID2
+        ,	(SELECT USERNM FROM SMPUSERS WHERE USERID = AA.FINAL_APPID2) AS FINAL_APPID2_NM
+        ,	AA.FINAL_APPKIND2
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPQUALITY_APP' AND CODEVAL1 = AA.FINAL_APPKIND2) AS FINAL_APPKIND2_NM6
+        ,	AA.FINAL_APPCOMMENT2
+        ,	AA.FINAL_APPDATE1
+        ,	AA.FINAL_APPDATE2
+        FROM (
+            SELECT 
+                B.SOURCINGID
+            ,	B.BUSINESSNUM
+            ,	A.SOURCINGNM
+            ,	A.SPEC
+            ,	A.PRODTYPE1
+            ,	A.PRODTYPE2
+            ,	A.QUALITYSTD
+            ,	C.BUSSINESSNM
+            
+            ,	B.LAB_PURPOSE
+            ,	B.LAB_YN
+            ,	CONVERT(VARCHAR(10), b.LAB_DATE_FROM , 120) AS LAB_DATE_FROM
+            ,	CONVERT(VARCHAR(10), B.LAB_DATE_TO , 120) AS LAB_DATE_TO
+            ,	B.LAB_FILE1
+            ,	B.LAB_FILE2
+            ,	B.LAB_DESC
+            
+            ,	B.FIELD_PURPOSE
+            ,	B.FIELD_YN
+            ,	CONVERT(VARCHAR(10), b.FIELD_DATE_FROM , 120) AS FIELD_DATE_FROM
+            ,	CONVERT(VARCHAR(10), B.FIELD_DATE_TO , 120) AS FIELD_DATE_TO
+            ,	B.FIELD_FILE1
+            ,	B.FIELD_FILE2
+            ,	B.FIELD_DESC
+            
+            ,	B.FINAL_YN
+            ,	B.FINAL_REQKIND
+            ,	B.FINAL_GRADEFILE
+            ,	B.FINAL_APPID1
+            ,	B.FINAL_APPKIND1
+            ,	B.FINAL_APPCOMMENT1
+            ,	B.FINAL_APPID2
+            ,	B.FINAL_APPKIND2
+            ,	B.FINAL_APPCOMMENT2
+            
+            ,	ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID, B.BUSINESSNUM  ORDER BY B.REGDATE  DESC) AS DUPL_CHK
+            ,	CONVERT(VARCHAR(10), B.FINAL_APPDATE1, 120) AS FINAL_APPDATE1
+            ,	CONVERT(VARCHAR(10), B.FINAL_APPDATE2, 120) AS FINAL_APPDATE2
+            FROM SMPSOURCING A
+            INNER JOIN SMPSOURCINGVENDOR B
+                ON A.SOURCINGID = B.SOURCINGID
+            INNER JOIN VIEW_TOTAL_VENDOR C
+                ON B.BUSINESSNUM = C.BUSINESSNUM
+            WHERE A.SOURCINGID = #{sourcingid}
+            AND   B.BUSINESSNUM = #{businessnum}
+        ) AA
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPSOURCING A
+            LEFT OUTER JOIN	SMPSTANDARDFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) G
+        ON AA.SOURCINGID = G.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPSOURCING A
+            LEFT OUTER JOIN	SMPPROCESSFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) H
+        ON AA.SOURCINGID = H.SOURCINGID
+        LEFT OUTER JOIN SMPCODES I
+			ON I.CODETYPECD = 'SMPITEM_RESULT1'
+			AND AA.LAB_YN = I.CODEVAL1
+		LEFT OUTER JOIN SMPCODES J
+			ON J.CODETYPECD = 'SMPITEM_RESULT1'
+			AND AA.FIELD_YN = J.CODEVAL1
+        WHERE AA.DUPL_CHK = '1'
+    </select>
+    
+    
+    <update id="updateSourcingVendor">
+        /* quality.updateSourcingVendor */
+    	UPDATE SMPSOURCINGVENDOR
+    	SET SOURCINGDESC = #{sourcingdesc}
+        WHERE 	BUSINESSNUM = #{businessnum}
+        AND		SOURCINGID = #{sourcingid}
+    </update>
+    <insert id="insertSourcingVendor">
+        /* quality.insertSourcingVendor */
+    	insert into SMPSOURCINGVENDOR
+    	(
+    		BUSINESSNUM
+    	,	SOURCINGID	
+    	,	SOURCINGDESC
+    	,	REGDATE
+    	,	REGID
+    	)values(
+    		#{businessnum}
+    	,	#{sourcingid}
+    	,	#{sourcingdesc}
+    	,	GETDATE()
+    	,	#{regid}
+    	)
+    </insert>
+    
+    <!-- BMT  LAB/FIELD 테스트 입력 저장 시작 -->
+    <update id="updateSourcingVendorLabTest">
+        /* quality.updateSourcingVendorLabTest */
+    	UPDATE SMPSOURCINGVENDOR
+    	SET LAB_PURPOSE = #{lftd_purpose}
+        ,   LAB_YN = #{lftd_yn}
+        ,   LAB_DATE_FROM = #{lftd_sdate}
+        ,   LAB_DATE_TO = #{lftd_edate}
+        ,   LAB_FILE1 = #{lftd_file_seq1}
+        ,   LAB_FILE2 = #{lftd_file_seq2}
+        ,   LAB_DESC = #{lftd_desc}
+        WHERE 	BUSINESSNUM = #{lftd_businessnum}
+        AND		SOURCINGID = #{lftd_sourcingid}
+    </update>
+    <update id="updateSourcingVendorFieldTest">
+        /* quality.updateSourcingVendorFieldTest */
+    	UPDATE SMPSOURCINGVENDOR
+    	SET FIELD_PURPOSE = #{lftd_purpose}
+        ,   FIELD_YN = #{lftd_yn}
+        ,   FIELD_DATE_FROM = #{lftd_sdate}
+        ,   FIELD_DATE_TO = #{lftd_edate}
+        ,   FIELD_FILE1 = #{lftd_file_seq1}
+        ,   FIELD_FILE2 = #{lftd_file_seq2}
+        ,   FIELD_DESC = #{lftd_desc}
+        WHERE 	BUSINESSNUM = #{lftd_businessnum}
+        AND		SOURCINGID = #{lftd_sourcingid}
+    </update>
+    <!-- BMT  LAB/FIELD 테스트 입력 저장 끝 -->
+    
+    <!-- final request info 저장 -->
+    <update id="updateSourcingFinalInfo">
+        /* quality.updateSourcingFinalInfo */
+        UPDATE SMPSOURCINGVENDOR SET 
+               FINAL_YN 		= #{final_yn}
+              ,FINAL_GRADEFILE 	= #{final_gradefile}
+              ,FINAL_APPID1 	= #{final_appid1}
+              ,FINAL_APPID2 	= #{final_appid2}
+              ,REGID 			= #{final_reqid}
+              ,FINAL_REQID 		= #{final_reqid}
+              ,FINAL_REQKIND 	= #{final_reqkind}
+              ,FINAL_REQDATE	= GETDATE()
+              ,FINAL_APPKIND1 	= NULL
+              ,FINAL_APPKIND2 	= NULL              
+         WHERE SOURCINGID 		= #{sourcingId}
+         AND BUSINESSNUM 		= #{businessnum}
+    </update>
+
+    
+    <insert id="standardFileSave">
+        /* quality.standardFileSave */
+    	INSERT INTO SMPSTANDARDFILE
+    	(
+    		STANDARDFILEID
+    	,	SOURCINGID
+    	,	ATTACH_SEQ
+    	,	REGDATE
+    	,	REGID	
+    	)
+    	VALUES(
+    		#{qualitySeq}
+    	,	#{sourcingId}
+    	,	#{attach_seq}
+    	,	GETDATE()
+    	,	#{regId}
+    	)
+    </insert>
+    <insert id="processFileSave">
+        /* quality.processFileSave */
+    	INSERT INTO SMPPROCESSFILE
+    	(
+    		PROCESSFILEID
+    	,	SOURCINGID
+    	,	ATTACH_SEQ
+    	,	REGDATE
+    	,	REGID	
+    	)
+    	VALUES(
+    		#{qualitySeq}
+    	,	#{sourcingId}		
+    	,	#{attach_seq}		
+    	,	GETDATE()		
+    	,	#{regId}		
+    	)    
+    </insert>
+    
+    <select id="qualityManageList_count" resultType="int">
+    	SELECT 	COUNT(1)
+		FROM	SMPQUALITY A
+		INNER JOIN SMPUSERS E
+		ON A.MANAGERID = E.USERID
+		WHERE QUALITYYYYY = #{stdQualityYear}
+        <if test="srcItemNm != null and srcItemNm != ''">
+		AND	A.SOURCINGNM LIKE '%'+#{srcItemNm}+'%'
+        </if>
+        <if test="srcItemType1 != null and srcItemType1 != ''">
+        AND A.PRODTYPE1 = #{srcItemType1}
+        </if>
+        <if test="srcItemType2 != null and srcItemType2 != ''">
+        AND A.PRODTYPE2 = #{srcItemType2}
+        </if>
+        <if test="srcChargerNm != null and srcChargerNm != ''">
+		AND E.USERNM LIKE '%'+#{srcChargerNm}+'%'
+        </if>
+        <if test="srcIsUse != null and srcIsUse != ''">
+		AND A.ISUSE = #{srcIsUse}
+        </if>
+        <if test="srcVendorNm != null and srcVendorNm != ''">
+        AND EXISTS( 
+                SELECT 1 FROM (
+                    SELECT 
+                        ROW_NUMBER() OVER(PARTITION BY Z.SOURCINGID, X.BUSINESSNUM  ORDER BY Z.REGDATE  DESC) AS ROW_NUMBER_CNT
+                        ,Z.SOURCINGID
+                    FROM 	SMPQUALITYVENDOR Z
+                    LEFT OUTER JOIN 	VIEW_TOTAL_VENDOR X
+                        ON 	Z.BUSINESSNUM = X.BUSINESSNUM
+                    WHERE  	Z.SOURCINGID = A.SOURCINGID
+                        AND X.BUSSINESSNM LIKE '%'+#{srcVendorNm}+'%'
+                )AA 
+                WHERE AA.ROW_NUMBER_CNT = 1
+                AND AA.SOURCINGID	=	A.SOURCINGID
+			)
+        </if>
+    </select>
+    
+    <select id="qualityManageList" resultType="hashmap">
+    	/*quality.qualityManageList*/
+    	SELECT 	A.QUALITYID
+		,		A.QUALITYYYYY
+		,		A.SOURCINGID
+		,		A.SOURCINGNM
+		,		A.SPEC
+		,		B.CODENM1 AS PRODTYPE1
+		,		C.CODENM1 AS PRODTYPE2
+		,		D.CODENM1 AS QUALITYSTD
+		,		A.QUALITYSTD AS QUALITYSTDCD
+		,		E.USERNM AS MANAGERNM
+		,		E.USERID AS MANAGERID
+		,		ISNULL(F.VEN_CNT,0) AS VENDORCNT
+		,		G.ATTACH_SEQ AS SPEC_FILE_SEQ
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'NAME') AS SPEC_FILE_NAME
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'PATH') AS SPEC_FILE_PATH
+        ,		H.ATTACH_SEQ AS PROC_FILE_SEQ
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(H.ATTACH_SEQ, 'NAME') AS PROC_FILE_NAME
+        ,		DBO.FNS_ATTACH_FILE_NAME_PATH(H.ATTACH_SEQ, 'PATH') AS PROC_FILE_PATH
+        ,		A.ISUSE
+		FROM	SMPQUALITY A
+		LEFT OUTER JOIN SMPCODES B
+		ON B.CODETYPECD = 'SMPITEM_ITEMTYPE1'
+		AND A.PRODTYPE1 = B.CODEVAL1
+		LEFT OUTER JOIN SMPCODES C
+		ON C.CODETYPECD = 'SMPITEM_ITEMTYPE2'
+		AND A.PRODTYPE2 = C.CODEVAL1
+		LEFT OUTER JOIN SMPCODES D
+		ON D.CODETYPECD = 'SMPITEM_QUALITYSTD'
+		AND A.QUALITYSTD = D.CODEVAL1
+		INNER JOIN SMPUSERS E
+		ON A.MANAGERID = E.USERID
+		LEFT OUTER JOIN 
+		(
+            SELECT SOURCINGID, COUNT(1) AS VEN_CNT
+            FROM SMPQUALITYVENDOR Z
+            INNER JOIN SMPVENDORS X
+                ON Z.BUSINESSNUM = X.BUSINESSNUM
+            GROUP BY SOURCINGID
+		) F
+		ON A.SOURCINGID = F.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPQUALITY A
+            LEFT OUTER JOIN	SMPSTANDARDFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) G
+        ON A.SOURCINGID = G.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPQUALITY A
+            LEFT OUTER JOIN	SMPPROCESSFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) H
+        on a.SOURCINGID = h.SOURCINGID
+		WHERE QUALITYYYYY = #{stdQualityYear}
+        <if test="srcItemNm != null and srcItemNm != ''">
+		AND	A.SOURCINGNM LIKE '%'+#{srcItemNm}+'%'
+        </if>
+        <if test="srcItemType1 != null and srcItemType1 != ''">
+        AND A.PRODTYPE1 = #{srcItemType1}
+        </if>
+        <if test="srcItemType2 != null and srcItemType2 != ''">
+        AND A.PRODTYPE2 = #{srcItemType2}
+        </if>
+        <if test="srcChargerNm != null and srcChargerNm != ''">
+		AND E.USERNM LIKE '%' + #{srcChargerNm} + '%'
+        </if>
+        <if test="srcIsUse != null and srcIsUse != ''">
+		AND A.ISUSE = #{srcIsUse}
+        </if>
+        <if test="srcVendorNm != null and srcVendorNm != ''">
+        AND EXISTS( 
+                SELECT 1 FROM (
+                    SELECT 
+                        ROW_NUMBER() OVER(PARTITION BY Z.SOURCINGID, X.BUSINESSNUM  ORDER BY Z.REGDATE  DESC) AS ROW_NUMBER_CNT
+                        ,Z.SOURCINGID
+                    FROM 	SMPQUALITYVENDOR Z
+                    LEFT OUTER JOIN 	VIEW_TOTAL_VENDOR X
+                        ON 	Z.BUSINESSNUM = X.BUSINESSNUM
+                    WHERE  	Z.SOURCINGID = A.SOURCINGID
+                        AND X.BUSSINESSNM LIKE '%'+#{srcVendorNm}+'%'
+                )AA 
+                WHERE AA.ROW_NUMBER_CNT = 1
+                AND AA.SOURCINGID	=	A.SOURCINGID
+			)
+        </if>
+		ORDER BY A.QUALITYID ASC    
+    </select>
+    
+    <select id="qualityVendorList_count" resultType="int">
+        /* quality.qualityVendorList_count */
+		SELECT	COUNT(1)
+        <include refid="qualityVendorListSql"/>
+    </select>
+    
+    <select id="qualityVendorList" resultType="hashmap">
+        /* quality.qualityVendorList */
+        SELECT 
+            	AA.VENDORNM
+            ,	AA.VENDORSTATUS
+            ,	AA.QUARTER1
+            ,	AA.QUARTER2
+            ,	AA.QUARTER3
+            ,	AA.QUARTER4
+            ,	AA.FIRSTHALF
+            ,	AA.SECONDHALF
+            ,	AA.M1
+            ,	AA.M2
+            ,	AA.M3
+            ,	AA.M4
+            ,	AA.M5
+            ,	AA.M6
+            ,	AA.M7
+            ,	AA.M8
+            ,	AA.M9
+            ,	AA.M10
+            ,	AA.M11
+            ,	AA.M12
+            ,	AA.VOC
+            ,	AA.QUALITYID
+            ,	AA.QUALITYYYYY
+            ,	AA.SOURCINGID
+            ,	AA.BUSINESSNUM	
+            ,	AA.VENDORSTATUS_CODE
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.QUARTER1) AS QUARTER1_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.QUARTER2) AS QUARTER2_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.QUARTER3) AS QUARTER3_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.QUARTER4) AS QUARTER4_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.FIRSTHALF) AS FIRSTHALF_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.SECONDHALF) AS SECONDHALF_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M1) AS M1_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M2) AS M2_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M3) AS M3_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M4) AS M4_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M5) AS M5_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M6) AS M6_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M7) AS M7_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M8) AS M8_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M9) AS M9_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M10) AS M10_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M11) AS M11_KIND
+            ,	(SELECT A.REQKIND FROM SMPQUALITYCHECK A WHERE A.QUALITY_PART_SEQ = AA.M12) AS M12_KIND
+        <include refid="qualityVendorListSql"/>
+        ORDER BY AA.REGDATE DESC
+    </select>
+    <sql id="qualityVendorListSql"> 
+        FROM (
+            SELECT	B.BUSSINESSNM AS VENDORNM
+            ,		C.CODENM1 AS VENDORSTATUS
+            ,		A.QUARTER1
+            ,		A.QUARTER2
+            ,		A.QUARTER3
+            ,		A.QUARTER4
+            ,		A.FIRSTHALF
+            ,		A.SECONDHALF
+            ,		A.M1
+            ,		A.M2
+            ,		A.M3
+            ,		A.M4
+            ,		A.M5
+            ,		A.M6
+            ,		A.M7
+            ,		A.M8
+            ,		A.M9
+            ,		A.M10
+            ,		A.M11
+            ,		A.M12
+            ,		(
+                        SELECT	COUNT(1) 
+                        FROM	SMPVOC AA 
+                        WHERE	AA.QUALITYID = A.QUALITYID 
+                        AND		AA.QUALITYYYYY = A.QUALITYYYYY 
+                        AND		AA.SOURCINGID = A.SOURCINGID 
+                        AND		AA.BUSINESSNUM = A.BUSINESSNUM
+                    ) AS VOC
+                    
+            ,		A.QUALITYID
+            ,		A.QUALITYYYYY
+            ,		A.SOURCINGID
+            ,		A.BUSINESSNUM	
+            ,		A.VENDORSTATUS AS VENDORSTATUS_CODE
+            ,       ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID, B.BUSINESSNUM  ORDER BY A.REGDATE  DESC) AS ROW_NUMBER_CNT
+            ,		A.REGDATE
+            FROM	SMPQUALITYVENDOR A
+            LEFT OUTER JOIN VIEW_TOTAL_VENDOR B
+                ON	A.BUSINESSNUM = B.BUSINESSNUM
+            LEFT OUTER JOIN	SMPCODES C
+                ON 	C.CODETYPECD = 'QUALITYVEN_STATUS'
+                AND A.VENDORSTATUS = C.CODEVAL1
+            WHERE	A.QUALITYID = #{qualityId}
+            AND		A.QUALITYYYYY = #{qualityYyyy}
+            AND		A.SOURCINGID = #{sourcingId}    
+		) AA
+        WHERE AA.ROW_NUMBER_CNT = '1'
+    </sql>
+    
+    <select id="qualityVendorDetail" resultType="hashmap">
+    	SELECT 	A.QUALITYID
+		,		A.QUALITYYYYY
+		,		A.SOURCINGID
+		,		A.SOURCINGNM
+		,		A.SPEC
+		,		B.CODENM1 +'/'+C.CODENM1 AS PRODTYPE
+		,		D.CODENM1 AS QUALITYSTD
+		,		A2.BUSSINESSNM
+		,		ISNULL(G.ATTACH_SEQ,'') AS SPEC_FILE_SEQ
+        ,		ISNULL(DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'NAME'),'') AS SPEC_FILE_NAME
+        ,		ISNULL(DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'PATH'),'') AS SPEC_FILE_PATH
+        ,		ISNULL(H.ATTACH_SEQ,'') AS PROC_FILE_SEQ
+        ,		ISNULL(DBO.FNS_ATTACH_FILE_NAME_PATH(H.ATTACH_SEQ, 'NAME'),'') AS PROC_FILE_NAME
+        ,		ISNULL(DBO.FNS_ATTACH_FILE_NAME_PATH(H.ATTACH_SEQ, 'PATH'),'') AS PROC_FILE_PATH
+		FROM	SMPQUALITY A
+		INNER JOIN SMPQUALITYVENDOR A1
+		ON A.QUALITYID = A1.QUALITYID
+		AND A.SOURCINGID = A1.SOURCINGID
+		AND A.QUALITYYYYY = A1.QUALITYYYYY
+		INNER JOIN VIEW_TOTAL_VENDOR A2
+		ON A1.BUSINESSNUM = A2.BUSINESSNUM
+		LEFT OUTER JOIN SMPCODES B
+		ON B.CODETYPECD = 'SMPITEM_ITEMTYPE1'
+		AND A.PRODTYPE1 = B.CODEVAL1
+		LEFT OUTER JOIN SMPCODES C
+		ON C.CODETYPECD = 'SMPITEM_ITEMTYPE2'
+		AND A.PRODTYPE2 = C.CODEVAL1
+		LEFT OUTER JOIN SMPCODES D
+		ON D.CODETYPECD = 'SMPITEM_QUALITYSTD'
+		AND A.QUALITYSTD = D.CODEVAL1
+		LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPQUALITY A
+            LEFT OUTER JOIN	SMPSTANDARDFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) G
+        ON A.SOURCINGID = G.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPQUALITY A
+            LEFT OUTER JOIN	SMPPROCESSFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) H
+        on a.SOURCINGID = h.SOURCINGID
+		WHERE	A.QUALITYID = #{qualityId}
+		AND		A.QUALITYYYYY = #{qualityYyyy}
+		AND		A.SOURCINGID = #{sourcingId}  
+		AND		A1.BUSINESSNUM = #{businessNum}
+    </select>
+    
+    <insert id="insertVoc">
+		INSERT INTO SMPVOC(	
+			VOCID
+        ,	QUALITYID
+        ,	QUALITYYYYY
+        ,	SOURCINGID
+        ,	BUSINESSNUM
+        ,	REQBORGID
+        ,	REQUSERNM
+        ,	REQDATE
+        ,	REQTEL
+        ,	REQFILE1
+        ,	REQFILE2
+        ,	REQDESC
+        ,	REGID
+        ,	REGDATE
+        
+        ,	TREATRESULT
+     	)VALUES(
+        	#{vocId}
+        ,	#{qualityId}
+        ,	#{qualityYYYY}
+        ,	#{sourcingId}
+        ,	#{businessNum}
+        ,	#{reqBorgId}
+        ,	#{reqUserNm}
+        ,	#{reqDate}
+        ,	#{reqTel}
+        ,	#{reqFile1}
+        ,	#{reqFile2}
+        ,	#{reqDesc}
+        ,	#{regId}
+        ,	GETDATE()
+        
+        ,	'10'
+        )
+    </insert>    
+    
+    <select id="vocList_count" resultType="int">
+		SELECT	COUNT(1)
+		FROM	SMPVOC A
+		,		SMPQUALITY B
+		,		VIEW_TOTAL_VENDOR C
+		WHERE	A.SOURCINGID = B.SOURCINGID
+		AND		A.BUSINESSNUM = C.BUSINESSNUM
+		<if test="vocYear != null and vocYear != ''">
+		AND		A.QUALITYYYYY = #{vocYear}
+		</if>
+		<if test="vocSourcingNm != null and vocSourcingNm != ''">
+		AND		B.SOURCINGNM LIKE '%'+#{vocSourcingNm}+'%'
+		</if>
+		<if test="vocSpec != null and vocSpec != ''">
+		AND		B.SPEC LIKE '%'+#{vocSpec}+'%'
+		</if>
+		<if test="vocVendorNm != null and vocVendorNm != ''">
+		AND		C.BUSSINESSNM LIKE '%'+#{vocVendorNm}+'%' 
+		</if>
+		<if test="treatResult != null and treatResult != ''">
+		AND 	A.TREATRESULT = #{treatResult}
+		</if>
+    </select>
+    
+    <select id="vocList" resultType="hashmap">
+		SELECT	B.SOURCINGNM
+		,		B.SPEC
+		,		C.BUSSINESSNM
+		,		A.TREATRESULT
+		,		A.REQUSERNM
+		,		A.REQDATE
+		,		A.REGID
+		,		A.REGDATE
+		,		A.MEASUREID
+		,		A.MEASUREDATE
+		FROM	SMPVOC A
+		,		SMPQUALITY B
+		,		VIEW_TOTAL_VENDOR C
+		WHERE	A.SOURCINGID = B.SOURCINGID
+		AND		A.BUSINESSNUM = C.BUSINESSNUM
+		<if test="vocYear != null and vocYear != ''">
+		AND		A.QUALITYYYYY = #{vocYear}
+		</if>
+		<if test="vocSourcingNm != null and vocSourcingNm != ''">
+		AND		B.SOURCINGNM LIKE '%'+#{vocSourcingNm}+'%'
+		</if>
+		<if test="vocSpec != null and vocSpec != ''">
+		AND		B.SPEC LIKE '%'+#{vocSpec}+'%'
+		</if>
+		<if test="vocVendorNm != null and vocVendorNm != ''">
+		AND		C.BUSSINESSNM LIKE '%'+#{vocVendorNm}+'%' 
+		</if>
+		<if test="treatResult != null and treatResult != ''">
+		AND 	A.TREATRESULT = #{treatResult}
+		</if>
+    </select>
+    
+    <select id="selectVendorStatPop" resultType="hashmap">
+        /* quality.selectVendorStatPop */
+        SELECT
+            AA.BUSSINESSNM
+        ,   AA.BUSINESSNUM
+        ,   AA.SUGGESTPHONE
+        ,   AA.VENDORSTATUS
+        ,   AA.CHANGEDESC
+        FROM (
+            SELECT
+                ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID, B.BUSINESSNUM  ORDER BY A.REGDATE  DESC) AS ROW_NUMBER_CNT
+            ,	B.BUSSINESSNM
+            ,	B.BUSINESSNUM
+            ,	B.SUGGESTPHONE
+            ,	A.VENDORSTATUS
+            ,	A.CHANGEDESC
+            FROM SMPQUALITYVENDOR A
+            LEFT OUTER JOIN VIEW_TOTAL_VENDOR B
+                ON A.BUSINESSNUM = B.BUSINESSNUM
+            WHERE	A.QUALITYID = #{qualityid}
+                AND A.QUALITYYYYY = #{qualityyyyy}
+                AND	A.SOURCINGID = #{sourcingid}
+                AND A.BUSINESSNUM = #{businessnum}
+        ) AA
+        WHERE AA.ROW_NUMBER_CNT = '1'
+    </select>
+    <update id="updateQualityVenStatus">
+        /* quality.updateQualityVenStatus */
+        UPDATE SMPQUALITYVENDOR
+        SET VENDORSTATUS 	= #{vendorStatus}
+        ,	CHANGEDESC 		= #{changeDesc}
+        WHERE QUALITYID 	= #{qualityid}
+        AND	QUALITYYYYY 	= #{qualityyyyy}
+        AND SOURCINGID 		= #{sourcingid}
+        AND BUSINESSNUM 	= #{businessnum}
+    </update>
+    
+    <select id="selectQualityCheck" resultType="hashmap">
+        /* quality.selectQualityCheck */
+        SELECT
+            A.QUALITYID
+        ,	A.QUALITYYYYY
+        ,	A.SOURCINGID
+        ,	A.SOURCINGNM
+        ,	A.SPEC
+        ,	A.PRODTYPE1
+        ,	A.PRODTYPE2
+        ,	A.QUALITYSTD
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE1' AND CODEVAL1 = A.PRODTYPE1) AS PRODTYPE1_NM
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE2' AND CODEVAL1 = A.PRODTYPE2) AS PRODTYPE2_NM
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_QUALITYSTD' AND CODEVAL1 = A.QUALITYSTD) AS QUALITYSTD_NM
+        ,	B.BUSSINESSNM
+        ,   B.BUSINESSNUM
+        ,	D.ATTACH_SEQ AS SPEC_FILE_SEQ
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(D.ATTACH_SEQ, 'NAME') AS SPEC_FILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(D.ATTACH_SEQ, 'PATH') AS SPEC_FILE_PATH
+        ,	E.ATTACH_SEQ AS PROC_FILE_SEQ
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(E.ATTACH_SEQ, 'NAME') AS PROC_FILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(E.ATTACH_SEQ, 'PATH') AS PROC_FILE_PATH
+
+		,	C.QUALITY_PART_SEQ
+        ,	C.PURPOSE
+        ,	C.QUALITYYN
+        ,	CONVERT(VARCHAR(10), C.QUALITYDATE, 120) AS QUALITYDATE
+        ,	C.RESULTFILE
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.RESULTFILE, 'NAME') AS RESULTFILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.RESULTFILE, 'PATH') AS RESULTFILE_PATH
+        ,	C.GRADEFILE
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.GRADEFILE, 'NAME') AS GRADEFILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.GRADEFILE, 'PATH') AS GRADEFILE_PATH
+        ,	C.QUALITYDESC
+        ,	C.REQID
+        ,	C.REQKIND
+        ,	C.APPID1
+        ,	(SELECT USERNM FROM SMPUSERS WHERE USERID = C.APPID1) AS APPID1_NM
+        ,	C.APPKIND1
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPQUALITY_APP' AND CODEVAL1 = C.APPKIND1) AS APPKIND1_NM
+        ,	C.APPCOMMENT1
+        ,	C.APPID2
+        ,	(SELECT USERNM FROM SMPUSERS WHERE USERID = C.APPID2) AS APPID2_NM
+        ,	C.APPKIND2
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPQUALITY_APP' AND CODEVAL1 = C.APPKIND2) AS APPKIND2_NM
+        ,	C.APPCOMMENT2
+        ,	CONVERT(VARCHAR(10),C.APPDATE1,120) AS APPDATE1
+        ,	CONVERT(VARCHAR(10),C.APPDATE2,120) AS APPDATE2
+        FROM SMPQUALITY A
+        LEFT OUTER JOIN 
+            (
+                SELECT
+                    A.QUALITYID
+                ,	A.QUALITYYYYY
+                ,	A.SOURCINGID
+                ,	A.BUSINESSNUM
+                ,	A.QUARTER1
+                ,	A.QUARTER2
+                ,	A.QUARTER3
+                ,	A.QUARTER4
+                ,	A.FIRSTHALF
+                ,	A.SECONDHALF
+                ,	A.M1
+                ,	A.M2
+                ,	A.M3
+                ,	A.M4
+                ,	A.M5
+                ,	A.M6
+                ,	A.M7
+                ,	A.M8
+                ,	A.M9
+                ,	A.M10
+                ,	A.M11
+                ,	A.M12
+                ,	B.BUSSINESSNM
+                ,	ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID, A.BUSINESSNUM  ORDER BY A.REGDATE  DESC) AS DUPL_CHK
+                FROM SMPQUALITYVENDOR A
+                LEFT OUTER JOIN VIEW_TOTAL_VENDOR B
+                    ON A.BUSINESSNUM = B.BUSINESSNUM
+                WHERE	A.QUALITYID		= #{qualityid}
+                AND		A.QUALITYYYYY	= #{qualityyyyy}
+                AND		A.SOURCINGID	= #{sourcingid}
+                AND		A.BUSINESSNUM	= #{businessnum}
+            ) B
+            ON B.DUPL_CHK = 1
+            AND A.QUALITYID		= B.QUALITYID
+            AND	A.QUALITYYYYY	= B.QUALITYYYYY
+            AND	A.SOURCINGID	= B.SOURCINGID
+        LEFT OUTER JOIN SMPQUALITYCHECK C
+            ON (CASE #{kind} -- KIND 변수
+                WHEN '1' THEN B.QUARTER1 
+                WHEN '2' THEN B.QUARTER2 
+                WHEN '3' THEN B.QUARTER3 
+                WHEN '4' THEN B.QUARTER4 
+                WHEN 'F' THEN B.FIRSTHALF 
+                WHEN 'S' THEN B.SECONDHALF 
+                WHEN 'M1' THEN B.M1 
+                WHEN 'M2' THEN B.M2 
+                WHEN 'M3' THEN B.M3 
+                WHEN 'M4' THEN B.M4 
+                WHEN 'M5' THEN B.M5 
+                WHEN 'M6' THEN B.M6 
+                WHEN 'M7' THEN B.M7 
+                WHEN 'M8' THEN B.M8 
+                WHEN 'M9' THEN B.M9 
+                WHEN 'M10' THEN B.M10 
+                WHEN 'M11' THEN B.M11 
+                WHEN 'M12' THEN B.M12 
+                ELSE '' END ) = C.QUALITY_PART_SEQ
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPQUALITY A
+            LEFT OUTER JOIN	SMPSTANDARDFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) D
+        ON A.SOURCINGID = D.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPQUALITY A
+            LEFT OUTER JOIN	SMPPROCESSFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) E
+        ON A.SOURCINGID = E.SOURCINGID
+        WHERE	A.QUALITYID		= #{qualityid}
+        AND		A.QUALITYYYYY	= #{qualityyyyy}
+        AND		A.SOURCINGID	= #{sourcingid}
+    </select>
+    
+    <update id="updateQualityvendorInfo">
+        /* quality.updateQualityvendorInfo */
+        UPDATE SMPQUALITYVENDOR SET
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq '1'.toString() ">
+        	QUARTER1 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq '2'.toString() ">
+        	QUARTER2 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq '3'.toString() ">
+        	QUARTER3 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq '4'.toString() ">
+        	QUARTER4 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'F'.toString() ">
+        	FIRSTHALF = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'S'.toString() ">
+        	SECONDHALF = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M1'.toString() ">
+        	M1 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M2'.toString() ">
+        	M2 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M3'.toString() ">
+        	M3 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M4'.toString() ">
+        	M4 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M5'.toString() ">
+        	M5 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M6'.toString() ">
+        	M6 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M7'.toString() ">
+        	M7 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M8'.toString() ">
+        	M8 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M9'.toString() ">
+        	M9 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M10'.toString() ">
+        	M10 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M11'.toString() ">
+        	M11 = #{quality_part_seq}
+        </if>
+        <if test="quarter_kind != null and quarter_kind != '' and quarter_kind eq 'M12'.toString() ">
+        	M12 = #{quality_part_seq}
+        </if>
+        WHERE 	1=1
+        AND		QUALITYID	= #{qualityid}
+        AND		QUALITYYYYY	= #{qualityyyyy}
+        AND		SOURCINGID	= #{sourcingid}
+        AND		BUSINESSNUM	= #{businissnum}
+    </update>
+    
+    <insert id="insertQualityChkInfo">
+        /* quality.insertQualityChkInfo */
+        INSERT INTO SMPQUALITYCHECK
+        (
+            QUALITY_PART_SEQ
+            ,PURPOSE
+            ,QUALITYYN
+            ,QUALITYDATE
+            ,RESULTFILE
+            ,GRADEFILE
+            ,QUALITYDESC
+            ,REQID
+            ,REQKIND
+            ,REQDATE
+            ,APPID1
+            ,APPID2
+        ) VALUES (
+            #{quality_part_seq}
+            ,#{purpose}
+            ,#{qualityyn}
+            ,#{qualitydate}
+            ,#{resultfile}
+            ,#{gradefile}
+            ,#{qualitydesc}
+            ,#{reqid}
+            ,#{reqkind}
+            ,GETDATE()
+            ,#{appid1}
+            ,#{appid2}
+        )
+    </insert>
+    
+    <update id="updateQualityChkInfo">
+        /* quality.updateQualityChkInfo */
+        UPDATE SMPQUALITYCHECK
+           SET PURPOSE 			= #{purpose}
+              ,QUALITYYN 		= #{qualityyn}
+              ,QUALITYDATE 		= #{qualitydate}
+              ,RESULTFILE 		= #{resultfile}
+              ,GRADEFILE 		= #{gradefile}
+              ,QUALITYDESC 		= #{qualitydesc}
+              ,REQID 			= #{reqid}
+              ,REQKIND 			= #{reqkind}
+              ,REQDATE 			= GETDATE()
+              ,APPID1 			= #{appid1}
+              ,APPID2 			= #{appid2}
+         WHERE QUALITY_PART_SEQ = #{quality_part_seq}
+    </update>
+    
+    
+    <select id="selectVocList_count" resultType="int">
+        /* quality.selectVocList_count */
+        SELECT COUNT(1)
+        <include refid="selectVocListSql"/>
+    </select>
+    <select id="selectVocList" resultType="hashmap">
+        /* quality.selectVocList */
+        SELECT
+            A.SOURCINGNM
+        ,	A.SPEC
+        ,	B.BUSSINESSNM
+        ,	C.TREATRESULT
+        ,	D.CODENM1 AS TREATRESULT_NM
+        ,	(CASE WHEN C.REQUSERNM IS NULL THEN '' ELSE C.REQUSERNM+' ('+CONVERT(VARCHAR(10),C.REQDATE,102)+')' END) REQ_INFO
+        ,	C1.USERNM+' ('+CONVERT(VARCHAR(10),C.REGDATE,102)+')' AS RECIPT_INFO
+        ,	(CASE WHEN C2.USERNM IS NULL THEN '' ELSE C2.USERNM+' ('+CONVERT(VARCHAR(10),C.MEASUREDATE,102)+')' END) MEASURE_INFO
+        ,	E.CODENM1 AS JUDGMENTRESULT_NM
+
+        ,	C.VOCID
+        ,	B.QUALITYID
+        ,	B.QUALITYYYYY
+        ,	B.SOURCINGID
+        ,	B.BUSINESSNUM
+        <include refid="selectVocListSql"/>
+        ORDER BY C.REGDATE DESC
+    </select>
+    <sql id="selectVocListSql"> 
+    FROM SMPQUALITY A
+    INNER JOIN (
+        SELECT 
+            ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID, A.BUSINESSNUM  ORDER BY A.REGDATE  DESC) AS ROW_NUMBER_CNT
+        ,	B.BUSSINESSNM
+        ,	A.QUALITYID
+        ,	A.QUALITYYYYY
+        ,	A.SOURCINGID
+        ,	A.BUSINESSNUM
+        FROM SMPQUALITYVENDOR A
+        LEFT OUTER JOIN VIEW_TOTAL_VENDOR B
+            ON A.BUSINESSNUM = B.BUSINESSNUM
+    ) B
+        ON	A.QUALITYID = B.QUALITYID
+        AND A.QUALITYYYYY = B.QUALITYYYYY
+        AND A.SOURCINGID = B.SOURCINGID
+        AND B.ROW_NUMBER_CNT = 1
+    INNER JOIN SMPVOC C
+        ON B.QUALITYID = C.QUALITYID
+        AND B.QUALITYYYYY = C.QUALITYYYYY
+        AND B.SOURCINGID = C.SOURCINGID
+        AND B.BUSINESSNUM = C.BUSINESSNUM
+    LEFT OUTER JOIN SMPUSERS C1
+        ON C.REGID = C1.USERID
+    LEFT OUTER JOIN SMPUSERS C2
+        ON C.MEASUREID = C2.USERID
+    LEFT OUTER JOIN SMPCODES D
+        ON D.CODETYPECD = 'SMPVOC_TREATRESULT'
+        AND C.TREATRESULT = D.CODEVAL1
+    LEFT OUTER JOIN SMPCODES E
+        ON E.CODETYPECD = 'SMPVOC_DECISION'
+        AND C.JUDGMENTRESULT = E.CODEVAL1
+    WHERE 1=1
+		<if test="vocYear != null and vocYear != ''">
+    AND		C.QUALITYYYYY = #{vocYear}
+		</if>
+		<if test="vocSourcingNm != null and vocSourcingNm != ''">
+    AND		A.SOURCINGNM LIKE '%'+#{vocSourcingNm}+'%'
+		</if>
+		<if test="vocSpec != null and vocSpec != ''">
+    AND		A.SPEC LIKE '%'+#{vocSpec}+'%'
+		</if>
+		<if test="vocVendorNm != null and vocVendorNm != ''">
+    AND		B.BUSSINESSNM LIKE '%'+#{vocVendorNm}+'%' 
+		</if>
+		<if test="vocStatus != null and vocStatus != ''">
+    AND 	C.TREATRESULT = #{vocStatus}
+		</if>
+    </sql>
+    
+    
+    <!-- 품질 Voc 조치 레이어 팝업 데이터  -->
+    <select id="selectVocDetailInfo" resultType="hashmap">
+        /* quality.selectVocDetailInfo */
+        SELECT
+            A.SOURCINGNM
+        ,	A.SPEC
+        ,	A.PRODTYPE1
+        ,	A.PRODTYPE2
+        ,	A.QUALITYSTD
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE1' AND CODEVAL1 = A.PRODTYPE1) AS PRODTYPE1_NM
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE2' AND CODEVAL1 = A.PRODTYPE2) AS PRODTYPE2_NM
+        ,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_QUALITYSTD' AND CODEVAL1 = A.QUALITYSTD) AS QUALITYSTD_NM
+        ,	B.BUSSINESSNM
+        ,	F.ATTACH_SEQ AS SPEC_FILE_SEQ
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(F.ATTACH_SEQ, 'NAME') AS SPEC_FILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(F.ATTACH_SEQ, 'PATH') AS SPEC_FILE_PATH
+        ,	G.ATTACH_SEQ AS PROC_FILE_SEQ
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'NAME') AS PROC_FILE_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(G.ATTACH_SEQ, 'PATH') AS PROC_FILE_PATH
+
+        ,	H.BORGNM
+        ,	C.REQUSERNM+'/'+C1.USERNM AS REQ_REG_USER
+        ,	CONVERT(VARCHAR(10),C.REQDATE,120) AS REQDATE 
+        ,	C.REQTEL
+        ,	C.REQFILE1 
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.REQFILE1 , 'NAME') AS REQFILE1_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.REQFILE1 , 'PATH') AS REQFILE1_PATH
+        ,	C.REQFILE2
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.REQFILE2 , 'NAME') AS REQFILE2_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.REQFILE2 , 'PATH') AS REQFILE2_PATH
+        ,	C.REQDESC
+        ,	C.TREATRESULT 
+        ,	C.JUDGMENTRESULT
+        ,	C.MEASURERESULT
+        ,	C.MEASUREFILE1
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.MEASUREFILE1 , 'NAME') AS MEASUREFILE1_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.MEASUREFILE1 , 'PATH') AS MEASUREFILE1_PATH
+        ,	C.MEASUREFILE2
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.MEASUREFILE2 , 'NAME') AS MEASUREFILE2_NAME
+        ,	DBO.FNS_ATTACH_FILE_NAME_PATH(C.MEASUREFILE2 , 'PATH') AS MEASUREFILE2_PATH
+        ,	C.MEASUREDESC
+        ,	C.VOCID
+        ,	C.APPID1
+        ,	(SELECT TOP 1 USERNM FROM SMPUSERS WHERE USERID = C.APPID1) AS APPNM1
+        ,	C.APPKIND1
+        ,	C.APPCOMMENT1
+        ,	(SELECT TOP 1 USERNM FROM SMPUSERS WHERE USERID = C.APPID2) AS APPNM2
+        ,	C.APPID2
+        ,	C.APPKIND2
+        ,	C.APPCOMMENT2
+        ,	C.REQKIND
+		,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPQUALITY_APP' AND CODEVAL1 = C.APPKIND1) AS APPKIND1_NM        
+		,	(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPQUALITY_APP' AND CODEVAL1 = C.APPKIND2) AS APPKIND2_NM        
+       	,	CONVERT(VARCHAR(10), C.APPDATE1, 120) AS APPDATE1
+        ,	CONVERT(VARCHAR(10), C.APPDATE2, 120) AS APPDATE2        
+        
+        FROM SMPQUALITY A
+        INNER JOIN (
+            SELECT 
+                ROW_NUMBER() OVER(PARTITION BY A.SOURCINGID, A.BUSINESSNUM  ORDER BY A.REGDATE  DESC) AS ROW_NUMBER_CNT
+            ,	B.BUSSINESSNM
+            ,	A.QUALITYID
+            ,	A.QUALITYYYYY
+            ,	A.SOURCINGID
+            ,	A.BUSINESSNUM
+            FROM SMPQUALITYVENDOR A
+            LEFT OUTER JOIN VIEW_TOTAL_VENDOR B
+                ON A.BUSINESSNUM = B.BUSINESSNUM
+        ) B
+            ON	A.QUALITYID = B.QUALITYID
+            AND A.QUALITYYYYY = B.QUALITYYYYY
+            AND A.SOURCINGID = B.SOURCINGID
+            AND B.ROW_NUMBER_CNT = 1
+        INNER JOIN SMPVOC C
+            ON B.QUALITYID = C.QUALITYID
+            AND B.QUALITYYYYY = C.QUALITYYYYY
+            AND B.SOURCINGID = C.SOURCINGID
+            AND B.BUSINESSNUM = C.BUSINESSNUM
+        LEFT OUTER JOIN SMPUSERS C1
+            ON C.REGID = C1.USERID
+        LEFT OUTER JOIN SMPUSERS C2
+            ON C.MEASUREID = C2.USERID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPQUALITY A
+            LEFT OUTER JOIN	SMPSTANDARDFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) F
+        ON A.SOURCINGID = F.SOURCINGID
+        LEFT OUTER JOIN (
+            SELECT 
+                A.SOURCINGID
+            ,	MAX(B.ATTACH_SEQ) AS ATTACH_SEQ
+            FROM	SMPQUALITY A
+            LEFT OUTER JOIN	SMPPROCESSFILE B 
+                ON A.SOURCINGID = B.SOURCINGID 
+            GROUP BY 	A.SOURCINGID
+        ) G
+        ON A.SOURCINGID = G.SOURCINGID
+        LEFT OUTER JOIN SMPBORGS H
+            ON C.REQBORGID = H.BORGID
+        WHERE 1=1
+        AND C.VOCID = #{vocid}
+    </select>
+    <update id="saveVocProcInfo">
+        /* quality.saveVocProcInfo */
+        UPDATE SMPVOC SET
+        	TREATRESULT 	= #{treatresult}
+        ,	JUDGMENTRESULT 	= #{judgmentresult}
+        ,	MEASURERESULT 	= #{measureresult}
+        ,	MEASUREFILE1 	= #{measurefile1}
+        ,	MEASUREFILE2 	= #{measurefile2}
+        ,	MEASUREDESC 	= #{measuredesc}
+        ,	MEASUREDATE 	= GETDATE()
+        ,	MEASUREID 		= #{measureid}
+        ,	REQKIND			= #{reqKind}
+        ,	APPID1			= #{appUserId1}
+        ,	APPKIND1		= NULL
+        ,	APPCOMMENT1		= #{vocAppcomment1}
+        ,	APPID2			= #{appUserId2}
+        ,	APPKIND2		= NULL
+        ,	APPCOMMENT2		= #{vocAppcomment2}
+        WHERE VOCID = #{vocid}
+    </update>
+    
+    
+    <select id="selectQualityApprovalList_count" resultType="int">
+    	/* quality.selectQualityApprovalList_count */
+		SELECT	COUNT(1)
+		FROM
+		(
+			SELECT	'10' AS APPTYPE
+			,		SOURCINGID
+			,		FINAL_REQDATE AS REQDATE
+			,		FINAL_APPID1 AS APPID1 
+			,		FINAL_APPID2 AS APPID2
+			,		FINAL_REQKIND AS REQKIND
+			FROM	SMPSOURCINGVENDOR A1
+			WHERE	A1.FINAL_REQKIND != '0'
+			UNION ALL
+			SELECT	'20' AS APPTYPE
+			,		SOURCINGID
+			,		REQDATE
+			,		APPID1
+			,		APPID2
+			,		REQKIND
+			FROM
+			(
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER1 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER2 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER3 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER4 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.FIRSTHALF UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.SECONDHALF UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M1 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M2 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M3 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M4 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M5 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M6 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M7 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M8 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M9 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M10 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M11 UNION ALL
+				SELECT	A1.SOURCINGID, A.REQDATE, A.APPID1, A.APPID2, A.REQKIND FROM SMPQUALITYCHECK A , SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M12
+			)A
+			UNION ALL
+			SELECT	'30' AS APPTYPE
+			,		A1.SOURCINGID
+			,		A2.MEASUREDATE AS REQDATE
+			,		A2.APPID1 AS APPID1
+			,		A2.APPID2 AS APPID2
+			,		A2.REQKIND
+			FROM	SMPQUALITYVENDOR A1
+			,		SMPVOC A2
+			WHERE	A1.QUALITYID = A1.QUALITYID
+			AND		A1.QUALITYYYYY = A2.QUALITYYYYY
+			AND		A1.BUSINESSNUM = A2.BUSINESSNUM
+			AND		A1.SOURCINGID = A2.SOURCINGID
+			AND		A2.REQKIND != '0'
+		)AA
+		WHERE 	REQDATE BETWEEN #{srcReqStartDate} AND #{srcReqEndDate} +' 23:59:59'
+		AND 	(APPID1 = #{userId} OR APPID2 = #{userId}) 
+		<if test="srcApprType != null and srcApprType != ''">
+		AND 	APPTYPE = #{srcApprType}
+		</if>
+		<if test="srcAppr != null and srcAppr != '' and srcAppr eq 'Y'.toString()">
+		AND 	REQKIND IN ('10', '19')
+		</if>
+		<if test="srcAppr != null and srcAppr != '' and srcAppr eq 'N'.toString()">
+		AND 	REQKIND NOT IN ('10', '19')
+		</if>		
+    </select>
+    
+    <select id="selectQualityApprovalList" resultType="hashmap">
+    	/* quality.selectQualityApprovalList */
+		SELECT	CONVERT(VARCHAR(10), REQDATE, 120) + ' (' + (SELECT USERNM FROM SMPUSERS WHERE USERID = REQID) + ')'  AS REQNM
+		,		(SELECT USERNM FROM SMPUSERS WHERE USERID = APPID1) AS APPNM1
+		,		(SELECT USERNM FROM SMPUSERS WHERE USERID = APPID2) AS APPNM2
+		,		CASE 
+					WHEN ISNULL( (SELECT USERNM FROM SMPUSERS WHERE USERID = APPID2) , '') = '' THEN (SELECT USERNM FROM SMPUSERS WHERE USERID = APPID1)
+					ELSE (SELECT USERNM FROM SMPUSERS WHERE USERID = APPID1) + ' > ' + (SELECT USERNM FROM SMPUSERS WHERE USERID = APPID2) 
+				END AS APPNM
+		,		AA.*
+		FROM
+		(
+			SELECT	'10' AS APPTYPE
+			,		B.SOURCINGID
+			,		A.BUSINESSNUM
+			,		0 AS QUALITYID
+			,		'' AS QUALITYYYYY
+			,		B.SOURCINGID AS APPKEY
+			,		B.SOURCINGNM
+			,		B.SPEC
+			,		C.BUSSINESSNM
+			,		(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE1' AND CODEVAL1 = B.PRODTYPE1) AS PRODTYPE1_NM
+			,		(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE2' AND CODEVAL1 = B.PRODTYPE2) AS PRODTYPE2_NM
+			,		A.REQID
+			,		A.REQDATE
+			,		A.APPID1
+			,		A.APPID2
+			,		A.APPKIND1
+			,		A.APPKIND2
+			,		CASE WHEN ISNULL(A.APPID2, '') = '' THEN '1' ELSE '2' END AS APPSTEP
+			,		CASE 
+						WHEN A.APPKIND1 = '20' OR A.APPKIND2 = '20' THEN 'E'
+						WHEN ISNULL(A.APPKIND1, '') = '' THEN '1' 
+						WHEN ISNULL(A.APPKIND1, '') != '' AND  ISNULL(A.APPKIND2, '') = '' 
+							AND (CASE WHEN ISNULL(A.APPID2, '') = '' THEN '1' ELSE '2' END) = '2' THEN '2' 
+						ELSE 'E' 
+					END AS CURRSTEP
+			,		A.REQKIND
+			,		'' AS QUALITY_KIND
+			FROM
+			(
+				SELECT	BUSINESSNUM
+				,		SOURCINGID
+				,		FINAL_REQID AS REQID
+				,		FINAL_REQDATE AS REQDATE
+				,		FINAL_APPID1 AS APPID1
+				,		FINAL_APPID2 AS APPID2
+				,		FINAL_APPKIND1 AS APPKIND1
+				,		FINAL_APPKIND2 AS APPKIND2
+				,		FINAL_REQKIND AS REQKIND
+				FROM	SMPSOURCINGVENDOR A1
+				WHERE	A1.FINAL_REQKIND != '0'
+			)A
+			,		SMPSOURCING B
+			,		VIEW_TOTAL_VENDOR C
+			WHERE	A.SOURCINGID = B.SOURCINGID
+			AND		A.BUSINESSNUM = C.BUSINESSNUM
+			UNION ALL
+			SELECT	'20' AS APPTYPE
+			,		A.SOURCINGID
+			,		A.BUSINESSNUM
+			,		A.QUALITYID
+			,		A.QUALITYYYYY
+			,		A.QUALITY_PART_SEQ AS APPKEY
+			,		B.SOURCINGNM
+			,		B.SPEC
+			,		C.BUSSINESSNM
+			,		(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE1' AND CODEVAL1 = B.PRODTYPE1) AS PRODTYPE1_NM
+			,		(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE2' AND CODEVAL1 = B.PRODTYPE2) AS PRODTYPE2_NM
+			,		A.REQID
+			,		A.REQDATE
+			,		A.APPID1
+			,		A.APPID2
+			,		A.APPKIND1
+			,		A.APPKIND2
+			,		CASE WHEN ISNULL(A.APPID2, '') = '' THEN '1' ELSE '2' END AS APPSTEP
+			,		CASE 
+						WHEN A.APPKIND1 = '20' OR A.APPKIND2 = '20' THEN 'E'
+						WHEN ISNULL(A.APPKIND1, '') = '' THEN '1' 
+						WHEN ISNULL(A.APPKIND1, '') != '' AND  ISNULL(A.APPKIND2, '') = '' 
+							AND (CASE WHEN ISNULL(A.APPID2, '') = '' THEN '1' ELSE '2' END) = '2' THEN '2' 
+						ELSE 'E' 
+					END AS CURRSTEP
+			,		A.REQKIND
+			,		A.QUALITY_KIND
+			FROM
+			(
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, '1' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER1 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, '2' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER2 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, '3' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER3 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, '4' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER4 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'F' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.FIRSTHALF UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'S' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.SECONDHALF UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M1' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M1 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M2' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M2 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M3' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M3 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M4' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M4 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M5' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M5 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M6' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M6 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M7' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M7 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M8' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M8 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M9' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M9 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M10' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M10 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M11' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M11 UNION ALL
+				SELECT A1.QUALITYID, A1.QUALITYYYYY, A1.SOURCINGID, A1.BUSINESSNUM, A.REQID, A.REQDATE, A.APPID1, A.APPID2, A.APPKIND1, A.APPKIND2, A.QUALITY_PART_SEQ, A.REQKIND, 'M12' AS QUALITY_KIND FROM SMPQUALITYCHECK A, SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M12
+			)A
+			,		SMPQUALITY B
+			,		VIEW_TOTAL_VENDOR C
+			WHERE	A.QUALITYID = B.QUALITYID
+			AND		A.QUALITYYYYY = B.QUALITYYYYY
+			AND		A.SOURCINGID = B.SOURCINGID
+			AND		A.BUSINESSNUM = C.BUSINESSNUM
+			UNION ALL
+			SELECT	'30' AS APPTYPE
+			,		B.SOURCINGID
+			,		A.BUSINESSNUM
+			,		0 AS QUALITYID
+			,		'' AS QUALITYYYYY
+			,		A.VOCID AS APPKEY
+			,		B.SOURCINGNM
+			,		B.SPEC
+			,		C.BUSSINESSNM
+			,		(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE1' AND CODEVAL1 = B.PRODTYPE1) AS PRODTYPE1_NM
+			,		(SELECT CODENM1 FROM SMPCODES WHERE CODETYPECD = 'SMPITEM_ITEMTYPE2' AND CODEVAL1 = B.PRODTYPE2) AS PRODTYPE2_NM
+			,		A.REQID
+			,		A.REQDATE
+			,		A.APPID1
+			,		A.APPID2
+			,		A.APPKIND1
+			,		A.APPKIND2
+			,		CASE WHEN ISNULL(A.APPID2, '') = '' THEN '1' ELSE '2' END AS APPSTEP
+			,		CASE 
+						WHEN A.APPKIND1 = '20' OR A.APPKIND2 = '20' THEN 'E'
+						WHEN ISNULL(A.APPKIND1, '') = '' THEN '1' 
+						WHEN ISNULL(A.APPKIND1, '') != '' AND  ISNULL(A.APPKIND2, '') = '' 
+							AND (CASE WHEN ISNULL(A.APPID2, '') = '' THEN '1' ELSE '2' END) = '2' THEN '2' 
+						ELSE 'E' 
+					END AS CURRSTEP
+			,		A.REQKIND
+			,		'' AS QUALITY_KIND
+			FROM
+			(
+				SELECT	A1.QUALITYID
+				,		A1.QUALITYYYYY
+				,		A1.BUSINESSNUM
+				,		A1.SOURCINGID
+				,		A2.MEASUREID AS REQID
+				,		A2.MEASUREDATE AS REQDATE
+				,		A2.APPID1 AS APPID1
+				,		A2.APPID2 AS APPID2
+				,		A2.APPKIND1 AS APPKIND1
+				,		A2.APPKIND2 AS APPKIND2
+				,		A2.REQKIND AS REQKIND
+				,		A2.VOCID
+				FROM	SMPQUALITYVENDOR A1
+				,		SMPVOC A2
+				WHERE	A1.QUALITYID = A1.QUALITYID
+				AND		A1.QUALITYYYYY = A2.QUALITYYYYY
+				AND		A1.BUSINESSNUM = A2.BUSINESSNUM
+				AND		A1.SOURCINGID = A2.SOURCINGID
+				AND		A2.REQKIND != '0'
+			)A
+			,		SMPQUALITY B
+			,		VIEW_TOTAL_VENDOR C
+			WHERE	A.SOURCINGID = B.SOURCINGID
+			AND		A.QUALITYID = B.QUALITYID
+			AND		A.QUALITYYYYY = B.QUALITYYYYY
+			AND		A.BUSINESSNUM = C.BUSINESSNUM			
+		)AA
+		WHERE 	REQDATE BETWEEN #{srcReqStartDate} AND #{srcReqEndDate} +' 23:59:59'
+		AND 	(APPID1 = #{userId} OR APPID2 = #{userId}) 
+		<if test="srcApprType != null and srcApprType != ''">
+		AND 	APPTYPE = #{srcApprType}
+		</if>
+		<if test="srcAppr != null and srcAppr != '' and srcAppr eq 'Y'.toString()">
+		AND 	REQKIND IN ('10', '19')
+		</if>
+		<if test="srcAppr != null and srcAppr != '' and srcAppr eq 'N'.toString()">
+		AND 	REQKIND NOT IN ('10', '19')
+		</if>
+		ORDER BY REQDATE DESC
+
+    </select>
+    
+    <update id="setSourcingApproval">
+    	/* quality.setSourcingApproval */
+    	UPDATE SMPSOURCINGVENDOR SET
+    	<if test="appStep != null and appStep != '' and appStep eq '1'.toString()">
+    		FINAL_APPKIND1 = #{kind}
+    	,	FINAL_APPDATE1 = GETDATE()
+    	</if>
+    	<if test="appStep != null and appStep != '' and appStep eq '2'.toString()">
+    		FINAL_APPKIND2 = #{kind}
+    	,	FINAL_APPDATE2 = GETDATE()	
+    	</if>
+    	<if test="kind != null and kind != '' and kind eq '20'.toString()">
+    	,	FINAL_REQKIND = #{reqKind}
+    	</if>
+    	<if test="isLastAppr != null and isLastAppr != '' and isLastAppr eq 'Y'.toString() and kind neq '20'.toString()">
+    	,	FINAL_REQKIND = #{reqKind}
+    	</if>
+    	,	FINAL_APPCOMMENT1 = #{bmtFinalAppcomment1}
+    	,	FINAL_APPCOMMENT2 = #{bmtFinalAppcomment2}
+		WHERE	BUSINESSNUM = #{businessNum}
+		AND 	SOURCINGID = #{sourcingId}	
+    </update>
+    
+    <update id="setQualityApproval">
+    	/* quality.setQualityApproval */
+    	UPDATE SMPQUALITYCHECK SET
+    	<if test="appStep != null and appStep != '' and appStep eq '1'.toString()">
+    		APPKIND1 = #{kind}
+    	,	APPDATE1 = GETDATE()	
+    	</if>
+    	<if test="appStep != null and appStep != '' and appStep eq '2'.toString()">
+    		APPKIND2 = #{kind}
+    	,	APPDATE2 = GETDATE()
+    	</if>
+    	<if test="kind != null and kind != '' and kind eq '20'.toString()">
+    	,	REQKIND = #{reqKind}
+    	</if>
+    	<if test="isLastAppr != null and isLastAppr != '' and isLastAppr eq 'Y'.toString() and kind neq '20'.toString()">
+    	,	REQKIND = #{reqKind}
+    	</if>
+    	,	APPCOMMENT1 = #{qualityChkAppcomment1}
+    	,	APPCOMMENT2 = #{qualityChkAppcomment2}    	
+		WHERE	QUALITY_PART_SEQ = #{qualityPartSeq}
+    </update>
+    
+    <update id="setVocApproval">
+    	/* quality.setVocApproval */
+    	UPDATE SMPVOC SET
+    	<if test="appStep != null and appStep != '' and appStep eq '1'.toString()">
+    		APPKIND1 = #{kind}
+    	,	APPDATE1 = GETDATE()	
+    	</if>
+    	<if test="appStep != null and appStep != '' and appStep eq '2'.toString()">
+    		APPKIND2 = #{kind}
+    	,	APPDATE2 = GETDATE()
+    	</if>
+    	<if test="kind != null and kind != '' and kind eq '20'.toString()">
+    	,	REQKIND = #{reqKind}
+    	,	TREATRESULT = '99'
+    	</if>
+    	<if test="isLastAppr != null and isLastAppr != '' and isLastAppr eq 'Y'.toString() and kind neq '20'.toString()">
+    	,	REQKIND = #{reqKind}
+    	,	TREATRESULT = '40'
+    	</if>
+    	,	APPCOMMENT1 = #{vocAppcomment1}
+    	,	APPCOMMENT2 = #{vocAppcomment2}    	    	
+		WHERE	VOCID = #{vocId}
+    </update>
+    
+    <select id="selectQualityEvalList_count" resultType="int">
+    	/* quality.selectQualityEvalList_count */
+		SELECT	COUNT(1)
+		FROM	
+		(	
+			SELECT	AA.BUSINESSNUM
+			,		MAX(BB.BUSSINESSNM) AS VENDORNM
+			,		MAX(AA.REQKIND) AS REQKIND
+			FROM
+			(
+				SELECT A.BUSINESSNUM,A.FINAL_REQKIND AS REQKIND FROM SMPSOURCINGVENDOR A UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER1 UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER2 UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER3 UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER4 UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.FIRSTHALF UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.SECONDHALF SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M1 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M2 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M3 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M4 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M5 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M6 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M7 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M8 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M9 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M10 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M11 SECONDHALF
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M12 
+			)AA
+			,		VIEW_TOTAL_VENDOR BB
+			WHERE	AA.BUSINESSNUM = BB.BUSINESSNUM
+			GROUP BY AA.BUSINESSNUM
+		)A
+		LEFT OUTER JOIN SMPEVAL B
+		ON A.BUSINESSNUM = B.BUSINESSNUM    
+    </select>
+    
+    <select id="selectQualityEvalList" resultType="hashmap">
+    	/* quality.selectQualityEvalList */
+		SELECT	A.*
+		FROM	
+		(	
+			SELECT	AA.BUSINESSNUM
+			,		MAX(BB.BUSSINESSNM) AS VENDORNM
+			,		MAX(AA.REQKIND) AS REQKIND
+			FROM
+			(
+				SELECT A.BUSINESSNUM,A.FINAL_REQKIND AS REQKIND FROM SMPSOURCINGVENDOR A UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER1 UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER2 UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER3 UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.QUARTER4 UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.FIRSTHALF UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.SECONDHALF UNION ALL
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M1 UNION ALL  
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M2 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M3 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M4 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M5 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M6 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M7 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M8 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M9 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M10 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M11 UNION ALL 
+				SELECT A1.BUSINESSNUM,A.REQKIND FROM SMPQUALITYCHECK A,	SMPQUALITYVENDOR A1 WHERE A.QUALITY_PART_SEQ = A1.M12 UNION ALL 
+			)AA
+			,		VIEW_TOTAL_VENDOR BB
+			WHERE	AA.BUSINESSNUM = BB.BUSINESSNUM
+			GROUP BY AA.BUSINESSNUM
+		)A
+		LEFT OUTER JOIN SMPEVAL B
+		ON A.BUSINESSNUM = B.BUSINESSNUM    
+    </select>
+    
+    <select id="selectSourcingTarget" resultType="hashmap">
+    	/* quality.selectSourcingTarget */
+		SELECT	A.SOURCINGID
+		,		A.SOURCINGNM
+		,		A.SPEC
+		,		A.PRODTYPE1
+		,		A.PRODTYPE2
+		,		A.QUALITYSTD
+		,		A.MANAGERID
+		FROM	SMPSOURCING A
+		FULL OUTER JOIN SMPQUALITY B 
+		ON		A.SOURCINGID = B.SOURCINGID
+		AND 	B.QUALITYYYYY = #{qualityYYYY}
+		WHERE 	B.SOURCINGID IS NULL    
+    </select>
+    
+    <insert id="insertQuality">
+        /* quality.insertSourcingVendor */
+    	insert into SMPQUALITY
+    	(
+    		QUALITYID
+    	,	QUALITYYYYY
+    	,	SOURCINGID
+    	,	SOURCINGNM
+    	,	SPEC
+    	,	PRODTYPE1
+    	,	PRODTYPE2
+    	,	QUALITYSTD
+    	,	MANAGERID	
+    	,	CREATEDATE
+    	,	CREATORID
+    	)values(
+    		#{QUALITYID}
+    	,	#{QUALITYYYYY}
+    	,	#{SOURCINGID}
+    	,	#{SOURCINGNM}
+    	,	#{SPEC}
+    	,	#{PRODTYPE1}
+    	,	#{PRODTYPE2}
+    	,	#{QUALITYSTD}
+    	,	#{MANAGERID}	
+    	,	GETDATE()
+    	,	#{USERID}
+    	)
+    </insert>
+    
+    <select id="selectSourcingVendorTarget" resultType="hashmap">
+    	/* quality.selectSourcingVendorTarget */
+		SELECT	A.QUALITYID
+		,		A.QUALITYYYYY
+		,		A.SOURCINGID
+		,		A.BUSINESSNUM
+		FROM
+		(
+			SELECT	A.QUALITYID
+			,		A.QUALITYYYYY
+			,		B.SOURCINGID
+			,		B.BUSINESSNUM
+			FROM
+			(
+			SELECT	B.* 
+			FROM	SMPSOURCING A
+			,		SMPQUALITY B
+			WHERE	A.SOURCINGID = B.SOURCINGID
+			AND		B.QUALITYYYYY = #{qualityYYYY}
+			)A
+			,		SMPSOURCINGVENDOR B
+			WHERE	A.SOURCINGID = B.SOURCINGID
+			AND		B.FINAL_REQKIND = '90'
+		)A
+		FULL OUTER JOIN SMPQUALITYVENDOR B
+		ON	A.QUALITYID = B.QUALITYID
+		AND	A.QUALITYYYYY = B.QUALITYYYYY	
+		AND	A.BUSINESSNUM = B.BUSINESSNUM
+		AND B.QUALITYID IS NULL
+    </select>
+    
+    <insert id="insertQualityVendor">
+        /* quality.insertSourcingVendor */
+    	INSERT INTO SMPQUALITYVENDOR
+    	(
+    		QUALITYID
+    	,	QUALITYYYYY
+    	,	SOURCINGID
+    	,	BUSINESSNUM
+    	,	VENDORSTATUS
+    	,	REGDATE
+    	,	REGID
+    	)values(
+    		#{QUALITYID}
+    	,	#{QUALITYYYYY}
+    	,	#{SOURCINGID}
+    	,	#{BUSINESSNUM}
+    	,	'10'
+    	,	GETDATE()
+    	,	#{USERID}
+    	)
+    </insert>    
+  
+    <insert id="insertSourcing">
+        /* quality.insertSourcing */
+    	insert into SMPSOURCING
+    	(
+    		SOURCINGID
+    	,	SOURCINGNM
+    	,	SPEC
+    	,	PRODTYPE1
+    	,	PRODTYPE2
+    	,	QUALITYSTD
+    	,	MANAGERID
+    	,	CREATEDATE
+    	,	CREATORID
+    	)values(
+    		#{sourcingId}
+    	,	#{sourcingNm}
+    	,	#{spec}
+    	,	#{prodType1}
+    	,	#{prodType2}
+    	,	'10'
+    	,	#{userId}
+    	,	GETDATE()
+    	,	#{userId}
+    	)
+    </insert>
+    
+    <update id="insertQualityMaster_bak">
+		INSERT INTO SMPQUALITY
+		(
+				QUALITYID
+		,		QUALITYYYYY
+		,		SOURCINGID
+		,		SOURCINGNM
+		,		SPEC
+		,		PRODTYPE1
+		,		PRODTYPE2
+		,		QUALITYSTD
+		,		MANAGERID
+		,		CREATEDATE
+		,		CREATORID
+		,		ISUSE
+		)
+		SELECT	#{qualityId}
+		,		#{qualityYYYY}
+		,		SOURCINGID
+		,		SOURCINGNM
+		,		SPEC
+		,		PRODTYPE1
+		,		PRODTYPE2
+		,		QUALITYSTD
+		,		#{userId}
+		,		CREATEDATE
+		,		#{userId}
+		,		'Y'
+    	FROM	SMPSOURCING
+    	WHERE	SOURCINGID = #{sourcingId}    
+    </update>    
+    
+    <update id="insertQualityMaster">
+    	/* quality.insertQualityMaster */
+		MERGE SMPQUALITY Q
+		USING SMPSOURCING S
+		ON 	S.SOURCINGID = #{sourcingId}    
+		AND S.SOURCINGID = Q.SOURCINGID
+		AND Q.QUALITYYYYY = #{qualityYYYY}
+		WHEN NOT MATCHED AND S.SOURCINGID = #{sourcingId} THEN  
+			INSERT
+			(
+					QUALITYID
+			,		QUALITYYYYY
+			,		SOURCINGID
+			,		SOURCINGNM
+			,		SPEC
+			,		PRODTYPE1
+			,		PRODTYPE2
+			,		QUALITYSTD
+			,		MANAGERID
+			,		CREATEDATE
+			,		CREATORID
+			,		ISUSE
+			)values(
+					#{qualityId}
+			,		#{qualityYYYY}
+			,		S.SOURCINGID
+			,		S.SOURCINGNM
+			,		S.SPEC
+			,		S.PRODTYPE1
+			,		S.PRODTYPE2
+			,		S.QUALITYSTD
+			,		#{userId}
+			,		GETDATE()
+			,		#{userId}
+			,		'Y'		
+			);
+    </update>    
+    
+    <update id="insertQualityDetail_bak">
+    	/* quality.insertQualityDetail_bak */
+    	INSERT INTO SMPQUALITYVENDOR
+    	(
+    			QUALITYID
+    	,		QUALITYYYYY
+    	,		SOURCINGID
+    	,		BUSINESSNUM
+    	,		VENDORSTATUS
+    	,		REGDATE
+    	,		REGID
+    	)
+		SELECT	#{qualityId}
+		,		#{qualityYYYY}
+		,		SOURCINGID
+		,		BUSINESSNUM
+		,		'20'
+		,		GETDATE()
+		,		#{userId}
+		FROM	SMPSOURCINGVENDOR
+		WHERE	SOURCINGID = #{sourcingId}   
+		AND		FINAL_REQKIND = '90'		  
+    </update>
+    
+    <update id="insertQualityDetail">
+    	/* quality.insertQualityDetail */
+		MERGE SMPQUALITYVENDOR Q
+		USING SMPSOURCINGVENDOR S
+		ON 	S.SOURCINGID = #{sourcingId}    
+		AND S.FINAL_REQKIND = '90'	
+		AND S.SOURCINGID = Q.SOURCINGID
+		AND Q.QUALITYYYYY = #{qualityYYYY}
+		AND Q.BUSINESSNUM = S.BUSINESSNUM
+		WHEN NOT MATCHED AND S.SOURCINGID = #{sourcingId} AND S.FINAL_REQKIND = '90' THEN
+		INSERT
+		(
+    			QUALITYID
+    	,		QUALITYYYYY
+    	,		SOURCINGID
+    	,		BUSINESSNUM
+    	,		VENDORSTATUS
+    	,		REGDATE
+    	,		REGID
+		)values(
+				ISNULL((
+					SELECT	TOP 1 QUALITYID
+					FROM	SMPQUALITY
+					WHERE	SOURCINGID = #{sourcingId} 
+					AND		QUALITYYYYY = #{qualityYYYY}			
+				),#{qualityId})
+		,		#{qualityYYYY}
+		,		SOURCINGID
+		,		BUSINESSNUM
+		,		'20'
+		,		GETDATE()
+		,		#{userId}	
+		);
+    </update>
+    
+    <update id="setQualityStd">
+    	/* quality.setQualityStd */
+    	UPDATE SMPQUALITY SET 
+    		QUALITYSTD = #{qualityStdCd}
+ 		,	UPDATEDATE = GETDATE()
+ 		,	UPDATEID = #{userId}	    		
+		WHERE	QUALITYID = #{qualityId}
+		AND	   	QUALITYYYYY = #{qualityYYYY}
+		AND    	SOURCINGID = #{sourcingId}
+    </update>
+    
+    <update id="resetQualityVendor">
+    	/* quality.resetQualityVendor */
+    	UPDATE SMPQUALITYVENDOR SET 
+ 			QUARTER1 = NULL
+    	,	QUARTER2 = NULL
+    	,	QUARTER3 = NULL
+    	,	QUARTER4 = NULL
+    	,	FIRSTHALF = NULL
+    	,	SECONDHALF = NULL	
+    	,	M1 = NULL	
+    	,	M2 = NULL	
+    	,	M3 = NULL	
+    	,	M4 = NULL	
+    	,	M5 = NULL	
+    	,	M6 = NULL	
+    	,	M7 = NULL	
+    	,	M8 = NULL	
+    	,	M9 = NULL	
+    	,	M10 = NULL	
+    	,	M11 = NULL	
+    	,	M12 = NULL	
+		WHERE	QUALITYID = #{qualityId}
+		AND	   	QUALITYYYYY = #{qualityYYYY}
+		AND    	SOURCINGID = #{sourcingId}
+    </update>
+    
+    <update id="setManager">
+    	/* quality.setManager */
+    	UPDATE SMPQUALITY SET 
+ 			MANAGERID = #{managerId}
+ 		,	UPDATEDATE = GETDATE()
+ 		,	UPDATEID = #{userId}	
+		WHERE	QUALITYID = #{qualityId}
+		AND	   	QUALITYYYYY = #{qualityYYYY}
+		AND    	SOURCINGID = #{sourcingId}
+    </update>
+    
+    <update id="setQualityIsUse">
+    	/* quality.setQualityIsUse */
+    	UPDATE SMPQUALITY SET 
+ 			ISUSE = #{isUse}
+ 		,	UPDATEDATE = GETDATE()
+ 		,	UPDATEID = #{userId}	
+		WHERE	QUALITYID = #{qualityId}
+		AND	   	QUALITYYYYY = #{qualityYYYY}
+		AND    	SOURCINGID = #{sourcingId}
+    </update>
+    
+    <update id="insertTransQualityMaster">
+    	/* quality.insertTransQualityMaster */
+		MERGE SMPQUALITY T
+		USING SMPQUALITY S
+		ON 	T.SOURCINGID = S.SOURCINGID
+		AND T.QUALITYID = S.QUALITYID
+		AND T.QUALITYYYYY = #{curQualityYYYY}
+		WHEN NOT MATCHED AND S.QUALITYYYYY = #{stdQualityYYYY} AND S.ISUSE = 'Y' THEN  
+			INSERT
+			(
+					QUALITYID
+			,		QUALITYYYYY
+			,		SOURCINGID
+			,		SOURCINGNM
+			,		SPEC
+			,		PRODTYPE1
+			,		PRODTYPE2
+			,		QUALITYSTD
+			,		MANAGERID
+			,		CREATEDATE
+			,		CREATORID
+			,		ISUSE
+			)values(
+					S.QUALITYID
+			,		#{curQualityYYYY}
+			,		S.SOURCINGID
+			,		S.SOURCINGNM
+			,		S.SPEC
+			,		S.PRODTYPE1
+			,		S.PRODTYPE2
+			,		S.QUALITYSTD
+			,		S.MANAGERID
+			,		GETDATE()
+			,		S.CREATORID
+			,		'Y'		
+			);
+    </update>     
+    
+    <update id="insertTransQualityDetail">
+    	/* quality.insertTransQualityDetail */
+		MERGE SMPQUALITYVENDOR T
+		USING 
+			(
+				SELECT	A.ISUSE
+				,		B.*
+				FROM	SMPQUALITY A
+				,		SMPQUALITYVENDOR B
+				WHERE	A.QUALITYID = B.QUALITYID
+				AND		A.QUALITYYYYY = B.QUALITYYYYY
+				AND		A.SOURCINGID = B.SOURCINGID
+			) S		
+		ON 	T.QUALITYID = S.QUALITYID
+		AND T.QUALITYYYYY = #{curQualityYYYY}
+		AND T.BUSINESSNUM = S.BUSINESSNUM
+		AND T.SOURCINGID = S.SOURCINGID
+		WHEN NOT MATCHED AND S.QUALITYYYYY = #{stdQualityYYYY} AND S.ISUSE = 'Y' THEN
+		INSERT
+		(
+    			QUALITYID
+    	,		QUALITYYYYY
+    	,		SOURCINGID
+    	,		BUSINESSNUM
+    	,		VENDORSTATUS
+    	,		REGDATE
+    	,		REGID
+		)values(
+				S.QUALITYID
+		,		#{curQualityYYYY}
+		,		S.SOURCINGID
+		,		S.BUSINESSNUM
+		,		'20'
+		,		GETDATE()
+		,		S.REGID
+		);
+    </update>    
+    
+    <select id="getQualityVendorCheckTarget" resultType="hashmap">
+    	/* quality.getQualityVendorCheckTarget */
+    	SELECT 	QUARTER1
+    	,		QUARTER2
+    	,		QUARTER3
+    	,		QUARTER4
+    	,		FIRSTHALF
+    	,		SECONDHALF	
+    	,		M1	
+    	,		M2	
+    	,		M3	
+    	,		M4	
+    	,		M5	
+    	,		M6	
+    	,		M7	
+    	,		M8	
+    	,		M9	
+    	,		M10	
+    	,		M11	
+    	,		M12	
+    	FROM	SMPQUALITYVENDOR
+    	WHERE	QUALITYID = #{qualityId}
+    	AND 	QUALITYYYYY = #{qualityYYYY}
+    	AND 	SOURCINGID = #{sourcingId}
+		AND	(	QUARTER1 IS NOT NULL OR
+				QUARTER2 IS NOT NULL OR
+				QUARTER3 IS NOT NULL OR
+				QUARTER4 IS NOT NULL OR
+				FIRSTHALF IS NOT NULL OR
+				SECONDHALF IS NOT NULL OR
+				M1 IS NOT NULL OR
+				M2 IS NOT NULL OR
+				M3 IS NOT NULL OR
+				M4 IS NOT NULL OR
+				M5 IS NOT NULL OR
+				M6 IS NOT NULL OR
+				M7 IS NOT NULL OR
+				M8 IS NOT NULL OR
+				M9 IS NOT NULL OR
+				M10 IS NOT NULL OR
+				M11 IS NOT NULL OR
+				M12 IS NOT NULL 
+				)    	
+    </select>
+    
+    <delete id="deleteQualityCheck">
+    	/* quality.deleteQualityCheck */
+   		DELETE FROM SMPQUALITYCHECK WHERE QUALITY_PART_SEQ = #{qualityPartSeq}
+    </delete>
+    
+    <select id="getQualitySummary" resultType="hashmap">
+    	/* quality.getQualitySummary */
+		SELECT	SUM(QUALITYCNT) AS QUALITYCNT
+		,		SUM(CHECKCNT) AS CHECKCNT
+		,		CONVERT(DECIMAL(18,2), ROUND( CONVERT(NUMERIC(2),SUM(CHECKCNT) )/ CONVERT(NUMERIC(2),SUM(QUALITYCNT) )* 100, 2)) AS QUALITYRATE
+		,		SUM(VOCCNT) AS VOCCNT
+		,		SUM(COMPCNT) AS COMPCNT
+		,		CONVERT(DECIMAL(18,2), ROUND( CONVERT(NUMERIC(2),SUM(COMPCNT) )/ CONVERT(NUMERIC(2),SUM(VOCCNT) )* 100, 2)) AS VOCRATE
+		FROM
+		(
+			SELECT	CASE
+						WHEN A.QUALITYSTD = '0' THEN 12
+						WHEN A.QUALITYSTD = '10' THEN 4
+						WHEN A.QUALITYSTD = '20' THEN 2
+						ELSE 0
+					END QUALITYCNT
+			,		CASE
+						WHEN A.QUALITYSTD = '0'  THEN 	(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M1)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M2)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M3)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M4)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M5)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M6)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M7)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M8)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M9)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M10)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M11)+
+														(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.M12)
+						WHEN A.QUALITYSTD = '10' THEN 	(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.QUARTER1)+(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.QUARTER2)+(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.QUARTER3)+(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.QUARTER4)
+						WHEN A.QUALITYSTD = '20' THEN 	(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.FIRSTHALF)+(SELECT COUNT(1) FROM SMPQUALITYCHECK A1 WHERE A1.QUALITY_PART_SEQ = B.SECONDHALF)
+						ELSE 0
+					END CHECKCNT
+		    ,		(   
+						SELECT	COUNT(1) 
+		                FROM	SMPVOC AA 
+		                WHERE	AA.QUALITYID = A.QUALITYID 
+		                AND		AA.QUALITYYYYY = A.QUALITYYYYY 
+		                AND		AA.SOURCINGID = A.SOURCINGID 
+		                AND		AA.BUSINESSNUM = B.BUSINESSNUM
+		                
+		            ) AS VOCCNT
+		    ,		(   
+						SELECT	COUNT(1) 
+		                FROM	SMPVOC AA 
+		                WHERE	AA.QUALITYID = A.QUALITYID 
+		                AND		AA.QUALITYYYYY = A.QUALITYYYYY 
+		                AND		AA.SOURCINGID = A.SOURCINGID 
+		                AND		AA.BUSINESSNUM = B.BUSINESSNUM
+						AND		AA.TREATRESULT = '40'
+		            ) AS COMPCNT
+			FROM	SMPQUALITY A
+			,		SMPQUALITYVENDOR B
+			WHERE	A.QUALITYID = B.QUALITYID
+			AND		A.QUALITYYYYY = B.QUALITYYYYY
+			AND		A.SOURCINGID = B.SOURCINGID
+			AND		A.QUALITYYYYY = #{qualityYYYY}
+		) A    
+    </select>
+    
+</mapper>

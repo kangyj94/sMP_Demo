@@ -1,0 +1,40 @@
+@charset "euc-kr";
+
+/*html ?�洹� 湲곕낯 ?���*/
+body {
+	padding:0;
+	margin:0;
+	font-size:12px;
+	font-family:malgun gothic ;
+	color:#222222;
+	line-height:18px;
+	text-align:left;
+	background:#FFFFFF;
+}
+a img { border:0 none; }
+table { border-collapse:collapse; border-spacing:0px; font-size:12px; }
+th, td { padding:0 0 0 0; }
+h1, h2, h3, h4, h5, h6 { margin:0; padding:0; font-weight:bold; }
+img, input.type-image { border:0 none; font-family:Arial; }
+hr { display:none; margin:0; }
+p { margin:0; padding:0; }
+
+a:link { color:#000; text-decoration:none; }
+a:visited { color:#000; text-decoration:none; }
+a:active { color:#000; text-decoration:none; }
+a:hover { color:#0083ca; text-decoration:underline; }
+
+/* input style */
+input {font-size:12px; color:#333; }
+
+ /* common */
+#M_wrap{position:relative;border:solid 1px #ddd;}
+#Container .CNT {background:#fff; line-height:18px;}
+#box {border-top:solid 1px #ddd; background:#f5f5f5; font-size:11px; color:#666; padding:10px;}
+.pos_pop_control {
+	overflow: hidden;
+	padding: 7px 30px 7px 30px;
+	border-top: 1px solid #777;
+	background: #8b8b8b;
+}
+.close {float:right}

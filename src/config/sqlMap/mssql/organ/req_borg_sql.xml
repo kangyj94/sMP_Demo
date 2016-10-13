@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="req_borg">
+	<insert id="insertReqBranch">
+		/* req_borg.insertReqBranch */
+		INSERT INTO REQSMPBRANCHS(
+			  BRANCHID
+			, GROUPID
+			, CLIENTID
+			, CLIENTNM
+			, CLIENTCD
+			, REGISTERCD
+			, AREATYPE
+			, BRANCHGRAD
+			, BUSINESSNUM
+			, REGISTNUM
+			, BRANCHBUSITYPE
+			, BRANCHBUSICLAS
+			, PRESSENTNM
+			, PHONENUM
+			, E_MAIL
+			, HOMEPAGE
+			, POSTADDRNUM
+			, ADDRES
+			, ADDRESDESC
+			, FAXNUM
+			, LOGINAUTHTYPE
+			, ORDERAUTHTYPE
+			, REFERECEDESC
+			, PAYBILLTYPE
+			, PAYBILLDAY
+			, ACCOUNTMANAGENM
+			, ACCOUNTTELNUM
+			, BANKCD
+			, RECIPIENT
+			, ACCOUNTNUM
+			, BUSINESSATTACHFILESEQ
+			, APPRAISALATTACHFILESEQ
+			, ETCFIRSTSEQ
+			, ETCSECONDSEQ
+			, ETCTHIRDSEQ
+			, REGISTERDATE
+			, SHARP_MAIL
+		)VALUES(
+			  #{branchId}
+			, #{groupId}
+			, #{clientId}
+			, #{clientNm}
+			, #{clientCd}
+			, #{registerCd}
+			, #{areaType}
+			, #{branchGrad}
+			, #{businessNum}
+			, #{registNum}
+			, #{branchBustType}
+			, #{branchBustClas}
+			, #{pressentNm}
+			, #{phoneNum}
+			, #{eMail}
+			, #{homePage}
+			, #{postAddrNum}
+			, #{addres}
+			, #{addresDesc}
+			, #{faxNum}
+			, #{loginAuthType}
+			, #{orderAuthType}
+			, #{refereceDesc}
+			, #{payBillType}
+			, #{payBillDay}
+			, #{accountManagerNm}
+			, #{accountTelNum}
+			, #{bankCd}
+			, #{recipient}
+			, #{accountNum}
+			, #{file_biz_reg_list}
+			, #{file_app_sal_list}
+			, #{file_list1}
+			, #{file_list2}
+			, #{file_list3}
+			, GETDATE()
+			, #{sharpMail}
+		)	
+	</insert>
+
+	<insert id="insertReqVendor">
+		/* req_borg.insertReqVendor */
+		INSERT INTO REQSMPVENDORS (
+			VENDORID
+		,	VENDORNM
+		,	VENDORCD
+		,	REGISTERCD
+		,	AREATYPE
+		,	BUSINESSNUM
+		,	REGISTNUM
+		,	VENDORBUSITYPE
+		,	VENDORBUSICLAS
+		,	PRESSENTNM
+		,	PHONENUM
+		,	E_MAIL
+		,	HOMEPAGE
+		,	POSTADDRNUM
+		,	ADDRES
+		,	ADDRESDESC
+		,	FAXNUM
+		,	LOGINAUTHTYPE
+		,	REFERECEDESC
+		,	PAYBILLTYPE
+		,	PAYBILLDAY
+		,	ACCOUNTMANAGENM
+		,	ACCOUNTTELNUM
+		,	BANKCD
+		,	RECIPIENT
+		,	ACCOUNTNUM
+		,	BUSINESSATTACHFILESEQ
+		,	APPRAISALATTACHFILESEQ
+		,	ETCFIRSTATTACHSEQ
+		,	ETCSECONDATTACHSEQ
+		,	ETCTHIRDATTACHSEQ
+		,	REGISTERDATE
+		,	SHARP_MAIL
+		,	CLASSIFY
+		,	ETCFOURTHATTACHSEQ
+		)VALUES(
+			#{vendorId}
+		,	#{vendorNm}
+		,	#{vendorCd}
+		,	#{registerCd}
+		,	#{areaType}
+		,	#{businessNum}
+		,	#{registNum}
+		,	#{vendorBustType}
+		,	#{vendorBustClas}
+		,	#{pressentNm}
+		,	#{phoneNum}
+		,	#{eMail}
+		,	#{homePage}
+		,	#{postAddrNum}
+		,	#{addres}
+		,	#{addresDesc}
+		,	#{faxNum}
+		,	#{loginAuthType}
+		,	#{refereceDesc}
+		,	#{payBillType}
+		,	#{payBillDay}
+		,	#{accountManagerNm}
+		,	#{accountTelNum}
+		,	#{bankCd}
+		,	#{recipient}
+		,	#{accountNum}
+		,	#{file_biz_reg_list}
+		,	#{file_app_sal_list}
+		,	#{file_list1}
+		,	#{file_list2}
+		,	#{file_list3}
+		,	GETDATE()
+		,	#{sharpMail}
+		,	#{classify}
+		,	#{file_list4}
+		)
+	</insert>
+	
+	<insert id="insertSmpUser">
+		/* req_borg.insertSmpUser */
+		INSERT INTO SMPUSERS(
+			  USERID
+			, LOGINID
+			, PWD
+			, USERNM
+			, TEL
+			, MOBILE
+			, ISLOGIN
+			, EMAIL
+			, REMOTEIP
+			, ISUSE
+			, CREATEDATE
+		)VALUES(
+			  #{userId}		
+			, #{loginId}		
+			, #{pwd}		
+			, #{userNm}
+			, #{tel}
+			, #{mobile}
+			, #{isLogin}
+			, #{userEmail}
+			, #{remoteIp}
+			, #{isUse}
+			, GETDATE()		
+		)	
+	</insert>
+	
+	<insert id="insertDeliveryInfo">
+		/* req_borg.insertDeliveryInfo */
+		INSERT INTO SMPDELIVERYINFO(
+			  DELIVERYID
+			, GROUPID
+			, CLIENTID
+			, BRANCHID
+			, SHIPPINGPLACE
+			, SHIPPINGADDRES
+			, SHIPPINGPHONENUM
+			, ISDEFAULT
+		)VALUES(
+			  #{deliveryId}
+			, #{groupId}
+			, #{clientId}
+			, #{branchId}
+			, #{shippingPlace}
+			, #{shippingAddres}
+			, #{shippingPhoneNum}
+			, #{isDefault}
+		)	
+	</insert>
+	
+	<select id="selectRolesList" resultType="kr.co.bitcube.common.dto.RolesDto">
+		/* req_borg.selectRolesList */
+		SELECT 
+		  ROLEID
+		, ROLECD
+		, ROLENM
+		, ROLEDESC
+		, BORGSCOPECD
+		, SVCTYPECD
+		, ISUSE
+		, INITISROLE
+		, INITBORGSCOPECD
+		FROM  SMPROLES WITH(NOLOCK)  
+		WHERE ROLECD = #{roleCd}
+		AND   ISUSE = '1'	
+
+	</select>
+	
+	<insert id="insertBorgsUsers">
+		/* req_borg.insertBorgsUsers */
+		INSERT INTO SMPBORGS_USERS(
+			  USERID
+			, BORGID
+			, LOGINID
+			, ISDEFAULT
+			, CREATEDATE
+		)VALUES(
+			  #{userId}
+			, #{borgId}	  
+			, #{loginId}	  
+			, #{borgsIsDefault}	  
+			, GETDATE()	  
+		)	
+	</insert>
+
+	<insert id="insertUserRoles">
+		/* req_borg.insertUserRoles */
+		INSERT INTO SMPBORGS_USERS_ROLES(
+			  ROLEID
+			, USERID
+			, BORGID
+			, ISDEFAULT
+			, BORGSCOPECD
+		)VALUES(
+			  #{roleId}
+			, #{userId}	  
+			, #{borgId}	  
+			, #{borgsIsDefault}	  
+			, #{borgScopeCd}	  
+		)
+	</insert>
+
+	<select id="reqBorgDupCheck" resultType="int">
+		/* req_borg.reqBorgDupCheck */
+		SELECT 	COUNT(1) 
+		FROM   	SMPBORGS A WITH(NOLOCK) 
+		LEFT OUTER JOIN	REQSMPBRANCHS B WITH(NOLOCK) 
+			ON		A.BORGCD = B.CLIENTCD
+			AND    	A.BORGID = B.CLIENTID
+		WHERE  	A.BORGTYPECD = 'CLT'
+		AND     A.BORGCD = #{clientCd}		
+	</select>
+
+	<select id="loginIdDupCheck" resultType="int">
+		/* req_borg.loginIdDupCheck */	
+		SELECT COUNT(*) 
+		FROM   SMPUSERS A WITH(NOLOCK) 
+		WHERE  A.LOGINID = #{loginId}
+	</select>
+</mapper>

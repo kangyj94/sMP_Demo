@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+<mapper namespace="proposal">
+	<sql id="selectProposalListSql">
+	FROM (
+		SELECT	A.RECEIPTNUM
+		,		A.NONUSERID
+		,		A.USERID
+		,		A.FINALPROCSTATFLAG
+		,		(SELECT CODENM1 FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'PROPOSAL_STAT' AND CODEVAL1 = A.FINALPROCSTATFLAG) AS FINALPROCSTATFLAG_NM
+		,		A.ACCEPTSTAT
+		,		(SELECT CODENM1 FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'PROPOSAL_STAT' AND CODEVAL1 = A.ACCEPTSTAT) AS ACCEPTSTAT_NM
+		,		CONVERT(VARCHAR(10),A.ACCEPTDATE,120) AS ACCEPTDATE
+		,		A.ACCEPTID
+		,		B.USERNM AS ACCEPT_USER_NM
+		,		A.SUITABLESTAT
+		,		(SELECT CODENM1 FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'PROPOSAL_STAT' AND CODEVAL1 = A.SUITABLESTAT) AS SUITABLESTAT_NM
+		,		CONVERT(VARCHAR(10),A.SUITABLEDATE,120) AS SUITABLEDATE
+		,		A.SUITABLECONTENT
+		,		A.SUITABLEID
+		,		C.USERNM	AS SUITABLE_USER_NM
+		,		A.APPRAISALSTAT
+		,		(SELECT CODENM1 FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'PROPOSAL_STAT' AND CODEVAL1 = A.APPRAISALSTAT)	AS APPRAISALSTAT_NM
+		,		CONVERT(VARCHAR(10),A.APPRAISALDATE,120) AS APPRAISALDATE
+		,		A.APPRAISALCONTENT
+		,		A.APPRAISALID
+		,		D.USERNM	AS APPRAISAL_USER_NM
+		,		CONVERT(VARCHAR(10),A.SUGGESTDATE,120) AS SUGGESTDATE
+		,		A.SUGGESTNAME
+		,		A.SUGGESTCONTENT
+		,		A.BUSSINESSNM
+		,		A.BUSINESSNUM
+		,		A.FILELIST1
+		,		A.FILELIST2
+		,		A.FILELIST3
+		,		A.FILELIST4 
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILELIST1, 'NAME') AS ATTACH_FILE_NAME1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILELIST2, 'NAME') AS ATTACH_FILE_NAME2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILELIST3, 'NAME') AS ATTACH_FILE_NAME3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILELIST4, 'NAME') AS ATTACH_FILE_NAME4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILELIST1, 'PATH') AS ATTACH_FILE_PATH1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILELIST2, 'PATH') AS ATTACH_FILE_PATH2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILELIST3, 'PATH') AS ATTACH_FILE_PATH3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILELIST4, 'PATH') AS ATTACH_FILE_PATH4
+		,		A.MATERIALTYPE
+		,		A.SUGGESTTITLE
+		,		ISNULL(A.SUGGESTPHONE,'') AS SUGGESTPHONE
+		,		A.SUGGESTEMAIL
+		,		(SELECT CODENM1 FROM  SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'PROPOSAL_SUGGEST'	AND CODEVAL1 = A.SUGGESTTARGET) AS SUGGESTTARGET
+		,		A.SUGGESTTARGET AS SUGGESTTARGETVAL
+		,		A.SUITABLEMOBILE AS SUITABLE_MOBILE 
+		FROM SMPNEW_MATERSUGGEST A WITH(NOLOCK)  
+			LEFT OUTER JOIN SMPUSERS B WITH(NOLOCK) 
+				ON A.ACCEPTID = B.USERID
+			LEFT OUTER JOIN SMPUSERS C WITH(NOLOCK) 
+				ON A.SUITABLEID = C.USERID
+			LEFT OUTER JOIN SMPUSERS D WITH(NOLOCK) 
+				ON A.APPRAISALID = D.USERID
+		WHERE 1=1
+		<if test="srcSuggestStDate != null and srcSuggestStDate != ''">
+			<if test="srcSuggestEndDate != null and srcSuggestEndDate != ''">
+		AND A.SUGGESTDATE BETWEEN CONVERT(DATETIME, #{srcSuggestStDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcSuggestEndDate}))
+			</if>
+		</if>
+		<if test="srcSuggestTitle != null and srcSuggestTitle != ''">
+		AND A.SUGGESTTITLE LIKE '%'+#{srcSuggestTitle}+'%'
+		</if>
+		<if test="srcSuggestName != null and srcSuggestName != ''">
+		AND A.SUGGESTNAME LIKE '%'+#{srcSuggestName}+'%'
+		</if>
+		<if test="srcSuitableUserNm != null and srcSuitableUserNm != ''">
+		AND A.SUITABLEID = #{srcSuitableUserNm}
+		</if>
+		<if test="srcAppraisalUserNm != null and srcAppraisalUserNm != ''">
+		AND A.APPRAISALID = #{srcAppraisalUserNm}
+		</if>
+		<if test="srcFinalProcStatFlagNm != null and srcFinalProcStatFlagNm != ''">
+		AND A.FINALPROCSTATFLAG = #{srcFinalProcStatFlagNm}
+		</if>
+
+		<if test="(isFinal != null and isFinal != '' and isFinal eq 'N'.toString()) and (isAdm != null and isAdm != '' and isAdm eq 'N'.toString()) ">
+		AND (A.USERID = #{userId} OR A.NONUSERID = #{nonUserId})
+		</if>
+
+		<if test="receiptNumForMail != null and receiptNumForMail != ''">
+		AND A.RECEIPTNUM = #{receiptNumForMail}
+		</if>
+		<if test="srcSuggestTarget != null and srcSuggestTarget !='' ">
+		AND SUGGESTTARGET = #{srcSuggestTarget}
+		</if>
+	)AA
+	</sql>
+	<select id="selectProposalListCnt" resultType="int">
+		/* proposal.selectProposalListCnt */
+		SELECT COUNT(1)
+		<include refid="selectProposalListSql"/>
+	</select>
+	<select id="selectProposalList" resultType="java.util.HashMap">
+		/* proposal.selectProposalList*/
+		SELECT	AA.RECEIPTNUM
+		,		AA.NONUSERID
+		,		AA.USERID
+		,		AA.FINALPROCSTATFLAG
+		,		AA.FINALPROCSTATFLAG_NM
+		,		AA.ACCEPTSTAT
+		,		AA.ACCEPTSTAT_NM
+		,		AA.ACCEPTDATE
+		,		AA.ACCEPTID
+		,		AA.ACCEPT_USER_NM
+		,		AA.SUITABLESTAT
+		,		AA.SUITABLESTAT_NM
+		,		AA.SUITABLEDATE
+		,		AA.SUITABLECONTENT
+		,		AA.SUITABLEID
+		,		AA.SUITABLE_USER_NM
+		,		AA.APPRAISALSTAT
+		,		AA.APPRAISALSTAT_NM
+		,		AA.APPRAISALDATE
+		,		AA.APPRAISALCONTENT
+		,		AA.APPRAISALID
+		,		AA.APPRAISAL_USER_NM
+		,		AA.SUGGESTDATE
+		,		AA.SUGGESTNAME
+		,		AA.SUGGESTCONTENT
+		,		AA.BUSSINESSNM
+		,		AA.BUSINESSNUM
+		,		AA.FILELIST1
+		,		AA.FILELIST2
+		,		AA.FILELIST3
+		,		AA.FILELIST4 
+		,		AA.MATERIALTYPE
+		,		AA.SUGGESTTITLE
+		,		AA.SUGGESTPHONE
+		,		AA.SUGGESTEMAIL
+		,		AA.ATTACH_FILE_NAME1
+		,		AA.ATTACH_FILE_NAME2
+		,		AA.ATTACH_FILE_NAME3
+		,		AA.ATTACH_FILE_NAME4
+		,		AA.ATTACH_FILE_PATH1
+		,		AA.ATTACH_FILE_PATH2
+		,		AA.ATTACH_FILE_PATH3
+		,		AA.ATTACH_FILE_PATH4
+		,		CASE WHEN (AA.SUGGESTTARGET IS NULL OR AA.SUGGESTTARGET ='') THEN ''
+					ELSE AA.SUGGESTTARGET 
+				END SUGGESTTARGET
+		,		SUGGESTTARGETVAL
+		,		SUITABLE_MOBILE
+		<include refid="selectProposalListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<!-- 신구자재 제안 상태 code 값 -->
+	<select id="selectProposalStat" resultType="java.util.HashMap">
+		/* proposal.selectProposalStat*/
+		SELECT CODENM1 AS CODE_NM, CODEVAL1 AS CODE_VAL FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'PROPOSAL_STAT' AND ISUSE = '1' ORDER BY DISORDER ASC
+	</select>
+
+	<!-- 비회원 아이디 조회 -->
+	<select id="selectNonUserId" resultType="int">
+		/* proposal.selectNonUserId*/
+		SELECT NONUSERID FROM SMPNONUSERS  WITH(NOLOCK) WHERE BUSINESSNUM = #{userInfoDto.borgNm}
+	</select>
+	
+	<!-- 신규자재 제안 등록 -->
+	<insert id="insertProposalInfo">
+	INSERT INTO SMPNEW_MATERSUGGEST 
+       ( 
+           RECEIPTNUM
+        <if test="nonUserId != null and nonUserId != ''">
+         ,NONUSERID
+        </if>
+        <if test="userId != null and userId != ''">
+         ,USERID
+        </if>
+         ,FINALPROCSTATFLAG
+         ,SUGGESTDATE
+         ,SUGGESTNAME
+         ,SUGGESTCONTENT
+         ,BUSSINESSNM
+        <if test="busiNum != null and busiNum != ''">
+         ,BUSINESSNUM
+        </if>
+         ,FILELIST1
+         ,FILELIST2
+         ,FILELIST3
+         ,SUGGESTTITLE
+         ,SUGGESTPHONE
+         ,SUGGESTEMAIL 
+       ) 
+       VALUES 
+       ( 
+       		#{receiptNum}
+        <if test="nonUserId != null and nonUserId != ''">
+         , #{nonUserId}
+        </if>
+        <if test="userId != null and userId != ''">
+         , #{userId}
+        </if>
+         , '10'
+         , GETDATE()
+         , #{regiUserName}
+         , #{propPointDesc}
+         , #{busiNm}
+        <if test="busiNum != null and busiNum != ''">
+         , #{busiNum}
+        </if>
+         , #{firstattachseq}
+         , #{secondattachseq}
+         , #{thirdattachseq}
+         , #{titleName}
+         , #{regiUserPhone}
+         , #{regiUserEmail}
+       ) 
+	</insert>
+	
+	<select id="selectBusiNumForVen" resultType="java.util.HashMap">
+		/* proposal.selectBusiNumForVen */
+		SELECT BUSINESSNUM FROM SMPVENDORS  WITH(NOLOCK) WHERE VENDORID = #{userInfoDto.borgId}
+	</select>
+	<select id="selectBusiNumForBuy" resultType="java.util.HashMap">
+		/* proposal.selectBusiNumForBuy */
+		SELECT BUSINESSNUM FROM SMPBRANCHS  WITH(NOLOCK) WHERE BRANCHID = #{userInfoDto.borgId}
+	</select>
+	
+	<insert id="insertProposalInfoHist">
+		INSERT INTO SMPNEW_MATERSUGGEST_HISTORY 
+	       ( 
+	           STATENUM
+	         ,RECEIPTNUM
+	         ,PROCSTATFLAG
+	         ,REGDATE
+	         ,REGID
+	         ,REGNAME
+        <if test="statContent != null and statContent != ''">
+	         ,REGCONTENT 
+        </if>
+	       ) 
+	       VALUES 
+	       (   #{stateNum}
+	         , #{receiptNum}
+	         , #{receiptNumStat}
+	         , GETDATE()
+	         , #{userInfoDto.userId}
+	         , #{userInfoDto.userNm}
+        <if test="statContent != null and statContent != ''">
+	         , #{statContent}
+        </if>
+	       ) 
+	</insert>
+	<update id="updateProposalInfo">
+		/* proposal.updateProposalInfo */
+		UPDATE SMPNEW_MATERSUGGEST
+		<trim prefix="SET" prefixOverrides=", ">
+	        <if test="titleName != null and titleName != ''">
+			, SUGGESTTITLE = #{titleName}
+	        </if>
+	        <if test="regiUserName != null and regiUserName != ''">
+			, SUGGESTNAME = #{regiUserName}
+	        </if>
+	        <if test="regiUserPhone != null and regiUserPhone != ''">
+			, SUGGESTPHONE = #{regiUserPhone}
+	        </if>
+	        <if test="regiUserEmail != null and regiUserEmail != ''">
+			, SUGGESTEMAIL = #{regiUserEmail}
+	        </if>
+	        <if test="propPointDesc != null and propPointDesc != ''">
+			, SUGGESTCONTENT = #{propPointDesc}
+	        </if>
+	        <if test="firstattachseq != null and firstattachseq != ''">
+			, FILELIST1 = #{firstattachseq}
+	        </if>
+	        <if test="secondattachseq != null and secondattachseq != ''">
+			, FILELIST2 = #{secondattachseq}
+	        </if>
+	        <if test="thirdattachseq != null and thirdattachseq != ''">
+			, FILELIST3 = #{thirdattachseq}
+	        </if>
+	        <if test="receiptNumStat != null and receiptNumStat != ''">
+			, FINALPROCSTATFLAG = #{receiptNumStat}
+	        </if>
+	        <if test="acceptStat != null and acceptStat != ''">
+			, ACCEPTSTAT = #{acceptStat}
+	        </if>
+	        <if test="acceptDate != null and acceptDate != ''">
+			, ACCEPTDATE = GETDATE()
+	        </if>
+	        <if test="acceptId != null and acceptId != ''">
+			, ACCEPTID = #{acceptId}
+	        </if>
+	        <if test="suitableStat != null and suitableStat != ''">
+			, SUITABLESTAT = #{suitableStat}
+	        </if>
+	        <if test="suitableContent != null and suitableContent != ''">
+			, SUITABLECONTENT = #{suitableContent}
+	        </if>
+	        <if test="materialType != null and materialType != ''">
+			, MATERIALTYPE = #{materialType}
+	        </if>
+	        <if test="fourthattachseq != null and fourthattachseq != ''">
+			, FILELIST4 = #{fourthattachseq}
+	        </if>
+	        <if test="suitableDate != null and suitableDate != ''">
+			, SUITABLEDATE = GETDATE()
+	        </if>
+	        <if test="suitableId != null and suitableId != ''">
+			, SUITABLEID = #{suitableId}
+	        </if>
+	        <if test="appraisalStat != null and appraisalStat != ''">
+			, APPRAISALSTAT = #{appraisalStat}
+	        </if>
+	        <if test="appraisalContent != null and appraisalContent != ''">
+			, APPRAISALCONTENT = #{appraisalContent}
+	        </if>
+	        <if test="appraisalId != null and appraisalId != ''">
+			, APPRAISALID = #{appraisalId}
+	        </if>
+	        <if test="appraisalDate != null and appraisalDate != ''">
+			, APPRAISALDATE = GETDATE()
+	        </if>
+			<if test="suggestTarget != null and suggestTarget != ''">
+			, SUGGESTTARGET = #{suggestTarget}
+			</if>
+			<if test="suitableMobile != null and suitableMobile != ''">
+			, SUITABLEMOBILE = #{suitableMobile}
+			</if>
+		</trim>
+		WHERE RECEIPTNUM = #{receiptNum} 
+	</update>
+	
+	<select id="selectProposalStatus" resultType="int">
+		/* proposal.selectProposalStatus */
+		SELECT FINALPROCSTATFLAG FROM SMPNEW_MATERSUGGEST  WITH(NOLOCK) WHERE RECEIPTNUM = ${receiptNum}
+	</select>
+	
+	<delete id="delProposalInfo">
+		/* proposal.delProposalInfo */
+		DELETE FROM SMPNEW_MATERSUGGEST WHERE RECEIPTNUM = ${receiptNum}
+	</delete>
+	
+
+	<select id="selectProposalFinalRole" resultType="java.lang.String">
+		/* proposal.selectProposalFinalRole */
+		SELECT TOP 1 'Y' AS FINAL_ROLE
+		  FROM SMPBORGS_USERS_ROLES A WITH(NOLOCK)  
+		     , SMPROLES B  WITH(NOLOCK) 
+		     , SMPUSERS C  WITH(NOLOCK) 
+		 WHERE A.ROLEID = B.ROLEID 
+		 AND A.USERID = C.USERID
+		 AND (B.ROLECD = 'BUY_NEW_MATER' OR B.ROLECD = 'ADM_NEW_MASTER') 
+        <![CDATA[
+	   	 AND C.LOGINID <> 'XXXXXXXXXX'
+        ]]>
+       	 AND A.USERID=#{userId}
+	</select>
+	<select id="selectProposalIsWriter" resultType="java.lang.String">
+		/* proposal.selectProposalIsWriter */
+		SELECT 'Y' AS IS_WRITER
+		  FROM SMPNEW_MATERSUGGEST A WITH(NOLOCK) 
+		  WHERE A.RECEIPTNUM = #{receiptNum}
+		  AND (NONUSERID = #{nonUserId} OR USERID = #{userId})
+	</select>
+	<select id="selectProposalIsB2BAdm" resultType="java.lang.String">
+		/* proposal.selectProposalIsB2BAdm*/
+		SELECT 
+          'Y' AS IS_ADM
+		<include refid="selectProposalB2BAdmListSql"/>
+		   AND E.USERID = #{userId}
+	</select>
+	<select id="selectProposalB2BAdmList" resultType="java.util.HashMap">
+		/* proposal.selectProposalB2BAdmList*/
+		SELECT 
+           E.USERID 
+	     , E.USERNM 
+	     , ISNULL(E.EMAIL,'') AS EMAIL
+	     , ISNULL(E.MOBILE,'') AS MOBILE
+		<include refid="selectProposalB2BAdmListSql"/>
+	</select>
+	<!-- B2B운영자나 제안채택권한자 조회 -->
+	<sql id="selectProposalB2BAdmListSql">
+        FROM SMPROLES A WITH ( NOLOCK) 
+         , SMPBORGS_USERS_ROLES B WITH ( NOLOCK) 
+         , SMPBORGS_USERS C WITH ( NOLOCK) 
+         , SMPBORGS D WITH ( NOLOCK) 
+         , SMPUSERS E WITH ( NOLOCK) 
+        WHERE A.ROLEID = B.ROLEID 
+           AND B.USERID = C.USERID 
+           AND B.BORGID = C.BORGID 
+           AND C.BORGID = D.BORGID 
+           AND C.USERID = E.USERID 
+		<if test="searchB2BAdm != null and searchB2BAdm != ''">
+		   AND A.ROLECD = 'ADM_B2B_MAN'
+		</if>
+		<if test="searchB2BAdm == null">
+		   AND (A.ROLECD = 'BUY_NEW_MATER' OR A.ROLECD = 'ADM_NEW_MASTER') 
+        <![CDATA[
+	   	   AND E.LOGINID <> 'XXXXXXXXXX'
+        ]]>
+		</if>
+           AND D.ISUSE = 1 
+           AND E.ISUSE = 1 
+           AND E.ISLOGIN = 1 
+	</sql>
+
+	<select id="selectProposalCnt" resultType="java.util.HashMap">
+		/* proposal.selectProposalCnt*/
+		SELECT 
+				SUM(AA.ALL_CNT) AS ALL_CNT
+				,SUM(AA.ACCEPT_CNT) AS ACCEPT_CNT
+				,SUM(AA.SUITABLE_Y_CNT) AS SUITABLE_Y_CNT
+				,SUM(AA.SUITABLE_N_CNT) AS SUITABLE_N_CNT
+				,SUM(AA.APPR_Y_CNT) AS APPR_Y_CNT
+				,SUM(AA.APPR_N_CNT) AS APPR_N_CNT
+				,SUM(AA.ACCEPT_WAITING_CNT) AS ACCEPT_WAITING_CNT
+		FROM(
+				SELECT 
+						1 AS ALL_CNT
+						,CASE WHEN FINALPROCSTATFLAG = '10' THEN 1 ELSE 0 END AS ACCEPT_WAITING_CNT
+						,CASE WHEN FINALPROCSTATFLAG = '20' THEN 1 ELSE 0 END AS ACCEPT_CNT
+						,CASE WHEN FINALPROCSTATFLAG = '31' THEN 1 ELSE 0 END AS SUITABLE_Y_CNT
+						,CASE WHEN FINALPROCSTATFLAG = '32' THEN 1 ELSE 0 END AS SUITABLE_N_CNT
+						,CASE WHEN FINALPROCSTATFLAG = '41' THEN 1 ELSE 0 END AS APPR_Y_CNT
+						,CASE WHEN FINALPROCSTATFLAG = '42' THEN 1 ELSE 0 END AS APPR_N_CNT 
+				FROM SMPNEW_MATERSUGGEST  WITH(NOLOCK) 
+		<if test="(isFinal != null and isFinal != '' and isFinal eq 'N'.toString()) and (isAdm != null and isAdm != '' and isAdm eq 'N'.toString()) ">
+				WHERE (USERID = #{userId} OR NONUSERID = #{nonUserId})
+		</if>
+		) AA
+	</select>
+	
+	<select id="selectProposalB2BAdmMailList" resultType="java.util.HashMap">
+		/* proposal.selectProposalB2BAdmMailList*/
+		SELECT	DISTINCT E.USERID 
+		,		E.USERNM 
+		,		ISNULL(E.EMAIL,'') AS EMAIL
+		,		ISNULL(E.MOBILE,'') AS MOBILE
+		FROM SMPROLES A WITH ( NOLOCK) 
+		INNER JOIN SMPBORGS_USERS_ROLES B WITH ( NOLOCK)
+			ON A.ROLEID = B.ROLEID 
+		INNER JOIN SMPBORGS_USERS C WITH ( NOLOCK) 
+			ON B.USERID = C.USERID
+			AND B.BORGID = C.BORGID
+		INNER JOIN SMPBORGS D WITH ( NOLOCK)
+			ON C.BORGID = D.BORGID 
+		INNER JOIN SMPUSERS E WITH ( NOLOCK)
+			ON C.USERID = E.USERID
+		<if test="suggestTargetVal != null and suggestTargetVal !=''">
+		INNER JOIN (
+				SELECT	CODENM2
+				,		CODEVAL1
+				FROM SMPCODES WITH(NOLOCK) 
+				WHERE CODETYPECD = 'PROPOSAL_SUGGEST'
+		)F
+			ON A.ROLECD = F.CODENM2
+		</if>
+		WHERE 1=1
+		<if test="searchB2BAdm != null and searchB2BAdm != ''">
+			AND (A.ROLECD = 'ADM_B2B_MAN' OR E.LOGINID IN ('xsunny', 'skyasee')) 
+			AND E.LOGINID NOT IN ('CGKIM','rokmc','khd17','mjbjhm','jjkkhh','jyb723','nowik95','shinesh')
+		</if>
+		<if test="searchB2BAdm == null"> 
+			<![CDATA[
+				AND E.LOGINID <> 'XXXXXXXXXX'
+			]]>
+			<if test="suggestTargetVal != null and suggestTargetVal !=''">
+				<choose>
+					<when test="suggestTargetVal == '30'.toString()">
+						AND (F.CODEVAL1 = '10' or F.CODEVAL1 = '20') 
+					</when>
+					<otherwise>
+						AND F.CODEVAL1 = #{suggestTargetVal}
+					</otherwise>
+				</choose>
+			</if>
+		</if>
+		AND D.ISUSE = 1 
+		AND E.ISUSE = 1 
+		AND E.ISLOGIN = 1 
+	</select>
+</mapper>

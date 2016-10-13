@@ -1,0 +1,24 @@
+1) 특정필드 복호화 설정
+   Rexpert/conf/Crypto.properties 파일에서 아래 내용 주석해제(#제거)
+
+rex.crypto.dbfield.decode.factory = test.testDecrypto
+rex.crypto.dbfield.decode.field = EMPLOYEE_ID,FIRST_NAME
+
+rex.crypto.dbfield.decode.factory  ==> 복호화 하고자 하는 package.class명
+rex.crypto.dbfield.decode.field    ==> 복호화 하고자 하는 데이터 필드명 (,로 구분하기)
+
+
+---------------------------------------------------------------------
+
+*참고 
+
+RexServer30/etc/특정필드암복호화 참고
+   testDecrypto.java파일은 IRexCrypto.java를 상속받아 작성합니다.
+   (test package와 testDecrypto.java는 원하는 명으로 변경하여 작성)
+    소스상 사용하는 함수는 String decrypt(String sMsg)
+
+==> 작성된 파일은 해당 classes폴더에 업로드 합니다.
+
+
+
+

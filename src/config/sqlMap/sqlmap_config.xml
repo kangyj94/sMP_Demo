@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+		"HTTP://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	
+	<settings>
+		<setting name="cacheEnabled" value="false" />
+		<setting name="useGeneratedKeys" value="true" />
+		<setting name="defaultExecutorType" value="REUSE" />
+	</settings>
+	
+	
+	<mappers>
+		<!-- common--> 
+		<mapper resource="config/sqlMap/mssql/common/login_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/common/etc_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/common/webChat_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/common/default_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/common/schedule_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/common/main_sql.xml" />
+
+		<!-- system--> 
+		<mapper resource="config/sqlMap/mssql/system/code_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/system/menuActivity_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/system/scope_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/system/role_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/system/borg_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/system/holiday_sql.xml" />
+		
+		<!-- board-->
+		<mapper resource="config/sqlMap/mssql/board_sql.xml" />
+		
+		<!-- order -->
+		<mapper resource="config/sqlMap/mssql/order/orderCommon_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/order/cartmanage_seq.xml" />
+		<mapper resource="config/sqlMap/mssql/order/delivery_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/order/orderRequest_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/order/purchase_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/order/returnOrder_sql.xml" />
+		
+		<!-- product -->
+		<mapper resource="config/sqlMap/mssql/product/category_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/product/product_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/product/newProductBid_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/product/manage/productManage_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/product/productApp_sql.xml" />
+		
+		<!-- borg -->
+		<mapper resource="config/sqlMap/mssql/organ/organ_sql.xml" />
+		<mapper resource="config/sqlMap/mssql/organ/req_borg_sql.xml" />
+		
+		<!-- adjust -->
+		<mapper resource="config/sqlMap/mssql/adjust/adjust_sql.xml" />
+		
+		<!-- analysis -->
+		<mapper resource="config/sqlMap/mssql/analysis/analysis_sql.xml" />
+		
+		<!-- eBill -->
+		<mapper resource="config/sqlMap/mssql/ebill/ebill_sql.xml" />
+		
+		<!-- evaluate -->
+		<mapper resource="config/sqlMap/mssql/evaluate/evaluate_sql.xml" />
+
+		<!-- proposal -->
+		<mapper resource="config/sqlMap/mssql/proposal/proposal_sql.xml" />
+		
+		<!-- migration -->
+		<mapper resource="config/sqlMap/mssql/mig/newCate_sql.xml" />
+		
+		<!-- evalution -->
+		<mapper resource="config/sqlMap/mssql/evaluation.xml" />
+		
+		<!-- quality -->
+		<mapper resource="config/sqlMap/mssql/quality/quality_sql.xml" />
+
+	</mappers>
+</configuration>

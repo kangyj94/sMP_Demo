@@ -1,0 +1,14 @@
+[version]
+signature="$CHICAGO$"
+AdvancedINF=2.0
+
+[Add.Code]
+MAOnFPS_CUSTRP.dll=MAOnFPS_CUSTRP.dll
+
+[MAOnFPS_CUSTRP.dll]
+FileVersion=2,5,0,1
+hook=CustRpInstall
+
+[CustRpInstall]
+file-win32-x86=MAOnFPS_CUSTRP.cab
+run=%EXTRACT_DIR%\CustRpInstall.exe

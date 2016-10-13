@@ -1,0 +1,34 @@
+강용준 계약서 수정소스
+ - DB Table(SMPBORGS : CONTRACT_DATE, CONTRACT_USERNM, CONTRACT_VERSION)
+ - src\config\sqlMap\mssql\common\etc_sql.xml
+ - src/kr/co/bitcube/system/controller/SystemLoginController.java
+ - src/kr/co/bitcube/common/service/CommonSvc.java
+ - src/kr/co/bitcube/common/dao/CommonDao.java
+ - www/index.jsp
+ - www/WEB-INF/jsp/homepage/member/login.jsp
+ - www/WEB-INF/jsp/homepage/member/join.jsp
+ - www/WEB-INF/jsp/homepage/member/join_02.jsp
+ - www/WEB-INF/jsp/common/auth/authBusinessNumberDiv.jsp
+ 
+
+개발서버에서 테스트 방법(로컬에서는 테스트를 할수 없음)
+ - src\config\framework.properties 에서 common.isReal.server 를 true 로 변경
+ - www/WEB-INF/jsp/common/auth/authBusinessNumberDiv.jsp 에서 94,95 라인 주석 풀고 97~131 주석하고 저장
+ - 고객사 테스트 
+ 	- bitcube/1111 로그인 
+ 	- 계약 체결
+ 	- 계약초기화
+ 		update	SMPBORGS
+		set		CONTRACT_DATE = null
+		,		CONTRACT_USERNM = null
+		,		CONTRACT_VERSION = null
+		where	BORGID = '304456' 
+ - 공급사 테스트 
+ 	- www/www 로그인 
+ 	- 계약 체결
+ 	- 계약초기화
+ 		update	SMPBORGS
+		set		CONTRACT_DATE = null
+		,		CONTRACT_USERNM = null
+		,		CONTRACT_VERSION = null
+		where	BORGID = 'VEN0189079' 

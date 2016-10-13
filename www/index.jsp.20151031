@@ -1,0 +1,593 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="kr.co.bitcube.common.utils.Constances" %>
+
+<%
+	/*######################## Important(사이트 첫 페이지에서 아래 3변수을 초기화)  ########################*/
+	/*###########만약 framework.properties 에서 아래 3변수에 대해 초기화 되어 있으면 초기화된 변수을 읽어 들임###########*/
+	if(Constances.SYSTEM_CONTEXT_PATH==null || "".equals(Constances.SYSTEM_CONTEXT_PATH))
+		Constances.SYSTEM_CONTEXT_PATH = request.getContextPath();
+	if(Constances.SYSTEM_IMAGE_URL==null || "".equals(Constances.SYSTEM_IMAGE_URL))
+		Constances.SYSTEM_IMAGE_URL = request.getContextPath();
+	if(Constances.SYSTEM_JSCSS_URL==null || "".equals(Constances.SYSTEM_JSCSS_URL))
+		Constances.SYSTEM_JSCSS_URL = request.getContextPath();
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<%@ include file="/WEB-INF/jsp/system/systemInclude.jsp" %>
+<title>OK Plaza에 오신것을 환영합니다.</title>
+<link href="<%=Constances.SYSTEM_JSCSS_URL%>/css/homepage_style.css" rel="stylesheet" type="text/css" />
+<script src="<%=Constances.SYSTEM_JSCSS_URL %>/cc/js/CC_Object.js" type="text/javascript"></script>
+
+<% if(Constances.COMMON_ISREAL_SERVER) { %>
+<%@ include file="/WEB-INF/jsp/common/auth/guestAuthDiv.jsp" %>
+<% //------------------------------------------------------------------------------ %>
+<% } %>
+
+
+<script type="text/javascript">
+//동반성장 페스티벌 팝업 띄우기
+//festivalPop1(); //기간만료
+//festivalPop2(); //기간만료
+//동반성장 페스티벌 팝업 띄우기
+
+//SKB 지정지입자재 BMT 시항 안내 팝업
+// bmtPop();
+//SKB 지정지입자재 BMT 시항 안내 팝업
+
+
+
+function MM_openBrWindow(theURL,winName,features) { //v2.0
+  window.open(theURL,winName,features);
+}
+
+function _getCookie(name){
+	var  nameOfCookie = name+'=';
+	var	 x=0;
+	while ( x <= document.cookie.length ) {
+		var y=(x+nameOfCookie.length);
+		if ( document.cookie.substring(x,y)==nameOfCookie) {
+			if (( endOfCookie=document.cookie.indexOf(';', y ))==-1 )
+				endOfCookie=document.cookie.length; 
+			return unescape( document.cookie.substring(y, endOfCookie) );
+		}
+		x = document.cookie.indexOf('', x )+1 ;
+		if ( x == 0 )
+		break;
+	}
+	return ''; 
+};
+
+//동반성장 페스티벌 공지 팝업
+function festivalPop1(){
+	var noticeCookie = _getCookie("festival1");	
+	if(noticeCookie != "checked"){
+			var popurl = "/popup/festivalPop1.jsp";			
+			window.open(popurl, "festival1", "left=0,top=0,width=600,height=600,history=no,resizable=no,status=no,scrollbars=yes,menubar=no");
+	}
+}
+
+//동반성장 페스티벌 공지 프로세서
+function festivalPop2(){
+	var noticeCookie = _getCookie("festival2");	
+	if(noticeCookie != "checked"){
+			var popurl = "/popup/festivalPop2.jsp";			
+			window.open(popurl, "festival2", "left=630,top=0,width=465,height=600,history=no,resizable=no,status=no,scrollbars=yes,menubar=no");
+	}
+}
+
+//SKB 지정지입자재 BMT 시행 안내
+function bmtPop(){
+	var noticeCookie = _getCookie("bmtpop");	
+	if(noticeCookie != "checked"){
+			var popurl = "/popup/bmtPop.jsp";			
+			window.open(popurl, "bmtPop", "left=0,top=0,width=700,height=913,history=no,resizable=no,status=no,scrollbars=yes,menubar=no");
+	}
+}
+</script>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		
+		//초기 팝업 호출 Script
+		$.post(
+			'<%=Constances.SYSTEM_CONTEXT_PATH %>/common/noticePopBoardMain.sys',
+			function(arg){
+				var boardList = eval('(' + arg + ')').boardList;
+				var _left = 100;
+				var _top = 100;
+				var _board_no = "";
+				for(var i=0;i<boardList.length;i++) {
+					_board_No = boardList[i].board_No;
+					var noticeCookie = _getCookie("frm_"+_board_No);
+					if(noticeCookie != _board_No){
+						var popurl = "/common/noticePop.sys?board_No="+_board_No;
+						window.open(popurl, "pop_"+_board_No, "left=100,top=100,width=630,height=550,history=no,resizable=yes,status=no,scrollbars=no,menubar=no");
+					}
+				}
+			}
+	);
+	
+	$("#userTb").show();
+	$("#findIdTb").show();
+	$("#descTb").hide();
+	$("#guestTb").hide();
+
+	$("#loginType1").click(function(){
+		$("#userTb").show();
+		$("#findIdTb").show();
+		$("#descTb").hide();
+		$("#guestTb").hide();
+		$("#loginType1").attr("checked", "checked");
+	});	
+
+	$("#imgLoginType1").click(function(){
+		$("#userTb").show();
+		$("#findIdTb").show();
+		$("#descTb").hide();
+		$("#guestTb").hide();
+		$("#loginType1").attr("checked", "checked");
+	});	
+	
+	$("#loginType2").click(function(){
+		$("#userTb").hide();
+		$("#findIdTb").hide();
+		$("#descTb").show();
+		$("#guestTb").hide();
+		$("#loginType2").attr("checked", "checked");
+	});	
+	
+	$("#imgLoginType2").click(function(){
+		$("#userTb").hide();
+		$("#findIdTb").hide();
+		$("#descTb").show();
+		$("#guestTb").hide();
+		$("#loginType2").attr("checked", "checked");
+	});	
+	
+	$("#gotoGuestLogin").click(function(){
+		$("#userTb").hide();
+		$("#findIdTb").hide();
+		$("#descTb").hide();
+		$("#guestTb").show();
+		$("#loginType2").attr("checked", "checked");
+	});	
+	
+	$("#businessNum1").keyup(function(){
+		if(($("#businessNum1").val()).length==3) {
+			$("#businessNum2").focus();
+		}
+	});
+	$("#businessNum2").keyup(function(){
+		if(($("#businessNum2").val()).length==2) {
+			$("#businessNum3").focus();
+		}
+	});
+	
+	$('#loginDialogPop').jqm();	//loginDialog 초기화
+	
+	$("#loginId").focus(); 
+	$("#loginId").css("ime-mode", "disabled");
+	$("#password").css("ime-mode", "disabled");
+	$("#loginId").keydown(function(e){
+		if(e.keyCode==13) {
+			$("#password").focus();
+		}
+	});
+	$("#password").keydown(function(e){
+		if(e.keyCode==13) {
+			$("#enter").click();
+		}
+	});
+	$("#enter").click(function(){
+		var loginId = $.trim($("#loginId").val());
+		var password = $.trim($("#password").val());
+		var chk_flag = $.trim($("#chk_flag").val());
+		if(loginId.length==0) {
+			alert("아이디를 입력해 주십시오!");
+			$("#loginId").val(loginId);
+			$("#loginId").focus();
+			return;
+		}
+		if(password.length==0) {
+			alert("패스워드를 입력해 주십시오!");
+			$("#password").val(password);
+			$("#password").focus();
+			return;
+		}
+		$.post(
+			"<%=Constances.SYSTEM_CONTEXT_PATH %>/system/loginCheckPop.sys", 
+			{ loginId:loginId, password:password, chk_flag:chk_flag },
+			function(arg){
+				if(fnTransResult(arg, false)) {
+					var result = eval('(' + arg + ')').customResponse;
+					var mobile = result.message[0];
+					if(result.newIdx==0) {
+						fnLogin();
+					} else if(result.newIdx==1) {
+						$('#loginDialogPop').jqmShow();	//모바일인증 화면 Display
+						fnJqmAuthInit(mobile);	//초기화
+					} else if(result.newIdx==2) {	//권역수정화면  Display
+						$('#loginDialogPop').jqmShow();
+						var areaType = result.message[1];
+						var borgId = result.message[2];
+						fnJqmAreaInit(areaType, borgId);
+					} else if(result.newIdx==3) {	//모바일 및 권역수정화면  Display
+						$('#loginDialogPop').jqmShow();
+						var areaType = result.message[1];
+						var borgId = result.message[2];
+						fnJqmAreaAuthInit(mobile, areaType, borgId);
+					}
+				}
+			}
+		);
+	});
+	
+	//비회원 로그인
+	$("#guestEnter").click(function(){
+		var bussName = $.trim($("#bussName").val());
+		var businessNum = $.trim($("#businessNum1").val()) + $.trim($("#businessNum2").val()) + $.trim($("#businessNum3").val());
+		var userNm = $.trim($("#bussName").val());
+		if(bussName.length<=0) { alert("사업자명을 입력해 주십시오!"); $("#bussName").focus(); return; }
+		if(businessNum.length!=10) { alert("사업자번호를 확인해 주십시오!"); $("#businessNum1").focus(); return; }
+		$.post(
+			"/system/guestCheckPop.sys", 
+			{	bussName:bussName, 
+				businessNum:businessNum, 
+				userNm:userNm 
+			},
+			function(arg){
+				var result = eval('(' + arg + ')').customResponse;
+				if(result.success == false){
+					var errors = "";
+					for(var i = 0; i < result.message.length; i++) { errors += result.message[i] + "\n"; }
+					
+					$("#dialog").html("<font size='2'>"+errors+"</font>");
+					$("#dialog").dialog({
+						title: '기존업체',modal: true,
+						buttons: {"Ok": function(){$(this).dialog("close");} }
+					});
+				} else {
+					var noneFlag = result.newIdx;
+					guestPassCheck(noneFlag);
+// 					var nonUserId = result.newIdx;
+// 					document.frm.action = "/system/guestLogin.sys?nonUserId="+nonUserId;
+// 					document.frm.submit();
+				}
+			}
+		);
+	});
+	function guestPassCheck(noneFlag) {
+		if(noneFlag==0) {	//신규 비회원
+			$('#guestPassRegDialogPop').jqm();
+			$('#guestPassRegDialogPop').jqmShow();
+		} else if(noneFlag==1) {	//기존 비회원
+			$('#guestPassConfirmDialogPop').jqm();	//Dialog 초기화
+			$('#guestPassConfirmDialogPop').jqmShow();
+		}
+		
+	}
+	
+	
+	
+	
+	
+	//사업자등록번호 체크
+	function checkCompanyNumber(strNumb){
+		if(strNumb.length != 10){
+			alert('사업자 등록번호가 잘못되었습니다.');
+			return false;
+		}
+		var sumMod = 0;
+		sumMod += parseInt(strNumb.substring(0, 1), 10);
+		sumMod += parseInt(strNumb.substring(1, 2), 10) * 3 % 10;
+		sumMod += parseInt(strNumb.substring(2, 3), 10) * 7 % 10;
+		sumMod += parseInt(strNumb.substring(3, 4), 10) * 1 % 10;
+		sumMod += parseInt(strNumb.substring(4, 5), 10) * 3 % 10;
+		sumMod += parseInt(strNumb.substring(5, 6), 10) * 7 % 10;
+		sumMod += parseInt(strNumb.substring(6, 7), 10) * 1 % 10;
+		sumMod += parseInt(strNumb.substring(7, 8), 10) * 3 % 10;
+		sumMod += Math.floor(parseInt(strNumb.substring(8, 9), 10) * 5 / 10);
+		sumMod += parseInt(strNumb.substring(8, 9), 10) * 5 % 10;
+		sumMod += parseInt(strNumb.substring(9, 10), 10);
+		if(sumMod % 10 != 0){
+			alert('사업자등록번호가 잘못되었습니다.');
+			return false;
+		}
+		return true;
+	}
+	
+	$("#reqBorg").click(function(){
+		var popurl = "/organ/reqBranchPop.sys";
+		var popproperty = "dialogWidth:970px;dialogHeight=900px;scroll=auto;status=no;resizable=no;";
+		window.open(popurl, 'okplazaPop', 'width=970, height=900, scrollbars=yes, status=no, resizable=no');
+	});
+
+	$("#reqVen").click(function(){
+		var popurl = "/organ/reqVendorPop.sys";
+		var popproperty = "dialogWidth:910px;dialogHeight=750px;scroll=auto;status=no;resizable=no;";
+		window.open(popurl, 'okplazaPop', 'width=910, height=750, scrollbars=yes, status=no, resizable=no');
+	});
+});
+
+function fnGoGuestLogin(guestFlag){
+	$("#guestFlag").val(guestFlag);	//0:신규상품, 1:지정자재
+	$("#initDiv").hide();
+	$("#chgDiv").show();
+
+	$("#userTb").hide();
+	$("#findIdTb").hide();
+	$("#descTb").show();
+	$("#guestTb").hide();
+	$("#loginType2").attr("checked", "checked");	
+}
+
+function fnLogin() {
+	document.frm.action = "<%=Constances.SYSTEM_CONTEXT_PATH %>/system/systemLogin.sys";
+	document.frm.submit();
+}
+function findId() {
+<%-- 	document.frm.action = "<%=Constances.SYSTEM_CONTEXT_PATH %>/system/systemLogin.sys"; --%>
+// 	document.frm.submit();
+}
+</script>
+
+<script type="text/javascript" src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/browser_update.js"></script>
+
+<script type="text/javascript">
+function contractDetail() {
+	var popurl = "/common/individualContractPopup.sys";
+	window.open(popurl, 'okplazaPop', 'width=760, height=800, scrollbars=yes, status=no, resizable=no');
+}
+
+function emailWithoutPopup(){
+	var popurl = "/popup/emailWithoutPopup.jsp";			
+	window.open(popurl, "okplazaPop", "left=0,top=0,width=445,height=250,history=no,resizable=no,status=no,scrollbars=yes,menubar=no");
+}
+</script>
+
+</head>
+<body style="border:none">
+<form id="frm" name="frm" method="post">
+<input type="hidden" name="chk_flag" id="chk_flag" value="0"/>
+<input type="hidden" name="guestFlag" id="guestFlag" value="0"/>
+
+<table width="977px" border="0" align="center" cellpadding="0" cellspacing="0">
+<tr>
+	<td>
+		<table width="977px" border="0" align="center" cellpadding="0" cellspacing="0">
+			<tr>
+				<td height="101px" valign="top">
+				<!-- 상단메뉴 레이아웃 시작 --><%@include file="/WEB-INF/jsp/homepage/inc/top.jsp"%><!-- 상단메뉴 레이아웃 끝 -->
+				</td>
+			</tr>
+			<tr>
+				<td align="center">
+				<!-- 메인 컨텐츠 시작-->
+					<table width="977" border="0" cellspacing="0" cellpadding="0">
+						<tr>
+							<td width="575" rowspan="2">
+								<!-- 이미지 랜덤 변경 시작-->
+								<script type="text/javascript">
+									var mb=new Array();
+									mb[0]="<img src='<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/main_big_img1.jpg' border='0'>";
+									mb[1]="<img src='<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/main_big_img2.jpg' border='0'>";
+									var whichquote=Math.floor(Math.random()*(mb.length));
+									document.write(mb[whichquote]);
+								</script>
+								<!-- 이미지 랜덤 변경 끝-->
+							</td>
+							<td height="155">
+								<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/main_big_txt_20140314.jpg" alt="고객의 경쟁력 제고에 기여하는 구매대행전문회사-합리적인 가격 실현과 품질 및 납기보장으로 고객의 경쟁력 강화에 도움이 되고자 합니다." width="402" height="155"/>
+							</td>
+						</tr>
+						<tr>
+							<td height="242" valign="top" background="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/main_big_img_02.jpg" style="padding-left:60px;"><p>&nbsp;</p>
+								<table width="310" border="0" cellspacing="0" cellpadding="0">
+									<tr>
+										<td align="left">
+											<!-- 로그인 박스 시작 -->
+											<table width="310" border="0" cellspacing="7" cellpadding="6" bgcolor="#ffe0c2">
+												<tr>
+													<td bgcolor="#FFFFFF" >
+														
+														<div id="initDiv" style="height: 22px;" ></div>
+														<div id="chgDiv" style="display: none;" >
+															<input type="radio" id="loginType1" name="loginType" style="border: 0;vertical-align: middle;" checked="checked"/>
+															<img id="imgLoginType1" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/user_txt.gif" width="36" height="20" style="vertical-align: middle; cursor:pointer;"/>
+															<input type="radio" id="loginType2" name="loginType" style="border: 0;vertical-align: middle;"/>
+															<img id="imgLoginType2" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/guest_txt.gif" width="36" height="20" style="vertical-align: middle; cursor:pointer;"/>
+														</div>
+													
+														<table id="userTb" width="284" border="0" cellspacing="0" cellpadding="0">
+															<tr>
+																<td width="65">
+																	<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/login_txt_id.gif" width="65" height="20"/>
+																</td>
+																<td>
+																	<font face="verdana,arial" size=-1>
+																		<input id="loginId" name="loginId" type="text" value="" size="" maxlength="50" class="text_id" style="width:98%; ime-mode:disabled" tabindex="1"/>
+																	</font>
+																</td>
+																<td width="63" rowspan="3">
+																	<a href="#"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/btn_login.gif" width="63" height="45" border="0" id="enter" value="Enter" /></a>
+																</td>
+															</tr>
+															<tr>
+																<td colspan="2" height="3px"></td>
+															</tr>
+															<tr>
+																<td width="65">
+																	<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/login_txt_pw.gif" width="65" height="20" />
+																</td>
+																<td>
+																	<font face="verdana,arial" size=-1>
+																		<input id="password" name="password" type="password" size="" maxlength="50" class="text_pw" style="width:98%" tabindex="2"/>
+																	</font>
+																</td>
+															</tr>
+														</table>
+														
+														<!-- 비회원로그인 추가 시작 -->
+														<table id="descTb" width="284" border="0" cellspacing="0" cellpadding="0"  >
+														
+															<tr>
+																<td colspan="2" height="6px"></td>
+															</tr>    													
+														
+															<tr>
+																<td align="center">
+																	<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/non_member_warning.gif" width="280"/>
+																</td>
+															</tr>
+															<tr>
+																<td colspan="2" height="3px"></td>
+															</tr>
+															<tr>
+																<td>
+																</td>
+															</tr>
+															<tr>
+																<td colspan="2" height="3px"></td>
+															</tr>
+															<tr>
+																<td align="center" >
+																	<img id="gotoGuestLogin" name="gotoGuestLogin" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/btn_non_member_login.gif" style="cursor: pointer;"/>
+																</td>
+															</tr>
+															<tr>
+																<td colspan="2" height="7px"></td>
+															</tr>
+														</table>
+														<table id="guestTb" width="284" border="0" cellspacing="0" cellpadding="0"  >
+															<tr>
+																<td colspan="2" height="13px"></td>
+															</tr>
+															<tr>
+																<td width="75">
+																	<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/bussname_txt.gif" width="60" height="20"/>
+																</td>
+																<td>
+																	<font face="verdana,arial" size=-1>
+																		<input id="bussName" name="bussName" type="text" value="" size="" maxlength="50" class="text_id" style="width:98%;" tabindex="1"/>
+																	</font>
+																</td>
+																<td width="63" rowspan="3">
+																	<a href="#"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/btn_login.gif" width="63" height="45" border="0" id="guestEnter" name="guestEnter" /></a>
+																</td>
+															</tr>
+															<tr>
+																<td colspan="2" height="12px"></td>
+															</tr>
+															<tr>
+																<td width="75">
+																	<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/bussnum_txt.gif" width="75" height="20"/>
+																</td>
+																<td>
+																	<font face="verdana,arial" size=-1>
+																		<input id="businessNum1" name="businessNum1" type="text" value="" size="3" maxlength="3" onkeydown="return onlyNumber(event)" class="text_id" style="width:22%;" tabindex="2"/>-
+																		<input id="businessNum2" name="businessNum2" type="text" value="" size="2" maxlength="2" onkeydown="return onlyNumber(event)" class="text_id" style="width:19%;" tabindex="3"/>-
+																		<input id="businessNum3" name="businessNum3" type="text" value="" size="5" maxlength="5" onkeydown="return onlyNumber(event)" class="text_id" style="width:40%;" tabindex="4"/>
+																	</font>
+																</td>
+															</tr>
+															<tr>
+																<td colspan="2" height="3px"></td>
+															</tr>
+															<tr>
+																<td colspan="2" height="7px"></td>
+															</tr>
+														</table>    
+														<!-- 비회원로그인 추가 끝 -->
+														
+														<table border="0" align="center" id="findIdTb"> 
+															<tr>
+																<td>
+																	<a href="#" onclick="window.open('/findId.jsp','findId','width=415, height=220')"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/btn_find_id.jpg" style="border: 0"/></a>
+																</td>
+																<td>
+																	<a href="#" onclick="window.open('/findPw.jsp','findPw','width=415, height=250')"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/btn_find_pw.jpg" style="border: 0"/></a>
+																</td>
+																<td>
+																	<a href="/homepage/member/join.home"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/btn_memberRegist.jpg" style="border: 0"/></a>
+																</td>
+															</tr>
+														</table>   														
+													</td>
+												</tr>
+											</table>
+											<!-- 로그인 박스 끝 -->
+										</td>
+									</tr>
+									<tr>
+									  <td height="6"></td>
+									</tr>
+									<tr>
+										<td>
+											<table width="310" border="0" cellspacing="0" cellpadding="0">
+												<tr>
+													<td align="left" colspan="3">
+														<a href="#" onclick="javascript:fnGoGuestLogin(1);">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/index_jijung.gif" width="320" height="35" border="0"/>
+<!-- 															<input type='button' value='지정자재 공급업체 신청' style="width: 320px;"/> -->
+														</a>
+													</td>
+												</tr>
+												<tr>
+													<td colspan="2" height="4px"></td>
+												</tr>
+												<tr>
+													<td align="left"><a href="#" onclick="javascript:fnGoGuestLogin(0);"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/index_btn_guide_01_bak.gif" width="101" height="40" border="0"/></a></td>
+													<td align="center"><a href="/homepage/user/user_01.home"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/index_btn_guide_01.gif" width="101" height="40" border="0"/></a></td>
+													<td align="right"><a href="/homepage/user/user_04.home"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/index_btn_guide_03.gif" width="101" height="40" border="0"/></a></td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/index_rollBanner.gif" width="309" height="41" border="0" usemap="#MapMap"/>
+										</td>
+									</tr>
+								</table>
+								<map name="MapMap"><area shape="rect" coords="130,3,211,39" href="http://www.skbroadband.com/" target="_blank" alt="skbroadband" onFocus="this.blur()"/>
+									<area shape="rect" coords="211,2,309,41" href="http://www.networkons.com/" target="_blank" alt="ONS" onFocus="this.blur()"/>
+									<area shape="rect" coords="76,3,130,39" href="http://www.skec.co.kr/" target="_blank" alt="skec" onFocus="this.blur()"/>
+									<area shape="rect" coords="3,3,76,39" href="http://www.sktelecom.com/" target="_blank" alt="sktelecom.com" onFocus="this.blur()"/>
+							</map>
+							</td>
+						</tr>
+					</table>
+					<!-- 메인 컨텐츠 끝-->
+				</td>
+			</tr>
+			<tr>
+				<td height="78" align="center">
+					<!-- 푸터 시작-->
+						<%@include file="/WEB-INF/jsp/homepage/inc/footer.jsp"%>
+					<!-- 푸터 끝-->
+				</td>
+			</tr>
+		</table>
+	</td>
+	<td>
+		<a href="http://mmcorp.opesmall.com" target="_blank" ><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/homepage/opesm_2.gif" width="81" height="125" border="0"  alt="사무용품 일괄 DC 구매"/></a>
+	</td>
+</tr>
+</table>
+<div id="dialog" title="Feature not supported" style="display:none;">
+	<p>That feature is not supported.</p>
+</div>
+<%@ include file="/loginCheckPup.jsp" %>
+<map name="Map">
+	<area shape="rect" coords="161,3,305,40" href="http://www.networkons.com/" target="_blank" alt="ONS" onFocus="this.blur()"/>
+	<area shape="rect" coords="96,3,161,39" href="http://www.skec.co.kr/" target="_blank" alt="skec" onFocus="this.blur()"/>
+	<area shape="rect" coords="4,3,95,39" href="http://www.sktelecom.com/" target="_blank" alt="sktelecom.com" onFocus="this.blur()"/>
+</map>
+</form>
+</body>
+<%-- 비회원 암호등록 --%>
+<jsp:include page="/WEB-INF/jsp/common/guestPassRegDialogPopDiv.jsp" flush="false" />
+<%-- 회원 확인 --%>
+<jsp:include page="/WEB-INF/jsp/common/guestPassConfirmDialogPopDiv.jsp" flush="false" />
+</html>

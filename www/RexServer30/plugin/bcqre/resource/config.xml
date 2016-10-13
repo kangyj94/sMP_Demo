@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<EzCertIssuer>
+    <Doc name="default">
+		<Page name="default" width="10200" height="15030">
+			<MatrixSize width="1200"  minheight="50" maxheight="200" />
+        </Page>
+    </Doc>
+    <Module sitecode="452" version="2.3.0.9" processlevel="2" license="/ksfcsw/jeus/bcqrelib/license.issuer" >
+        <MatrixModule
+            convert2img="1"
+            version="1"
+            format="2"
+            redundancycode="5"
+            rsctrl="2"
+            codingblocknumber="8"
+            mincodewordblock="4"
+            density="3"
+            dpi="450"
+        />
+
+        <CryptoModule
+            toolkitcode="1"
+            certPath="/etc/signkorea/pse_root/server_cert/signCert.der"
+            keyPath="/etc/signkorea/pse_root/server_cert/signPri.key"
+            passwd="11223344"
+
+        />
+
+    </Module>
+
+</EzCertIssuer>

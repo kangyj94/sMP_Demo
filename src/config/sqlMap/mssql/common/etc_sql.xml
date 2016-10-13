@@ -1,0 +1,2773 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="common.etc">
+	<select id="selectCodeList" resultType="kr.co.bitcube.common.dto.CodesDto">
+		/*common.etc.selectCodeList*/
+		SELECT	A.CODEID
+		,		A.CODETYPEID
+		,		A.CODETYPECD
+		,		A.CODENM1
+		,		A.CODEVAL1
+		,		A.CODENM2
+		,		A.CODEVAL2
+		,		A.DISORDER
+		,		A.ISUSE
+		FROM	SMPCODES A WITH(NOLOCK)
+		WHERE	A.CODETYPECD = #{codeTypeCd}
+		<if test="isUse != null and isUse != ''">
+		AND		A.ISUSE = #{isUse}
+		</if>
+		<if test="codeVal2 != null and codeVal2 != ''">
+		AND		A.CODEVAL2 = #{codeVal2}
+		</if>
+		ORDER BY A.DISORDER
+	</select>
+	
+	<sql id="selectSvcUserListSql">
+		FROM	SMPUSERS A WITH(NOLOCK)
+		,		SMPBORGS_USERS B WITH(NOLOCK)
+		,		SMPBORGS C WITH(NOLOCK)
+		WHERE	A.USERID = B.USERID
+		AND		B.BORGID = C.BORGID
+		<if test="srcSvcTypeCd != null and srcSvcTypeCd != ''">
+		AND		C.SVCTYPECD = #{srcSvcTypeCd}
+		</if>
+		<if test="srcLoginId != null and srcLoginId != ''">
+		AND		A.LOGINID like '%'+#{srcLoginId}+'%'
+		</if>
+		<if test="srcUserNm != null and srcUserNm != ''">
+		AND		A.USERNM like '%'+#{srcUserNm}+'%'
+		</if>
+		<if test="srcClientId != null and srcClientId != ''">
+		AND		C.CLIENTID = #{srcClientId}
+		</if>
+		<if test="srcBranchId != null and srcBranchId != ''">
+		AND		C.BORGID = #{srcBranchId}
+		</if>
+		<if test="isDirector != null and isDirector != '' and isDirector eq 'Y'.toString()">
+		AND (
+				NOT EXISTS(SELECT 1 FROM SMPDIRECTINFO A1  WITH(NOLOCK) WHERE A1.USERID = A.USERID AND A1.BRANCHID = C.BORGID
+						   UNION ALL
+						   SELECT 1 FROM SMPDIRECTINFO A1 WITH(NOLOCK)  WHERE A1.DIRECTORID = A.USERID AND A1.BRANCHID = C.BORGID)
+			)
+		AND 	A.USERID != #{srcDirectorUserId}	
+		</if>
+		<if test="srcClientNm != null and srcClientNm != ''">
+		AND		dbo.FNS_BORG_STRING(C.BORGID) LIKE '%'+#{srcClientNm}+'%'
+		</if>
+		AND		A.ISUSE = 1
+		AND		A.ISLOGIN = 1
+		AND		C.ISUSE = 1
+	</sql>
+	<select id="selectSvcUserListCnt" resultType="int">
+		/*common.etc.selectSvcUserListCnt*/
+		SELECT	COUNT(1)
+		<include refid="selectSvcUserListSql"/>
+	</select>
+	<select id="selectSvcUserList" resultType="kr.co.bitcube.common.dto.LoginUserDto">
+		/*common.etc.selectSvcUserList*/
+		SELECT	dbo.FNS_CODENM1BYCODEVAL1('SVCTYPECD', C.SVCTYPECD) AS SVCTYPENM
+		,		C.SVCTYPECD
+		,		A.USERID
+		,		A.USERNM
+		,		A.LOGINID
+		,		C.BORGID
+		,       A.MOBILE
+		,		dbo.FNS_BORG_STRING(C.BORGID) AS BORGNMS
+		,		C.BORGNM AS BORGNM
+		<include refid="selectSvcUserListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectUserCntByLoginId" resultType="int">
+		/*common.etc.selectUserCntByLoginId*/
+		SELECT	COUNT(1)
+		FROM	SMPUSERS A WITH(NOLOCK)
+		WHERE	A.LOGINID = #{loginId}
+	</select>
+	
+	<select id="selectUserAuthByLoginIdPassword" resultType="java.util.HashMap">
+		/*common.etc.selectUserAuthByLoginIdPassword*/
+		SELECT	TOP 1
+				(CASE 	WHEN (C.SVCTYPECD='ADM' OR C.SVCTYPECD='CEN') THEN '20'
+						WHEN C.SVCTYPECD='BUY' THEN ISNULL(D.LOGINAUTHTYPE, '20')
+						WHEN C.SVCTYPECD='VEN' THEN ISNULL(E.LOGINAUTHTYPE, '20')
+				END) AS LOGINAUTHTYPE
+		,		A.MOBILE
+		,		C.SVCTYPECD
+		,		B.USERID
+		,		B.BORGID
+        ,       (CASE   WHEN C.SVCTYPECD = 'BUY' THEN (SELECT COUNT(1) FROM SMPBORGS Z WITH(NOLOCK)  WHERE Z.BORGID=C.CLIENTID AND Z.ISUSE = '1')
+                        ELSE 1
+                END) AS ISUSE_CLIENT
+		FROM	SMPUSERS A WITH(NOLOCK)
+		,       SMPBORGS_USERS B WITH(NOLOCK)
+		,       SMPBORGS C WITH(NOLOCK)
+		LEFT OUTER JOIN SMPBRANCHS D WITH(NOLOCK)
+		ON		C.BORGID = D.BRANCHID
+		LEFT OUTER JOIN SMPVENDORS E WITH(NOLOCK)
+		ON		C.BORGID = E.VENDORID
+		WHERE	A.LOGINID = #{loginId}
+		<if test="password != null and password != ''">
+		AND		A.PWD = #{password}
+		</if>
+		<if test="borgIsDefault != null and borgIsDefault != ''">
+		AND		B.ISDEFAULT = 1
+		</if>
+		<if test="belongBorgId != null and belongBorgId != ''">
+		AND		C.BORGID = #{belongBorgId}
+		</if>
+		<if test="belongSvcTypeCd != null and belongSvcTypeCd != ''">
+		AND		C.SVCTYPECD = #{belongSvcTypeCd}
+		</if>
+		AND     A.ISUSE = '1'
+		AND     A.ISLOGIN = '1'
+		AND     A.USERID = B.USERID
+		AND     B.BORGID = C.BORGID
+		AND     C.ISUSE = '1'
+	</select>
+	
+	<update id="updateIsDefaultBorgUser">
+		/*common.etc.updateIsDefaultBorgUser*/
+		UPDATE	SMPBORGS_USERS
+		SET		ISDEFAULT = 1
+		WHERE	USERID = #{userId}
+		AND		BORGID = #{borgId}
+	</update>
+	
+	<select id="selectMobileAuthCnt" resultType="int">
+		/*common.etc.selectMobileAuthCnt*/
+		SELECT 	COUNT(1) FROM SMPUSERS WITH(NOLOCK)
+		WHERE 	LOGINID = #{loginId}
+		AND		MOBILE = #{srcMoblieNum}
+		AND		USERNM_ETC = #{srcAuthNum}
+	</select>
+	
+	<insert id="insertUserRandom">
+		/*common.etc.insertUserRandom*/
+		UPDATE 	SMPUSERS
+		SET		USERNM_ETC = #{randString}
+		WHERE	LOGINID = #{loginId}
+	</insert>
+	
+	<insert id="insertUser">
+		/*common.etc.insertUser*/
+		INSERT INTO SMPUSERS(
+				USERID
+		,		LOGINID
+		<if test="empNo != null and empNo != ''">
+		,		EMPNO
+		</if>
+		,		PWD
+		,		USERNM
+		<if test="userNmEtc != null and userNmEtc != ''">
+		,		USERNM_ECT
+		</if>
+		<if test="gradeNm != null and gradeNm != ''">
+		,		GRADENM
+		</if>
+		,		TEL
+		,		MOBILE
+		<if test="fax != null and fax != ''">
+		,		FAX
+		</if>
+		<if test="zipCode != null and zipCode != ''">
+		,		ZIPCODE
+		</if>
+		<if test="address1 != null and address1 != ''">
+		,		ADDRESS1
+		</if>
+		<if test="address2 != null and address2 != ''">
+		,		ADDRESS2
+		</if>
+		,		EMAIL
+		,		ISLOGIN
+		,		REMOTEIP
+		,		CREATEDATE
+		,		CREATORID
+		,		UPDATEDATE
+		,		UPDATERID
+		,		ISUSE
+		) VALUES (
+				#{userId}
+		,		#{loginId}
+		<if test="empNo != null and empNo != ''">
+		,		#{empNo}
+		</if>
+		,		#{pwd}
+		,		#{userNm}
+		<if test="userNmEtc != null and userNmEtc != ''">
+		,		#{userNmEtc}
+		</if>
+		<if test="gradeNm != null and gradeNm != ''">
+		,		#{gradeNm}
+		</if>
+		,		#{tel}
+		,		#{mobile}
+		<if test="fax != null and fax != ''">
+		,		#{fax}
+		</if>
+		<if test="zipCode != null and zipCode != ''">
+		,		#{zipCode}
+		</if>
+		<if test="address1 != null and address1 != ''">
+		,		#{address1}
+		</if>
+		<if test="address2 != null and address2 != ''">
+		,		#{address1}
+		</if>
+		,		#{email}
+		,		#{isLogin}
+		,		#{remoteIp}
+		,		GETDATE()
+		,		#{creatorId}
+		,		GETDATE()
+		,		#{updaterId}
+		,		#{isUse}
+		)
+	</insert>
+	<insert id="insertAdminReceiveInfo">
+		/*common.etc.insertAdminReceiveInfo*/
+		INSERT INTO SMPRECEIVEINFO(
+				USERID
+		,		ISEMAIL
+		,		ISSMS
+		) VALUES (
+				#{userId}
+		<if test="isEmail != null and isEmail != ''">
+		,		#{isEmail}
+		</if>
+		<if test="isSms != null and isSms != ''">
+		,		#{isSms}
+		</if>
+		)
+	</insert>
+	
+	<insert id="insertBorgUser">
+		/*common.etc.insertBorgUser*/
+		INSERT INTO SMPBORGS_USERS (
+				USERID
+		,		BORGID
+		,		LOGINID
+		,		ISDEFAULT
+		,		CREATEDATE
+		) VALUES (
+				#{userId}
+		,		#{borgId}
+		,		#{loginId}
+		,		#{isBorgDefault}
+		,		GETDATE()
+		)
+	</insert>
+	
+	<insert id="insertBorgUserRole">
+		/*common.etc.insertBorgUserRole*/
+		INSERT INTO SMPBORGS_USERS_ROLES (
+				USERID
+		,		BORGID
+		,		ROLEID
+		,		ISDEFAULT
+		,		BORGSCOPECD
+		) VALUES (
+				#{userId}
+		,		#{borgId}
+		,		#{roleId}
+		,		#{isRoleDefault}
+		,		#{borgScopeCd}
+		)
+	</insert>
+	
+	<update id="updateUser">
+		/*common.etc.updateUser*/
+		UPDATE	SMPUSERS
+		SET		PWD = #{pwd}
+		<if test="empNo != null and empNo != ''">
+		,		EMPNO = #{empNo}
+		</if>
+		,		USERNM = #{userNm}
+		<if test="userNmEtc != null and userNmEtc != ''">
+		,		USERNM_ETC = #{userNmEtc}
+		</if>
+		<if test="gradeNm != null and gradeNm != ''">
+		,		GRADENM = #{gradeNm}
+		</if>
+		,		TEL = #{tel}
+		,		MOBILE = #{mobile}
+		<if test="fax != null and fax != ''">
+		,		FAX = #{fax}
+		</if>
+		<if test="zipCode != null and zipCode != ''">
+		,		ZIPCODE = #{zipCode}
+		</if>
+		<if test="address1 != null and address1 != ''">
+		,		ADDRESS1 = #{address1}
+		</if>
+		<if test="address2 != null and address2 != ''">
+		,		ADDRESS2 = #{address1}
+		</if>
+		,		EMAIL = #{email}
+		,		ISLOGIN = #{isLogin}
+		,		REMOTEIP = #{remoteIp}
+		,		UPDATEDATE = GETDATE()
+		,		UPDATERID = #{updaterId}
+		,		ISUSE = #{isUse}
+		WHERE	USERID = #{userId}
+	</update>
+	
+	<update id="updateAdminReceiveInfo">
+		/*common.etc.updateAdminReceiveInfo*/
+		UPDATE	SMPRECEIVEINFO
+		SET		isEmail = #{isEmail}
+		,		isSms = #{isSms}
+		WHERE	USERID = #{userId}
+	</update>
+	
+	<select id="selectCodeTypesInfo" resultType="kr.co.bitcube.system.dto.CodeTypesDto">
+		/*common.etc.selectCodeTypesInfo*/
+		SELECT  A.CODETYPEID
+		,       A.CODETYPECD
+		,       A.CODETYPENM
+		,       A.CODETYPEDESC
+		,       A.CODEFLAG
+		,       A.REMOTEIP
+		,       A.CREATEDATE
+		,       A.CREATORID
+		,       A.UPDATEDATE
+		,       A.UPDATERID
+		,       A.ISUSE
+		FROM    SMPCODETYPES A WITH(NOLOCK)
+		WHERE	A.CODETYPEID = #{srcCodeTypeId}
+	</select>
+	
+	<select id="selectAttachList" resultType="kr.co.bitcube.common.dto.AttachInfoDto">
+		/*common.etc.selectAttachList*/
+		SELECT	A.ATTACH_SEQ
+		,		A.ATTACH_FILE_NAME
+		,		A.ATTACH_FILE_PATH
+		FROM	ATTACHINFO A WITH(NOLOCK) 
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<foreach item="item" collection="attach_seq" open=" AND A.ATTACH_SEQ IN (" separator="," close=")">
+					#{item.attach_seq}
+			</foreach>
+		</trim>
+	</select>
+	
+	<insert id="insertAttachInfo">
+		/*common.etc.insertAttachInfo*/
+		INSERT INTO ATTACHINFO (
+				ATTACH_SEQ
+		,		ATTACH_FILE_NAME
+		,		ATTACH_FILE_PATH
+		,		INSERT_DATE
+		) VALUES (
+				#{attach_seq}
+		,		#{attach_file_name}
+		,		#{attach_file_path}
+		,		GETDATE()
+		)
+	</insert>
+	
+	<update id="updateAttachInfo">
+		/*common.etc.updateAttachInfo*/
+		UPDATE	ATTACHINFO
+		SET		ATTACH_FILE_NAME = #{attach_file_name}
+		,		ATTACH_FILE_PATH = #{attach_file_path}
+		,		INSERT_DATE = GETDATE()
+		WHERE	ATTACH_SEQ = #{attach_seq}
+	</update>
+	
+	<sql id="selectBuyBorgDivListSql">
+		FROM	SMPBORGS A WITH(NOLOCK)
+		LEFT OUTER JOIN	SMPBRANCHS B WITH(NOLOCK)
+		ON		A.BORGID = B.BRANCHID
+		INNER JOIN SMPBORGS C WITH(NOLOCK)
+			ON	A.PARBORGID = C.BORGID
+		WHERE	1=1
+		<if test="branchIsUse != null and branchIsUse != ''">
+		AND		A.ISUSE = #{branchIsUse}
+		</if>
+		AND		A.SVCTYPECD = 'BUY'
+		<if test="srcBorgTypeCd != null and srcBorgTypeCd != ''">
+		AND		A.BORGTYPECD = #{srcBorgTypeCd}
+		</if>
+		<if test="srcBorgNm != null and srcBorgNm != ''">
+		AND		A.BORGNM LIKE '%${srcBorgNm}%'
+		</if>
+		<if test="srcClientId != null and srcClientId != ''">
+		AND		A.CLIENTID = #{srcClientId}
+		</if>
+		<if  test="multiSelYN != null and multiSelYN != '' ">
+		AND    A.BORGTYPECD != 'GRP'
+		</if>
+		<if  test="isWork != null and isWork != '' ">
+		AND    B.WORKID IS NULL
+		</if>
+		<if  test="isAcc != null and isAcc != '' ">
+		AND    B.ACCMANAGEUSERID IS NULL
+		</if>
+		<if  test="srcWork != null and srcWork != '' ">
+        AND    B.WORKID = #{srcWork}
+        </if>
+	</sql>
+	<select id="selectBuyBorgDivListCnt" resultType="int">
+		/*common.etc.selectBuyBorgDivListCnt*/
+		SELECT	COUNT(1)
+		<include refid="selectBuyBorgDivListSql"/>
+	</select>
+	<select id="selectBuyBorgDivList" resultType="kr.co.bitcube.common.dto.BorgDto">
+		/*common.etc.selectBuyBorgDivList*/
+		SELECT	dbo.FNS_CODENM1BYCODEVAL1('BORGTYPECD', A.BORGTYPECD) AS BORGTYPENM
+		,		dbo.FNS_BORG_STRING(A.BORGID) AS BORGNMS
+		,		A.BORGID
+		,		(CASE	WHEN A.BORGTYPECD = 'GRP' THEN A.BORGID
+						ELSE A.GROUPID
+				END) AS GROUPID
+		,		(CASE	WHEN A.BORGTYPECD = 'GRP' THEN ''
+						WHEN A.BORGTYPECD = 'CLT' THEN A.BORGID
+						ELSE A.CLIENTID
+				END) AS CLIENTID
+		,		(CASE	WHEN A.BORGTYPECD = 'GRP' THEN ''
+						WHEN A.BORGTYPECD = 'CLT' THEN ''
+						WHEN A.BORGTYPECD = 'BCH' THEN A.BORGID
+						ELSE A.BRANCHID
+				END) AS BRANCHID
+		,		A.BORGCD
+		,		dbo.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE', B.AREATYPE) AS AREANM
+		,		B.AREATYPE
+		<include refid="selectBuyBorgDivListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<sql id="selectVendorDivListSql">
+		FROM	SMPBORGS A WITH(NOLOCK) 
+		,		SMPVENDORS B WITH(NOLOCK) 
+		WHERE	1=1
+		AND		A.BORGID = B.VENDORID
+		AND		A.SVCTYPECD = 'VEN'
+		<if test="vendorIsUse != null and vendorIsUse !=''">
+		AND		A.ISUSE = #{vendorIsUse}
+		</if>
+		<if test="srcAreaType != null and srcAreaType != ''">
+		AND		B.AREATYPE = #{srcAreaType}
+		</if>
+		<if test="srcVendorNm != null and srcVendorNm != ''">
+		AND		A.BORGNM LIKE '%${srcVendorNm}%'
+		</if>
+	</sql>
+	<select id="selectVendorDivListCnt" resultType="int">
+		/*common.etc.selectVendorDivListCnt*/
+		SELECT	COUNT(1)
+		<include refid="selectVendorDivListSql"/>
+	</select>
+	<select id="selectVendorDivList" resultType="kr.co.bitcube.common.dto.BorgDto">
+		/*common.etc.selectVendorDivList*/
+		SELECT	A.BORGID
+		,		A.BORGCD
+		,		B.AREATYPE
+		,		dbo.FNS_CODENM1BYCODEVAL1('VEN_AREA_CODE', B.AREATYPE) AS AREANM
+		,		A.BORGNM
+		<include refid="selectVendorDivListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<insert id="insertMsgData">
+		/*common.etc.insertMsgData*/
+		INSERT INTO MSG_DATA (
+			CUR_STATE
+		<if test="userData != null and userData != ''">
+		,	USERDATA
+		</if>
+		<if test="req_date != null and req_date != ''">
+		,	REQ_DATE
+		</if>
+		,	CALL_TO
+		,	CALL_FROM
+		,	SMS_TXT
+		,	MSG_TYPE
+		) VALUES (
+			0
+		<if test="userData != null and userData != ''">
+		,	#{userData}
+		</if>
+		<if test="req_date != null and req_date != ''">
+		,	#{req_date}
+		</if>
+		,	#{call_to}
+		,	#{call_from}
+		,	#{sms_txt}
+		,	4
+		)
+	</insert>
+	
+	<select id="selectSmsNumByAdminRole" resultType="java.lang.String">
+		/*common.etc.selectSmsNumByAdminRole*/
+		SELECT	D.MOBILE
+		FROM	SMPROLES A WITH(NOLOCK) 
+		,		SMPBORGS_USERS_ROLES B WITH(NOLOCK) 
+		,		SMPBORGS C WITH(NOLOCK) 
+		,		SMPUSERS D WITH(NOLOCK) 
+		WHERE	A.ROLEID = B.ROLEID
+		AND		B.USERID = D.USERID
+		AND		B.BORGID = C.BORGID
+		AND		C.SVCTYPECD = 'ADM'
+		AND		D.ISUSE = 1
+		AND		D.ISLOGIN = 1
+		AND		A.ROLECD = #{roleCd}
+	</select>
+	
+	<select id="selectUserInfoListByBranchId" resultType="kr.co.bitcube.common.dto.UserDto">
+		/*	common.etc.selectUserInfoListByBranchId */
+		SELECT dbo.FNS_BorgNameByBorgID(BORG.BORGID) AS borgNms            
+		     , BORG.borgId             
+		     , BORG.borgCd             
+		     , USERS.userId             
+		     , USERS.userNm             
+		     , USERS.loginId            
+		     , USERS.gradeNm            
+		     , USERS.tel                
+		     , USERS.mobile             
+		     , USERS.email              
+		     , USERS.isLogin            
+		     , USERS.isUse              
+		     , USERS.ZIPCODE            
+		     , USERS.ADDRESS1+USERS.ADDRESS2 AS address            
+			 , BORG.svcTypeCd          
+		  FROM SMPBORGS_USERS USERBORG WITH(NOLOCK) 
+		     , SMPUSERS USERS WITH(NOLOCK) 
+		     , SMPBORGS BORG  WITH(NOLOCK) 
+		 WHERE USERBORG.USERID = USERS.USERID
+		   AND USERBORG.BORGID = BORG.BORGID 
+		   AND USERS.isLogin = '1'           
+		   AND USERS.isUse   = '1'
+		   AND USERBORG.BORGID = #{borgId}
+		 ORDER BY USERS.userNm
+	</select>
+	
+	<select id="selectUserInfoByUserInfo" resultType="hashmap">
+		/*	common.etc.selectUserInfoByUserInfo */
+		SELECT	TOP 1
+				USERS.USERID
+		,		USERS.USERNM
+		,		USERS.TEL
+		,		USERS.MOBILE
+		FROM	SMPBORGS_USERS USERBORG WITH(NOLOCK) 
+		,		SMPUSERS USERS WITH(NOLOCK) 
+		,		SMPBORGS BORG  WITH(NOLOCK) 
+		WHERE	USERBORG.USERID = USERS.USERID
+			AND USERBORG.BORGID = BORG.BORGID 
+			AND USERS.isLogin = '1'
+			AND USERS.isUse   = '1'
+			AND USERBORG.BORGID = #{branchid}
+			AND USERS.userId = #{userid}
+	</select>
+
+	<select id="selectDeliveryAddressByBranchId" resultType="kr.co.bitcube.common.dto.DeliveryAddressDto">
+		/*	common.etc.selectDeliveryAddressByBranchId */
+		SELECT	DELY.deliveryid
+		,		DELY.groupid
+		,		DELY.clientid
+		,		DELY.branchid
+		,		DELY.shippingplace
+		,		DELY.shippingaddres
+		,		DELY.shippingphonenum
+		,		DELY.isdefault 
+		FROM	SMPDELIVERYINFO DELY WITH(NOLOCK) 
+		WHERE	DELY.branchid = #{branchId}
+		ORDER BY DELY.isdefault DESC, DELY.deliveryid DESC 
+	</select>	
+	
+	<select id="selectDispCateListInfoByBuyBorg" resultType="kr.co.bitcube.product.dto.CategoryDto" >
+		WITH TMP_TAB(
+		   CATE_ID 
+		 , ref_cate_seq
+		 , MAJO_CODE_NAME) 
+		AS ( 
+		    SELECT distinct  CONVERT ( VARCHAR , CATE_ID )  AS CATE_ID
+		         , CONVERT ( VARCHAR , DISPCATE.ref_cate_seq) AS ref_cate_seq  
+		         , CONVERT ( VARCHAR , (    SELECT MASTER.MAJO_CODE_NAME  
+		                  FROM mccategorymaster MASTER WITH(NOLOCK) 
+		                 WHERE  MASTER.CATE_ID = DISPCATE.CATE_ID
+		           ) ) AS MAJO_CODE_NAME
+		      FROM ( 
+		               SELECT CATEBORG.CATE_DISP_ID 
+		                 FROM mccategoryborg CATEBORG WITH(NOLOCK)  
+		                WHERE 1=1 
+		                      
+		            ) AS CATEBORG
+		         , mcdisplaycategory DISPCATE 
+		     WHERE DISPCATE.cate_disp_id = CATEBORG.CATE_DISP_ID
+		     UNION ALL 
+		     SELECT CONVERT( VARCHAR , CATEMASTER.cate_id) 
+		         ,  CONVERT( VARCHAR , 
+		                CASE 
+		                   WHEN CATEMASTER.ref_cate_seq = 0 
+		                   THEN '-1'
+		                   ELSE  CATEMASTER.ref_cate_seq
+		                END 
+		            ) 
+		         ,  CONVERT( VARCHAR , CATEMASTER.MAJO_CODE_NAME ) AS MAJO_CODE_NAME 
+		       FROM mccategorymaster CATEMASTER  WITH(NOLOCK) , TMP_TAB
+		      WHERE TMP_TAB.ref_cate_seq = CATEMASTER.CATE_ID
+		) 
+		SELECT DISTINCT  CATE_ID 
+		     , ref_cate_seq 
+		     , MAJO_CODE_NAME
+		  FROM TMP_TAB
+	</select>
+<!-- /* (
+		                        ( CATEBORG.groupid  = #{groupId}   AND CATEBORG.clientid = '0'  AND CATEBORG.branchid = '0'                  ) OR 
+		                        ( CATEBORG.groupid  = #{groupId}   AND CATEBORG.clientid = #{clientId}  AND CATEBORG.branchid = '0'          ) OR
+		                        ( CATEBORG.groupid  = #{groupId}   AND CATEBORG.clientid = #{clientId}  AND CATEBORG.branchid = #{branchId}  )
+		                      ) */ -->
+	<select id="selectPostAddressList" resultType="java.util.HashMap">
+		/*common.etc.selectPostAddressList*/
+		SELECT	post_iden_code AS post
+		,		ISNULL(post_city_addr,'')+' '+
+				ISNULL(post_divi_addr,'')+' '+
+				ISNULL(post_stre_addr,'')+' '+
+				ISNULL(post_buil_addr,'')+
+				(CASE	WHEN post_star_addr IS NULL THEN ''
+						ELSE ' '+post_star_addr+ 
+								(CASE	WHEN post_clos_addr IS NULL THEN ''
+										ELSE '~'+post_clos_addr 
+								END)
+				END) AS postAddress
+		FROM	mcpost WITH(NOLOCK) 
+		WHERE	post_stre_addr LIKE '%'+#{srcPostAddrDiv}+'%'
+		OR		post_buil_addr LIKE '%'+#{srcPostAddrDiv}+'%'
+	</select>
+
+	<select id="selectNewPostAddressList" resultType="java.util.HashMap">
+		/*common.etc.selectNewPostAddressList*/
+		select	zipcode as post
+		,		sido + ' ' +
+				gugun + ' ' +
+				(case when dong is null then '' else dong + ' ' end) +
+				(case when ri is null then '' else ri + ' ' end) +
+				(case when bldg is null then '' else bldg + ' ' end) +
+				st_bunji + 
+				(case	when ed_bunji = '0' then ''
+						else '-'+ed_bunji
+				end) +
+				' (' +
+				doro + ' ' +
+				st_bldg +
+				(case	when ed_bldg = '0' then ''
+						else '-'+ed_bldg
+				end) +
+				')' as postAddress
+		from 	mcdoropost WITH(NOLOCK)  
+		where 	sido = #{srcSido}
+		and 	(dong like #{srcPostAddrDiv}+'%' 
+				or ri like #{srcPostAddrDiv}+'%' 
+				or doro like #{srcPostAddrDiv}+'%'  
+				or bldg like #{srcPostAddrDiv}+'%')
+		
+<!-- 		SELECT	zipcode AS post -->
+<!-- 		,		ISNULL(sido,'')+' '+ -->
+<!-- 				ISNULL(gugun,'')+' '+ -->
+<!-- 				ISNULL(dong,'')+' '+ -->
+<!-- 				ISNULL(ri,'')+' '+ -->
+<!-- 				ISNULL(bldg,'')+ -->
+<!-- 				(CASE	WHEN st_bunji IS NULL OR st_bunji = '' THEN '' -->
+<!-- 						ELSE ' '+st_bunji+  -->
+<!-- 								(CASE	WHEN ed_bunji IS NULL OR ed_bunji = '' THEN '' -->
+<!-- 										ELSE '~'+ed_bunji -->
+<!-- 								END) -->
+<!-- 				END) AS postAddress -->
+<!-- 		FROM	mcnewpost -->
+<!-- 		WHERE	dong LIKE '%'+#{srcPostAddrDiv}+'%' -->
+<!-- 		OR		ri LIKE '%'+#{srcPostAddrDiv}+'%' -->
+<!-- 		OR		bldg LIKE '%'+#{srcPostAddrDiv}+'%' -->
+<!-- 		order by convert(int, seq) -->
+	</select>
+	
+	<update id="updateNotDefaultDeliveryInfo">
+		/*common.etc.updateNotDefaultDeliveryInfo*/
+		UPDATE	SMPDELIVERYINFO
+		SET		ISDEFAULT = '0'
+		WHERE	GROUPID = #{groupId}
+		AND		CLIENTID = #{clientId}
+		AND		BRANCHID = #{branchId}
+	</update>
+
+	<delete id="deleteDeliveryInfo">
+		/*common.etc.deleteDeliveryInfo*/
+		DELETE	SMPDELIVERYINFO
+		WHERE	DELIVERYID = #{deliveryId}
+	</delete>
+	
+	<update id="updateDeliveryInfo">
+		/*common.etc.updateDeliveryInfo*/
+		UPDATE	SMPDELIVERYINFO
+		SET		ISDEFAULT = '1'
+		WHERE	DELIVERYID = #{deliveryId}
+	</update>
+	
+	<insert id="insertMailInfo">
+		/*common.etc.insertMailInfo*/
+		INSERT INTO MAILINFO(
+				MAILSEQ
+		,		MAILSUBJECT
+		,		MAILCONTENTS
+		,		RECEIVEMAILADDR
+		,		SENDFLAG
+		,		CREATEDATE
+		) VALUES (
+				#{mailSeq}
+		,		#{mailSubject}
+		,		#{mailContents}
+		,		#{reveiveMailAddr}
+		,		'0'
+		,		GETDATE()
+		)
+	</insert>
+	
+	<select id="selectReceiveInfoDtoByUserId" resultType="kr.co.bitcube.common.dto.ReceiveInfoDto">
+		/*common.etc.selectReceiveInfoDtoByUserId*/
+		SELECT	A.USERID
+		,		A.ISEMAIL
+		,		A.ISSMS
+		,		A.EMAILBYPURCHASE
+		,		A.EMAILBYDELIVERY
+		,		A.EMAILBYREGISTERGOOD
+		,		A.SMSBYPURCHASE
+		,		A.SMSBYDELIVERY
+		,		A.SMSBYREGISTERGOOD
+		,		A.EMAILBYPURCHASEORDER
+		,		A.EMAILBYORDRTRECEIVE
+		,		A.EMAILBYNOTIAUCTION
+		,		A.EMAILBYNOTISUCCESSBID
+		,		A.SMSBYPURCHASEORDER
+		,		A.SMSBYORDRTRECEIVE
+		,		A.SMSBYNOTIAUCTION
+		,		A.SMSBYNOTISUCCESSBID
+		,		B.EMAIL AS email
+		,		B.MOBILE AS mobile
+		FROM	SMPRECEIVEINFO A WITH(NOLOCK) 
+		,		SMPUSERS B WITH(NOLOCK) 
+		WHERE	A.USERID = B.USERID
+		AND		USERID = #{userId}
+	</select>
+	
+	<select id="selectAdminReceiveInfoDtoByRoleCd" resultType="kr.co.bitcube.common.dto.ReceiveInfoDto">
+		/*common.etc.selectAdminReceiveInfoDtoByRoleCd*/
+		SELECT	A.USERID
+		,		A.ISEMAIL
+		,		A.ISSMS
+		,		A.EMAILBYPURCHASE
+		,		A.EMAILBYDELIVERY
+		,		A.EMAILBYREGISTERGOOD
+		,		A.SMSBYPURCHASE
+		,		A.SMSBYDELIVERY
+		,		A.SMSBYREGISTERGOOD
+		,		A.EMAILBYPURCHASEORDER
+		,		A.EMAILBYORDRTRECEIVE
+		,		A.EMAILBYNOTIAUCTION
+		,		A.EMAILBYNOTISUCCESSBID
+		,		A.SMSBYPURCHASEORDER
+		,		A.SMSBYORDRTRECEIVE
+		,		A.SMSBYNOTIAUCTION
+		,		A.SMSBYNOTISUCCESSBID
+		,		B.EMAIL AS email
+		,		REPLACE(B.MOBILE, '-', '') AS mobile
+		FROM	SMPRECEIVEINFO A WITH(NOLOCK) 
+		,		SMPUSERS B WITH(NOLOCK) 
+		,		SMPBORGS_USERS C WITH(NOLOCK) 
+		,		SMPBORGS D WITH(NOLOCK) 
+		,		SMPBORGS_USERS_ROLES E WITH(NOLOCK) 
+		,		SMPROLES F WITH(NOLOCK) 
+		WHERE	A.USERID = B.USERID
+		AND		B.USERID = C.USERID
+		AND		C.BORGID = D.BORGID
+		AND		D.SVCTYPECD = 'ADM'
+		AND		B.ISUSE = 1
+		AND		C.USERID = E.USERID
+		AND		C.BORGID = E.BORGID
+		AND		E.ROLEID = F.ROLEID
+		AND		F.ROLECD = #{AdminRoleCd}
+	</select>
+	
+	<select id="selectReceiveInfoDtoByBorgId" resultType="kr.co.bitcube.common.dto.ReceiveInfoDto">
+		/*common.etc.selectReceiveInfoDtoByBorgId*/
+		SELECT	A.USERID
+		,		A.ISEMAIL
+		,		A.ISSMS
+		,		A.EMAILBYPURCHASE
+		,		A.EMAILBYDELIVERY
+		,		A.EMAILBYREGISTERGOOD
+		,		A.SMSBYPURCHASE
+		,		A.SMSBYDELIVERY
+		,		A.SMSBYREGISTERGOOD
+		,		A.EMAILBYPURCHASEORDER
+		,		A.EMAILBYORDRTRECEIVE
+		,		A.EMAILBYNOTIAUCTION
+		,		A.EMAILBYNOTISUCCESSBID
+		,		A.SMSBYPURCHASEORDER
+		,		A.SMSBYORDRTRECEIVE
+		,		A.SMSBYNOTIAUCTION
+		,		A.SMSBYNOTISUCCESSBID
+		,		B.EMAIL AS email
+		,		REPLACE(B.MOBILE, '-', '') AS mobile
+		FROM	SMPRECEIVEINFO A WITH(NOLOCK) 
+		,		SMPUSERS B WITH(NOLOCK) 
+		,		SMPBORGS_USERS C WITH(NOLOCK) 
+		WHERE	A.USERID = B.USERID
+		AND		B.USERID = C.USERID
+		AND		B.ISUSE = 1
+		AND		C.BORGID = #{borgId}
+	</select>
+	
+	<select id="selectBuyPublishAuthCntByBranchId" resultType="int">
+		/*common.etc.selectBuyPublishAuthCntByBranchId*/
+		SELECT	COUNT(1)
+		FROM	AUTHINFO WITH(NOLOCK) 
+		WHERE	BORGID = (SELECT A.CLIENTID FROM SMPBORGS A  WITH(NOLOCK) WHERE A.BORGID = #{branchId})
+	</select>
+	
+	<select id="selectVenPublishAuthCntByVendorId" resultType="int">
+		/*common.etc.selectVenPublishAuthCntByVendorId*/
+		SELECT	COUNT(1)
+		FROM	AUTHINFO WITH(NOLOCK) 
+		WHERE	BORGID = #{vendorId}
+	</select>	
+	
+	<select id="getSmpBranchsBusinessNumDupCnt" resultType="int">
+		/* common.etc.getSmpBranchsBusinessNumDupCnt */
+		SELECT 	SUM(CNT)
+		FROM	(
+				SELECT 	COUNT(*) AS CNT 
+				FROM 	SMPBRANCHS WITH(NOLOCK)  
+				WHERE	BUSINESSNUM = #{businessNum}
+				UNION ALL 
+				SELECT  COUNT(*) AS CNT
+				FROM 	REQSMPBRANCHS WITH(NOLOCK) 
+				WHERE	BUSINESSNUM = #{businessNum}
+				) AA		
+	</select>
+	<select id="getSmpVendorsBusinessNumDupCnt" resultType="int">
+		/* common.etc.getSmpVendorsBusinessNumDupCnt */	
+		SELECT 	SUM(CNT)
+		FROM	(
+				SELECT 	COUNT(*) AS CNT 
+				FROM 	SMPVENDORS WITH(NOLOCK)  
+				WHERE	BUSINESSNUM = #{businessNum}
+				UNION ALL 
+				SELECT  COUNT(*) AS CNT
+				FROM 	REQSMPVENDORS WITH(NOLOCK) 
+				WHERE	BUSINESSNUM = #{businessNum}
+				) AA		
+	</select>
+	
+	<select id="getSmpBranchsAuthCnt" resultType="int" >
+		/* common.etc.getSmpBranchsAuthCnt */
+		SELECT 	COUNT(1)
+		FROM 	SMPBORGS A WITH(NOLOCK) 
+		,		SMPBRANCHS B WITH(NOLOCK) 
+		,		AUTHINFO C WITH(NOLOCK) 
+		WHERE   A.BRANCHID = B.BRANCHID
+		AND		A.BORGID = C.BORGID
+		AND		B.BUSINESSNUM = #{businessNum}	
+	</select>
+	
+	<insert id="insertAuthInfo">
+		/* common.etc.insertAuthInfo */
+		INSERT INTO AUTHINFO(
+			BORGID
+		,	USERDN
+		,	CREATDATE
+		,	CREATORID
+		,	REMOTEIP			
+		)VALUES(
+			#{borgId}
+		,	#{userDn}
+		,	GETDATE()
+		,	#{creatUserId}
+		,	#{remoteIp}
+		)
+	</insert>
+	
+	<select id="selectManagerSmsEmailInfoByManageClientId" resultType="kr.co.bitcube.common.dto.SmsEmailInfo" >
+		/* common.etc.selectManagerSmsEmailInfoByManageClientId */
+		/*
+		SELECT	B.USERID
+		,		(CASE WHEN C.EMAIL='' OR C.EMAIL IS NULL THEN '0'
+					  ELSE B.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(C.MOBILE,'-','')='' OR C.MOBILE IS NULL THEN '0'
+					  ELSE B.ISSMS
+				END) AS ISSMS
+		,		C.EMAIL AS emailAddr
+		,		REPLACE(C.MOBILE,'-','') AS mobileNum
+		FROM	SMPADMIN_BORGS A WITH(NOLOCK) 
+		,		SMPRECEIVEINFO B WITH(NOLOCK) 
+		,		SMPUSERS C WITH(NOLOCK) 
+		WHERE	A.USERID = B.USERID
+		AND		A.USERID = C.USERID
+		AND		C.ISUSE = '1'
+		AND		A.MANAGEBORGID = #{manageClientId}
+		*/
+	</select>
+	
+	<select id="selectManagerSmsEmailInfosByManageClientId" resultType="kr.co.bitcube.common.dto.SmsEmailInfo" >
+		/* common.etc.selectManagerSmsEmailInfosByManageClientId */
+		SELECT	DISTINCT
+				D.USERID
+		,		(CASE WHEN D.EMAIL='' OR D.EMAIL IS NULL THEN '0'
+					  ELSE E.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(D.MOBILE,'-','')='' OR D.MOBILE IS NULL THEN '0'
+					  ELSE E.ISSMS
+				END) AS ISSMS
+		,		D.EMAIL AS emailAddr
+		,		REPLACE(D.MOBILE,'-','') AS mobileNum
+		FROM	SMPBORGS A WITH(NOLOCK) 
+		INNER JOIN SMPBORGS B WITH(NOLOCK) 
+			ON	A.BORGID = B.CLIENTID
+		INNER JOIN SMPBRANCHS C WITH(NOLOCK) 
+			ON	B.BORGID = C.BRANCHID
+		INNER JOIN SMPUSERS D WITH(NOLOCK) 
+			ON	C.ACCMANAGEUSERID = D.USERID
+		INNER JOIN SMPRECEIVEINFO E WITH(NOLOCK) 
+			ON	D.USERID = E.USERID
+		WHERE	A.BORGID = #{manageClientId}
+		AND	D.ISUSE = '1'
+	</select>
+	
+	<select id="selectBondManagerSmsEmailInfoByBranchId" resultType="kr.co.bitcube.common.dto.SmsEmailInfo" >
+		/* common.etc.selectBondManagerSmsEmailInfoByBranchId */
+		SELECT	C.USERID
+		,		(CASE WHEN C.EMAIL='' OR C.EMAIL IS NULL THEN '0'
+					  ELSE B.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(C.MOBILE,'-','')='' OR C.MOBILE IS NULL THEN '0'
+					  ELSE B.ISSMS
+				END) AS ISSMS
+		,		C.EMAIL AS emailAddr
+		,		REPLACE(C.MOBILE,'-','') AS mobileNum
+		FROM	SMPBRANCHS A WITH(NOLOCK) 
+		INNER JOIN SMPRECEIVEINFO B WITH(NOLOCK) 
+				ON	A.ACCMANAGEUSERID = B.USERID
+		INNER JOIN SMPUSERS C WITH(NOLOCK) 
+				ON	B.USERID = C.USERID
+				AND	C.ISUSE = '1'
+		WHERE	A.BRANCHID = #{branchId}
+	</select>
+	<select id="selectManagerSmsEmailInfoByManageBranchId" resultType="kr.co.bitcube.common.dto.SmsEmailInfo" >
+		/* common.etc.selectManagerSmsEmailInfoByManageBranchId */
+		SELECT	C.USERID
+		,		(CASE WHEN C.EMAIL='' OR C.EMAIL IS NULL THEN '0'
+					  ELSE B.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(C.MOBILE,'-','')='' OR C.MOBILE IS NULL THEN '0'
+					  ELSE B.ISSMS
+				END) AS ISSMS
+		,		C.EMAIL AS emailAddr
+		,		REPLACE(C.MOBILE,'-','') AS mobileNum
+		FROM	SMPBRANCHS A1 WITH(NOLOCK) 
+		INNER JOIN SMPWORKINFO A WITH(NOLOCK) 
+				ON	A1.WORKID = A.WORKID
+		INNER JOIN SMPRECEIVEINFO B WITH(NOLOCK) 
+				ON	A.USERID = B.USERID
+		INNER JOIN SMPUSERS C WITH(NOLOCK) 
+				ON	B.USERID = C.USERID
+				AND	C.ISUSE = '1'
+		WHERE	A1.BRANCHID = #{branchId}
+	</select>
+	
+	<select id="selectApproverSmsEmailInfoByRoleCd" resultType="kr.co.bitcube.common.dto.SmsEmailInfo" >
+		/* common.etc.selectApproverSmsEmailInfoByRoleCd */
+		SELECT	D.USERID
+		,		(CASE WHEN D.EMAIL='' OR D.EMAIL IS NULL THEN '0'
+					  ELSE E.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(D.MOBILE,'-','')='' OR D.MOBILE IS NULL THEN '0'
+					  ELSE E.ISSMS
+				END) AS ISSMS
+		,		D.EMAIL AS emailAddr
+		,		REPLACE(D.MOBILE,'-','') AS mobileNum
+		FROM	SMPROLES A WITH(NOLOCK) 
+		,		SMPBORGS_USERS_ROLES B WITH(NOLOCK) 
+		,		SMPBORGS C WITH(NOLOCK) 
+		,		SMPUSERS D WITH(NOLOCK) 
+		,		SMPRECEIVEINFO E WITH(NOLOCK) 
+		WHERE	A.ROLEID = B.ROLEID
+		AND		B.USERID = D.USERID
+		AND		B.BORGID = C.BORGID
+		AND		D.USERID = E.USERID
+		AND		C.SVCTYPECD = 'ADM'
+		AND		D.ISUSE = 1
+		AND		D.ISLOGIN = 1
+		AND		A.ROLECD = #{roleCd}
+	</select>
+	
+	<select id="selectUserSmsEmailInfoByUserId" resultType="kr.co.bitcube.common.dto.SmsEmailInfo" >
+		/* common.etc.selectUserSmsEmailInfoByUserId */
+		SELECT	A.USERID
+		,		(CASE WHEN A.EMAIL='' OR A.EMAIL IS NULL THEN '0'
+					  ELSE B.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(A.MOBILE,'-','')='' OR A.MOBILE IS NULL THEN '0'
+					  ELSE B.ISSMS
+				END) AS ISSMS
+		,		A.EMAIL AS emailAddr
+		,		REPLACE(A.MOBILE,'-','') AS mobileNum
+		,		B.emailByPurchase
+		,		B.emailByDelivery
+		,		B.emailByRegisterGood
+		,		B.smsByPurchase
+		,		B.smsByDelivery
+		,		B.smsByRegisterGood
+		,		B.emailByPurchaseOrder
+		,		B.emailByOrdrtReceive
+		,		B.emailByNotiAuction
+		,		B.emailByNotiSuccessBid
+		,		B.smsByPurchaseOrder
+		,		B.smsByOrdrtReceive
+		,		B.smsByNotiAuction
+		,		B.smsByNotiSuccessBid
+		FROM	SMPUSERS A WITH(NOLOCK) 
+		,		SMPRECEIVEINFO B WITH(NOLOCK) 
+		WHERE	A.USERID = B.USERID
+		AND		A.ISUSE = '1'
+		AND		A.USERID = #{userid}
+	</select>
+	
+	<select id="selectVendorUserSmsEmailInfoByVendorId" resultType="kr.co.bitcube.common.dto.SmsEmailInfo" >
+		/* common.etc.selectVendorUserSmsEmailInfoByVendorId */
+		select	c.USERID
+		,		(CASE WHEN C.EMAIL='' OR C.EMAIL IS NULL THEN '0'
+					  ELSE D.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(C.MOBILE,'-','')='' OR C.MOBILE IS NULL THEN '0'
+					  ELSE D.ISSMS
+				END) AS ISSMS
+		,		C.EMAIL AS emailAddr
+		,		REPLACE(C.MOBILE,'-','') AS mobileNum
+		,		D.emailByPurchase
+		,		D.emailByDelivery
+		,		D.emailByRegisterGood
+		,		D.smsByPurchase
+		,		D.smsByDelivery
+		,		D.smsByRegisterGood
+		,		D.emailByPurchaseOrder
+		,		D.emailByOrdrtReceive
+		,		D.emailByNotiAuction
+		,		D.emailByNotiSuccessBid
+		,		D.smsByPurchaseOrder
+		,		D.smsByOrdrtReceive
+		,		D.smsByNotiAuction
+		,		D.smsByNotiSuccessBid
+		from	SMPBORGS a WITH(NOLOCK) 
+		,		SMPBORGS_USERS b WITH(NOLOCK) 
+		,		SMPUSERS c WITH(NOLOCK) 
+		,		SMPRECEIVEINFO d WITH(NOLOCK) 
+		where	a.BORGID = b.BORGID
+		and		b.USERID = c.USERID
+		and		c.USERID = d.USERID
+		and		c.ISUSE = '1'
+		and		a.BORGID = #{vendorId}
+	</select>
+	
+	<select id="selectOrderDistributeEmailSmsByOrderNum" resultType="java.util.HashMap">
+		/* common.etc.selectOrderDistributeEmailSmsByOrderNum */
+		select	a.orde_iden_numb
+		,		MAX(c.good_name) as good_name
+		,		COUNT(1) as orderProdCnt
+		,		a.clientid as clientid
+		,		a.branchId
+		,		DBO.FNS_BORG_STRING(a.branchid) as borgNms
+		,		DBO.FNS_BORGNAMEBYBORGID(a.branchid) as branchNm
+		,		MAX(a.prepay) as prepay
+		,		MAX(b.orde_stat_flag) AS orde_stat_flag
+		from	mrordm a WITH(NOLOCK) 
+		,		mrordt b WITH(NOLOCK) 
+		,		mcgood c WITH(NOLOCK) 
+		where	a.orde_iden_numb = b.orde_iden_numb
+		and		b.good_iden_numb = c.good_iden_numb
+		<![CDATA[
+		and		b.orde_requ_quan > b.purc_requ_quan
+		and		(a.orde_type_clas <> '90' and b.norm_trus_flag <> '1')
+		]]>
+		and		a.orde_iden_numb = #{orderNum}
+		group by a.orde_iden_numb, a.clientid, a.branchid
+	</select>
+	
+	<select id="selectOrderEmailSmsListByOrderNum" resultType="java.util.HashMap">
+		/* common.etc.selectOrderEmailSmsListByOrderNum */
+		select	a.orde_iden_numb
+		,		c.vendorid
+		,		DBO.FNS_BORG_STRING(a.branchid) as borgNms
+		,		COUNT(1) as orderProdCnt
+		,		MAX(d.good_name) as good_name
+		from	mrordm a WITH(NOLOCK) 
+		,		mrordt b WITH(NOLOCK) 
+		,		mrpurt c WITH(NOLOCK) 
+		,		mcgood d WITH(NOLOCK) 
+		where	a.orde_iden_numb = b.orde_iden_numb
+		and		b.orde_iden_numb = c.orde_iden_numb
+		and		b.orde_sequ_numb = c.orde_sequ_numb
+		and		c.good_iden_numb = d.good_iden_numb
+		and		a.orde_iden_numb = #{orderNum}
+		and		(a.orde_type_clas &lt;&gt; '90' and b.norm_trus_flag &lt;&gt; '1')
+		group by a.orde_iden_numb, c.vendorid, a.branchid
+	</select>
+	
+	<select id="selectOrderEmailSmsListByOrderNumArray" resultType="java.util.HashMap">
+		/* common.etc.selectOrderEmailSmsListByOrderNumArray */
+		select	a.orde_iden_numb
+		,   b.orde_sequ_numb 
+		,		c.vendorid
+		,		DBO.FNS_BORG_STRING(a.branchid) as borgNms
+		,		DBO.FNS_BORGNAMEBYBORGID(a.branchid) as branchNm
+		,		dbo.FNS_BorgNameByBorgID(c.vendorid) as vendorNm
+		,		a.orde_user_id
+		,		COUNT(1) as orderProdCnt
+		,		MAX(d.good_name) as good_name
+		,		(select phonenum from smpvendors a1 where a1.vendorid = c.vendorid) as phonenum
+		from	mrordm a WITH(NOLOCK) 
+		,		mrordt b WITH(NOLOCK) 
+		,		mrpurt c WITH(NOLOCK) 
+		,		mcgood d WITH(NOLOCK) 
+		where	a.orde_iden_numb = b.orde_iden_numb
+		and		b.orde_iden_numb = c.orde_iden_numb
+		and		b.orde_sequ_numb = c.orde_sequ_numb
+		and		c.good_iden_numb = d.good_iden_numb
+		and		(a.orde_type_clas &lt;&gt; '90' and b.norm_trus_flag &lt;&gt; '1')
+		and 	${queryString}
+		group by a.orde_iden_numb, b.orde_sequ_numb, c.vendorid, a.orde_user_id, a.branchid
+	</select>
+	
+	<select id="getUserIdPasswordFind" resultType="java.util.HashMap">
+		/* common.etc.getUserIdPasswordFind */
+		SELECT	A.loginid
+		,		A.mobile
+		FROM	smpusers A WITH(NOLOCK) 
+		WHERE	A.usernm = #{srcUserNm}
+		AND		replace(A.mobile,'-','') = #{srcMobileNum}
+		<if test="srcLoginid != null and srcLoginid != ''">
+			AND loginid = #{srcLoginid}
+		</if>
+	</select>
+	
+	
+	<update id="updateUserPasswordRandom">
+		/* common.etc.updateUserPasswordRandom */
+		UPDATE SMPUSERS 
+		SET pwd = #{randPassword}
+		WHERE loginid = #{srcLoginid}
+	</update>
+	
+	<insert id="insertWorkInfo">
+		/* common.etc.insertWorkInfo */
+		INSERT INTO SMPWORKINFO(
+			WORKID
+		,	USERID
+		,	WORKNM	
+		,	IS_SKTS_MANAGE
+		,	MAT_KIND
+		,	CONTRACT_CD
+		)VALUES(
+			#{workId}
+		,	#{userId}	
+		,	#{workNm}	
+		,	#{isSktsManage}	
+		,	#{mat_kind}	
+		,	#{contract_cd}	
+		)
+	</insert>
+	
+	<select id="selectWorkInfo" resultType="kr.co.bitcube.common.dto.WorkInfoDto" >
+		/* common.etc.selectWorkInfo */
+		SELECT	A.WORKID
+		,		A.USERID
+		,		A.WORKNM
+		,		B.USERNM
+		,		A.IS_SKTS_MANAGE AS ISSKTSMANAGE
+		,		A.mat_kind
+		,		A.contract_cd
+		FROM 	SMPWORKINFO A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPUSERS B WITH(NOLOCK) 
+			ON 	A.USERID = B.USERID
+		<if test="orderString != null and orderString != ''">
+		ORDER BY ${orderString}
+		</if> 		
+	</select>
+
+	<update id="connWorkInfoToUser">
+		/* common.etc.connWorkInfoToUser */
+		UPDATE SMPWORKINFO SET 
+			USERID = #{userId}
+		<foreach item="item" collection="chkWorkInfoArr" open=" WHERE WORKID IN (" separator="," close=")">
+				#{item}
+		</foreach>	
+	</update>
+
+	<update id="disConnWorkInfoToUser">
+		/* common.etc.disConnWorkInfoToUser */
+		UPDATE SMPWORKINFO SET 
+			USERID = NULL
+		<foreach item="item" collection="unChkWorkInfoArr" open=" WHERE WORKID IN (" separator="," close=")">
+				#{item}
+		</foreach>	
+	</update>
+	
+	<select id="selectConnWorkBranchList" resultType="kr.co.bitcube.common.dto.WorkInfoDto">
+		/* common.etc.selectConnWorkBranchList */
+		SELECT	A.BRANCHNM
+		,		A.BUSINESSNUM
+		,		A.BRANCHCD
+		,		A.BRANCHID
+		,		A.WORKID
+		,		B.CODENM1 AS areaType
+		FROM 	SMPBRANCHS A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPCODES B WITH(NOLOCK) 
+			ON A.AREATYPE = B.CODEVAL1
+		WHERE	WORKID = #{workId}
+		AND B.CODETYPECD = 'DELI_AREA_CODE'
+		ORDER BY ${orderString}
+	</select>
+	
+	<update id="connBranchs">
+		/* common.etc.connBranchs */
+		UPDATE SMPBRANCHS SET 
+		<if test="connType eq 'WRK'.toString()">
+			WORKID = #{workId}
+		</if>
+		<if test="connType eq 'ACC'.toString()">
+			ACCMANAGEUSERID = #{userId}
+		</if>
+		<foreach item="item" collection="chkConnInfoArr" open=" WHERE BRANCHID IN (" separator="," close=")">
+				#{item}
+		</foreach>	
+	</update>
+
+	<update id="disConnBranchs">
+		/* common.etc.disConnBranchs */
+		UPDATE SMPBRANCHS SET 
+		<if test="connType eq 'WRK'.toString()">
+			WORKID = NULL
+		</if>
+		<if test="connType eq 'ACC'.toString()">
+			ACCMANAGEUSERID = NULL
+		</if>
+		<foreach item="item" collection="unChkConnInfoArr" open=" WHERE BRANCHID IN (" separator="," close=")">
+				#{item}
+		</foreach>	
+	</update>	
+	
+	<select id="selectConnAccBranchList" resultType="kr.co.bitcube.common.dto.WorkInfoDto">
+		/* common.etc.selectConnAccBranchList */
+		SELECT	BRANCHNM
+		,		BUSINESSNUM
+		,		BRANCHCD
+		,		BRANCHID
+		,		WORKID
+		FROM 	SMPBRANCHS WITH(NOLOCK) 
+		WHERE	ACCMANAGEUSERID = #{userId}
+	</select>
+	
+	<select id="getAccManageUserList" resultType="kr.co.bitcube.common.dto.WorkInfoDto">
+		/* common.etc.getAccManageUserList */
+		SELECT 	A.USERID
+		,		A.USERNM
+		FROM	SMPUSERS A WITH(NOLOCK) 
+		,		SMPBRANCHS B WITH(NOLOCK) 
+		WHERE  	A.USERID = B.ACCMANAGEUSERID
+		AND		A.ISUSE = '1'
+		GROUP BY A.USERID, A.USERNM
+	</select>
+	
+    <select id="selectDispGoodIdList" resultType="kr.co.bitcube.product.dto.BuyProductDto">
+        /* common.etc.selectDispGoodIdList */
+        SELECT  DISPGOOD.DISP_GOOD_ID
+        FROM    MCGOOD GOOD WITH(NOLOCK)
+        ,       MCGOODVENDOR GOODVEN WITH(NOLOCK)
+        ,       MCDISPLAYGOOD DISPGOOD WITH(NOLOCK)
+        WHERE   GOOD.GOOD_IDEN_NUMB = GOODVEN.GOOD_IDEN_NUMB
+        AND     GOODVEN.GOOD_IDEN_NUMB = DISPGOOD.GOOD_IDEN_NUMB
+        AND     GOODVEN.VENDORID = DISPGOOD.VENDORID
+        AND     DISPGOOD.FINAL_GOOD_STS = '1'
+        AND     GOODVEN.ISUSE = '1'
+        AND     DISPGOOD.GOOD_IDEN_NUMB = #{good_iden_numb}
+        AND     (
+                    (DISPGOOD.GROUPID = (SELECT GROUPID FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID=#{branchid})
+                        AND DISPGOOD.CLIENTID = (SELECT CLIENTID FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID=#{branchid})
+                        AND DISPGOOD.BRANCHID = #{branchid} )
+                    OR (DISPGOOD.GROUPID = (SELECT GROUPID FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID=#{branchid})
+                        AND DISPGOOD.CLIENTID = (SELECT CLIENTID FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID=#{branchid})
+                        AND DISPGOOD.BRANCHID = '0' )
+                    OR (DISPGOOD.GROUPID = (SELECT GROUPID FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID=#{branchid})
+                        AND DISPGOOD.CLIENTID = '0'
+                        AND DISPGOOD.BRANCHID = '0')
+                    OR (DISPGOOD.GROUPID = '0' AND DISPGOOD.CLIENTID = '0' AND DISPGOOD.BRANCHID = '0')
+                )
+        AND     DISPGOOD.VENDORID = #{vendorid}
+    </select>
+	
+	<select id="selectOrderApprovalRequestEmailSmsByOrderNum" resultType="java.util.HashMap">
+		/* common.etc.selectOrderApprovalRequestEmailSmsByOrderNum*/
+		select	a.orde_iden_numb
+		,		MAX(c.good_name) as good_name
+		,		COUNT(1) as orderProdCnt
+		,		a.clientid as clientid
+		,		a.branchId
+		,		DBO.FNS_BORG_STRING(a.branchid) as borgNms
+		,		DBO.FNS_BORGNAMEBYBORGID(a.branchid) as branchNm
+		,		MAX(b.directorId) as directorUserId    -- 감독관이 다를 수 없음.
+		FROM	MRORDM A WITH(NOLOCK) 
+		,		MRORDT B WITH(NOLOCK) 
+		,		MCGOOD C WITH(NOLOCK) 
+		WHERE	A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+		AND		B.GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB
+		AND		B.ORDE_STAT_FLAG = '05'
+		AND		A.ORDE_IDEN_NUMB = #{orderNum}
+		GROUP BY A.ORDE_IDEN_NUMB, A.CLIENTID, A.BRANCHID
+	</select>
+	
+	<select id="selectApprovalUserSmsEmailInfo" resultType="kr.co.bitcube.common.dto.SmsEmailInfo" >
+		/* common.etc.selectApprovalUserSmsEmailInfo*/
+		SELECT	C.USERID
+		,		(CASE WHEN C.EMAIL='' OR C.EMAIL IS NULL THEN '0'
+					  ELSE B.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(C.MOBILE,'-','')='' OR C.MOBILE IS NULL THEN '0'
+					  ELSE B.ISSMS
+				END) AS ISSMS
+		,		C.EMAIL AS emailAddr
+		,		REPLACE(C.MOBILE,'-','') AS mobileNum
+		from SMPRECEIVEINFO B WITH(NOLOCK) 
+		INNER JOIN SMPUSERS C WITH(NOLOCK) 
+		ON	B.USERID = C.USERID
+		AND	C.ISUSE = '1'
+		WHERE	C.USERID = #{directorUserId}
+	</select>
+	
+	<select id="selectOrderEmailSmsListByOrderNumForDivPurc" resultType="java.util.HashMap">
+		/* common.etc.selectOrderEmailSmsListByOrderNumForDivPurc*/
+		SELECT c.orde_iden_numb 
+			, c.vendorid 
+			, DBO.FNS_BORG_STRING(a.branchid) as borgNms 
+			, d.good_name as good_name 
+		FROM mrordm a WITH(NOLOCK)  
+			, mrordt b  WITH(NOLOCK) 
+			, mrpurt c  WITH(NOLOCK) 
+			, mcgood d  WITH(NOLOCK) 
+		WHERE a.orde_iden_numb = b.orde_iden_numb 
+			AND b.orde_iden_numb = c.orde_iden_numb 
+			AND b.orde_sequ_numb = c.orde_sequ_numb 
+			AND c.good_iden_numb = d.good_iden_numb 
+			and		(a.orde_type_clas &lt;&gt; '90' and b.norm_trus_flag &lt;&gt; '1')
+			AND		c.orde_iden_numb = #{orderNum}
+			AND		c.orde_sequ_numb = #{sequNum}
+			AND		c.purc_iden_numb = #{purcNum}
+	</select>
+	
+	<select id="selectOrderCancelEmailSmsByOrderNum" resultType="java.util.HashMap">
+		/* common.etc.selectOrderCancelEmailSmsByOrderNum*/
+		SELECT 
+		 		C.ORDE_IDEN_NUMB  AS orde_iden_numb
+		     , DBO.FNS_BORG_STRING(A.BRANCHID) AS  borgNms
+		     , DBO.FNS_BORGNAMEBYBORGID(A.BRANCHID) AS branchNm
+		     , C.VENDORID  AS vendorid
+		FROM	MRORDM A WITH(NOLOCK) 
+		,		MRORDT B WITH(NOLOCK) 
+		,		MRPURT C WITH(NOLOCK) 
+		WHERE A.ORDE_IDEN_NUMB= B.ORDE_IDEN_NUMB
+		AND B.ORDE_IDEN_NUMB = C.ORDE_IDEN_NUMB
+		AND B.ORDE_SEQU_NUMB = C.ORDE_SEQU_NUMB
+		AND C.PURC_STAT_FLAG = '50' 
+		AND (a.orde_type_clas &lt;&gt; '90' and b.norm_trus_flag &lt;&gt; '1')
+		AND A.ORDE_IDEN_NUMB = #{orderNum}
+		AND B.ORDE_SEQU_NUMB = #{orderSequNum}
+	</select>
+	
+	<!-- Sms 전송 대상 사용자 조회 쿼리 -->
+	<select id="selectSmsSvcUserListCnt" resultType="int">
+		/*common.etc.selectSmsSvcUserListCnt*/
+		SELECT	COUNT(1) FROM (
+			SELECT 
+				A.SVCTYPECD 
+			     , DBO.FNS_BORG_STRING(D.BORGID) AS BORGNMS 
+		<include refid="selectSmsSvcUserListSql"/>
+		) AA
+		WHERE 1=1
+		<if test="srcSmsBorgNms != null and srcSmsBorgNms != '' and srcSmsBorgNms neq '0'.toString() ">
+				AND AA.BORGNMS like '%'+#{srcSmsBorgNms}+'%'
+		</if>
+	</select>
+	<select id="selectSmsSvcUserList" resultType="java.util.HashMap">
+		/*common.etc.selectSmsSvcUserList*/
+		select AA.* from (
+			SELECT
+				A.SVCTYPECD 
+		     , DBO.FNS_CODENM1BYCODEVAL1('SVCTYPECD', A.SVCTYPECD) AS SVCTYPENM 
+		     , DBO.FNS_BORG_STRING(D.BORGID) AS BORGNMS 
+			 , ISNULL(DBO.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE', ISNULL((CASE WHEN D1.BRANCHID IS NOT NULL THEN D1.AREATYPE WHEN D2.VENDORID IS NOT NULL THEN D2.AREATYPE ELSE '' END),'')),'') AS DELI_AREA_CODE_NAME
+			 , A.ROLENM  
+		     , B.BORGSCOPECD
+		     , A.ROLEID 
+		     , D.BORGID  
+		     , E.USERNM 
+		     , E.LOGINID 
+			 , ISNULL(E.MOBILE,'') AS MOBILE
+		     , B.ISDEFAULT 
+		<include refid="selectSmsSvcUserListSql"/>
+		) AA
+		WHERE 1=1
+		<if test="srcSmsBorgNms != null and srcSmsBorgNms != '' and srcSmsBorgNms neq '0'.toString() ">
+				AND AA.BORGNMS LIKE '%'+#{srcSmsBorgNms}+'%'
+		</if>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	<sql id="selectSmsSvcUserListSql">
+		  FROM SMPROLES A WITH ( NOLOCK) 
+		     , SMPBORGS_USERS_ROLES B WITH( NOLOCK) 
+		     , SMPBORGS_USERS C WITH( NOLOCK) 
+		     , SMPBORGS D WITH( NOLOCK )
+			 LEFT OUTER JOIN SMPBRANCHS D1 WITH(NOLOCK)
+			 ON D.BORGID = D1.BRANCHID
+			 LEFT OUTER JOIN SMPVENDORS D2 WITH(NOLOCK)
+			 ON D.BORGID = D2.VENDORID 
+		     , SMPUSERS E WITH ( NOLOCK) 
+		 WHERE A.ROLEID = B.ROLEID 
+		       AND B.USERID = C.USERID 
+		       AND B.BORGID = C.BORGID 
+		       AND C.BORGID = D.BORGID 
+		       AND C.USERID = E.USERID 
+		       AND D.ISUSE = 1 
+		       AND E.ISUSE = 1 
+		       AND E.ISLOGIN = 1 
+		<if test="srcSmsSvcTypeNm != null and srcSmsSvcTypeNm != '' and srcSmsSvcTypeNm neq '0'.toString() ">
+				AND A.SVCTYPECD = #{srcSmsSvcTypeNm}
+		</if>
+		<if test="srcSmsRoleNm != null and srcSmsRoleNm != '' and srcSmsRoleNm neq '0'.toString() ">
+				AND A.ROLEID = #{srcSmsRoleNm}
+		</if>
+		<if test="srcSmsDeliAreaCodeNm != null and srcSmsDeliAreaCodeNm != '' and srcSmsDeliAreaCodeNm neq '0'.toString() ">
+				AND (CASE WHEN D1.BRANCHID IS NOT NULL THEN D1.AREATYPE WHEN D2.VENDORID IS NOT NULL THEN D2.AREATYPE ELSE '' END) = #{srcSmsDeliAreaCodeNm}
+		</if>
+		<if test="srcSmsUserNm != null and srcSmsUserNm != '' and srcSmsUserNm neq '0'.toString() ">
+				AND E.USERNM LIKE '%'+#{srcSmsUserNm}+'%'
+		</if>
+	</sql>
+	
+	<select id="selectSmsRoleKind" resultType="java.util.HashMap">
+		/*common.etc.selectSmsRoleKind*/
+		SELECT 
+			ROLENM 
+			, ROLEID
+		FROM SMPROLES WITH(NOLOCK) 
+		WHERE ISUSE = 1
+		AND SVCTYPECD = #{srcSmsSvcTypeNm}
+	</select>
+	
+	
+	
+	<insert id="saveChatLogin">
+		/*common.etc.saveChatLogin*/
+		MERGE	SMPCHAT_LOGIN AS A
+		USING	
+		(
+				SELECT	#{userId} as userId
+				,		#{branchId} as branchId
+				,		#{userNm} as userNm
+				,		#{branchNm} as branchNm
+		) B
+		ON		(A.userId = B.userId AND A.branchId = B.branchId)
+		WHEN	not matched then
+				INSERT (userId, branchId, userNm, branchNm, requestDate) 
+				VALUES (B.userId, B.branchId, B.userNm, B.branchNm, GETDATE())
+		WHEN	matched then
+				UPDATE	SET requestDate = GETDATE();
+	</insert>
+	
+	<select id="selectChatMeUserInfo" resultType="kr.co.bitcube.common.dto.ChatLoginDto">
+		/*common.etc.selectChatMeUserInfo*/
+		SELECT	Top 1
+				fromUserId as userId
+		,		fromBranchId as branchId
+		,		fromUserNm as userNm
+		FROM	SMPCHAT WITH(NOLOCK)
+		WHERE	toUserId = #{userId}
+		AND		toBranchId = #{branchId}
+		AND		receiveFlag = 0
+	</select>
+	
+	<select id="selectLogoutChatList" resultType="kr.co.bitcube.common.dto.ChatLoginDto">
+		/*common.etc.selectLogoutChatList*/
+		SELECT	userId
+		,		branchId
+		FROM	SMPCHAT_LOGIN WITH(NOLOCK)
+		<![CDATA[
+		WHERE	DATEDIFF(s, requestDate, getdate()) > 11
+		]]>
+	</select>
+	
+	<insert id="insertChatLogTable">
+		/*common.etc.insertChatLogTable*/
+		INSERT INTO ${logTable} 
+		SELECT * FROM SMPCHAT WITH(NOLOCK)
+		WHERE
+		( fromUserId = #{userId} AND fromBranchId = #{branchId} ) 
+		OR
+		( toUserId = #{userId} AND toBranchId = #{branchId} )
+	</insert>
+	
+	<delete id="deleteLogoutChatData">
+		/*common.etc.deleteLogoutChatData*/
+		DELETE	SMPCHAT
+		WHERE
+		( fromUserId = #{userId} AND fromBranchId = #{branchId} ) 
+		OR
+		( toUserId = #{userId} AND toBranchId = #{branchId} )
+	</delete>
+	
+	<delete id="deleteChatLogin">
+		/*common.etc.deleteChatLogin*/
+		DELETE	SMPCHAT_LOGIN
+		WHERE	userId = #{userId}
+		AND		branchId = #{branchId}
+	</delete>
+	
+	<delete id="deleteAllChatLogin">
+		/*common.etc.deleteAllChatLogin*/
+		DELETE	SMPCHAT_LOGIN
+	</delete>
+	
+	<delete id="deleteAllChatInfo">
+		/*common.etc.deleteAllChatLogin*/
+		DELETE	SMPCHAT
+	</delete>
+	
+	<insert id="createChatLog">
+		/*common.etc.createChatLog*/
+		CREATE TABLE SMPCHAT_LOG_${logYyyyMm} (
+			[chatId] [bigint] NOT NULL,
+			[fromUserid] [varchar](10) NOT NULL,
+			[fromBranchId] [varchar](10) NOT NULL,
+			[fromUserNm] [varchar](100) NULL,
+			[toUserId] [varchar](10) NOT NULL,
+			[toBranchId] [varchar](10) NOT NULL,
+			[toUserNm] [varchar](100) NULL,
+			[message] [varchar](1000) NULL,
+			[createDate] [datetime] NULL,
+			[receiveFlag] [int] NULL
+		) ON [PRIMARY]
+	</insert>
+	
+	<insert id="alterChatLog">
+		/*common.etc.alterChatLog*/
+		CREATE NONCLUSTERED INDEX IDX_SMPCHAT_LOG_${logYyyyMm} ON SMPCHAT_LOG_${logYyyyMm} (
+			[chatId] DESC
+		) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+	</insert>
+	
+	<select id="selectChatLoginList" resultType="kr.co.bitcube.common.dto.ChatLoginDto">
+		/*common.etc.selectChatLoginList*/
+		SELECT	A.userId
+		,		A.branchId
+		,		A.userNm
+		,		A.branchNm
+		,		A.requestDate
+		FROM	SMPCHAT_LOGIN A WITH(NOLOCK)
+		<if test="borgUserNm != null and borgUserNm != ''">
+		INNER JOIN SMPBORGS B WITH(NOLOCK)
+			ON	A.BRANCHID = B.BORGID
+			AND	(
+					A.branchNm LIKE '%'+#{borgUserNm}+'%'
+				OR
+					A.userNm LIKE '%'+#{borgUserNm}+'%'
+			)
+		</if>
+		<![CDATA[
+		WHERE	(A.USERID <> #{userId}
+		OR		A.BRANCHID <> #{branchId})
+		AND		DATEDIFF(s, A.requestDate, getdate()) < 11
+		]]>
+	</select>
+<!-- 	SUN -->
+	<select id="selectChatList" resultType="kr.co.bitcube.common.dto.ChatDto">
+		/*common.etc.selectChatList*/
+		SELECT	chatId
+		,		fromUserId
+		,		fromBranchId
+		,		fromUserNm
+		,		message
+		FROM	SMPCHAT WITH(NOLOCK)
+		WHERE
+		(
+				fromUserId = #{fromUserId}
+				AND		fromBranchId = #{fromBranchId}
+				AND		toUserId = #{toUserId}
+				AND		toBranchId = #{toBranchId}
+		) OR
+		(
+				fromUserId = #{toUserId}
+				AND		fromBranchId = #{toBranchId}
+				AND		toUserId = #{fromUserId}
+				AND		toBranchId = #{fromBranchId}
+		)
+	</select>
+	
+	<update id="updateReceiveChatToUser">
+		/*common.etc.updateReceiveChatToUser*/
+		UPDATE	SMPCHAT
+		SET		RECEIVEFLAG = '1'
+		WHERE	toUserId = #{fromUserId}
+		AND		toBranchId = #{fromBranchId}
+		AND		receiveFlag = '0'
+	</update>
+	
+	<select id="selectChatMeList" resultType="kr.co.bitcube.common.dto.ChatDto">
+		/*common.etc.selectChatMeList*/
+		SELECT	chatId
+		,		message
+		FROM	SMPCHAT WITH(NOLOCK)
+		WHERE	fromUserId = #{fromUserId}
+		AND		fromBranchId = #{fromBranchId}
+		AND		toUserId = #{toUserId}
+		AND		toBranchId = #{toBranchId}
+		AND		receiveFlag = '0'
+	</select>
+	
+	<update id="updateReceiveChatByChatId">
+		/*common.etc.updateReceiveChatByChatId*/
+		UPDATE	SMPCHAT
+		SET		RECEIVEFLAG = '1'
+		WHERE	chatId = #{chatId}
+	</update>
+	
+	<insert id="insertChatData">
+		/*common.etc.insertChatData*/
+		INSERT INTO SMPCHAT (
+				fromUserId
+		,		fromBranchId
+		,		fromUserNm
+		,		toUserId
+		,		toBranchId                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+		,		toUserNm
+		,		message
+		,		createDate
+		,		receiveFlag
+		) VALUES (
+				#{fromUserId}
+		,		#{fromBranchId}
+		,		#{fromUserNm}
+		,		#{toUserId}
+		,		#{toBranchId}
+		,		#{toUserNm}
+		,		#{message}
+		,		GETDATE()
+		,		'0'
+		)
+	</insert>
+	
+	
+	<sql id="selectChatMessageListSql">
+		FROM	${logTable} WITH(NOLOCK)
+		WHERE
+		(
+				fromUserId = #{fromUserId}
+				AND		fromBranchId = #{fromBranchId}
+				AND		toUserId = #{toUserId}
+				AND		toBranchId = #{toBranchId}
+		) OR
+		(
+				fromUserId = #{toUserId}
+				AND		fromBranchId = #{toBranchId}
+				AND		toUserId = #{fromUserId}
+				AND		toBranchId = #{fromBranchId}
+		)
+	</sql>
+	<select id="selectChatMessageListCnt" resultType="int">
+		/*common.etc.selectChatMessageListCnt*/
+		SELECT	COUNT(1)
+		<include refid="selectChatMessageListSql"/>
+	</select>
+	<select id="selectChatMessageList" resultType="kr.co.bitcube.common.dto.ChatDto">
+		/*common.etc.selectChatMessageList*/
+		SELECT	chatId
+		,		fromUserId
+		,		fromBranchId
+		,		fromUserNm
+		,		toUserId
+		,		toBranchId
+		,		toUserNm
+		,		message
+		,		convert(varchar(19),createDate,120) as createDate
+		<include refid="selectChatMessageListSql"/>
+		ORDER BY CHATID DESC
+	</select>
+	
+	<update id="updateWorkInfo">
+	    /*common.etc.updateWorkInfo*/
+		UPDATE SMPWORKINFO SET
+			WORKNM = #{workNm}
+		,	IS_SKTS_MANAGE = #{isSktsManage}
+		,	MAT_KIND = #{mat_kind}
+		,	CONTRACT_CD = #{contract_cd}
+		WHERE WORKID = #{workId}	
+	</update>
+	
+	<select id="selectMrordtStatus" resultType="java.lang.String">
+        /*common.etc.selectMrordtStatus*/
+        select  max(case when c.deli_stat_flag is not null then c.deli_stat_flag
+				 <choose>
+				    <when test="purc_iden_numb != null and purc_iden_numb != ''">
+				            when b.purc_stat_flag is not null then b.purc_stat_flag
+				    </when>
+				    <otherwise>
+				            when a.orde_requ_quan > a.purc_requ_quan then a.orde_stat_flag
+				    </otherwise>
+				</choose>
+                      else a.orde_stat_flag
+                end)
+        from    mrordt a with(nolock)
+        left outer join mrpurt b with(nolock)
+            on  a.orde_iden_numb = b.orde_iden_numb
+            and a.orde_sequ_numb = b.orde_sequ_numb
+        left outer join mracpt c with(nolock)
+            on  b.orde_iden_numb = c.orde_iden_numb
+            and b.orde_sequ_numb = c.orde_sequ_numb
+            and b.purc_iden_numb = c.purc_iden_numb
+        left outer join mrordtlist d with(nolock)
+            on  c.orde_iden_numb = d.orde_iden_numb
+            and c.orde_sequ_numb = d.orde_sequ_numb
+            and c.purc_iden_numb = d.purc_iden_numb
+            and c.deli_iden_numb = d.deli_iden_numb
+        where   a.orde_iden_numb = #{orde_iden_numb}
+        and     a.orde_sequ_numb = #{orde_sequ_numb}
+        <if test="purc_iden_numb != null and purc_iden_numb != ''">
+        and     b.purc_iden_numb = #{purc_iden_numb}
+        </if>
+        <if test="deli_iden_numb != null and deli_iden_numb != ''">
+        and     c.deli_iden_numb = #{deli_iden_numb}
+        </if>
+        <if test="rece_iden_numb != null and rece_iden_numb != ''">
+        and     d.rece_iden_numb = #{rece_iden_numb}
+        </if>
+    </select>
+    <select id="selectMrpurtStatus" resultType="java.lang.String">
+        /*common.etc.selectMrpurtStatus*/
+        select  purc_stat_flag
+        from    mrpurt WITH(NOLOCK)
+        where   orde_iden_numb = #{orde_iden_numb}
+        and     orde_sequ_numb = #{orde_sequ_numb}
+        and     purc_iden_numb = #{purc_iden_numb}
+        <![CDATA[
+        and     (purc_requ_quan - deli_prod_quan) >= convert(decimal, #{prod_quan})
+        ]]>
+    </select>
+    <select id="selectMracptStatus" resultType="java.lang.String">
+        /*common.etc.selectMracptStatus*/
+        select  deli_stat_flag
+        from    mracpt WITH(NOLOCK)
+        where   orde_iden_numb = #{orde_iden_numb}
+        and     orde_sequ_numb = #{orde_sequ_numb}
+        and     purc_iden_numb = #{purc_iden_numb}
+        and     deli_iden_numb = #{deli_iden_numb}
+    </select>
+    <select id="selectMrordtlistStatus" resultType="java.lang.String">
+        /*common.etc.selectMrordtlistStatus*/
+        select  b.deli_stat_flag
+        from    mrordtlist a WITH(NOLOCK)
+        inner join mracpt b a WITH(NOLOCK)
+            on  a.orde_iden_numb = b.orde_iden_numb
+            and a.orde_sequ_numb = b.orde_sequ_numb
+            and a.purc_iden_numb = b.purc_iden_numb
+            and a.deli_iden_numb = b.deli_iden_numb
+        where   a.orde_iden_numb = #{orde_iden_numb}
+        and     a.orde_sequ_numb = #{orde_sequ_numb}
+        and     a.purc_iden_numb = #{purc_iden_numb}
+        and     a.deli_iden_numb = #{deli_iden_numb}
+        and     a.rece_iden_numb = #{rece_iden_numb}
+    </select>
+    
+    <select id="selectReturnProdQuanCnt" resultType="int">
+        /*common.etc.selectReturnProdQuanCnt*/
+        select  a.sale_prod_quan
+        -isnull((
+                select  SUM(aa.retu_prod_quan)
+                from    mrarem aa WITH(NOLOCK) 
+                where   aa.orde_iden_numb = a.orde_iden_numb
+                and     aa.orde_sequ_numb = a.orde_sequ_numb
+                and     aa.purc_iden_numb = a.purc_iden_numb
+                and     aa.deli_iden_numb = a.deli_iden_numb
+                and     aa.rece_iden_numb = a.rece_iden_numb
+                and     aa.retu_stat_flag in ('0','1')
+        ),0)
+        from    mrordtlist a with(nolock)
+        where   a.orde_iden_numb = #{orde_iden_numb}
+        and     a.orde_sequ_numb = #{orde_sequ_numb}
+        and     a.purc_iden_numb = #{purc_iden_numb}
+        and     a.deli_iden_numb = #{deli_iden_numb}
+        and     a.rece_iden_numb = #{rece_iden_numb}
+    </select>
+    
+	<select id="selectCmpMsgId" resultType="String">
+	/*common.etc.selectCmpMsgId*/
+		SELECT	TOP 1 CMP_MSG_ID 
+		FROM	MSG_SKTELINK WITH(NOLOCK) 
+		WHERE	CMP_MSG_ID LIKE '%'+#{cmpMsgId}+'%'
+		ORDER BY CMP_MSG_ID  DESC
+	</select>
+
+	<insert id="insertMsgSktelink">
+	/*common.etc.insertMsgSktelink*/
+		INSERT INTO MSG_SKTELINK(
+				CMP_MSG_ID
+		,		CMP_USR_ID
+		,		ODR_FG
+		,		SMS_GB
+		,		USED_CD
+		,		MSG_GB
+		,		WRT_DTTM
+		,		SND_DTTM
+		,		SND_PHN_ID
+		,		RCV_PHN_ID
+		,		CALLBACK
+		,		SND_MSG
+		,		EXPIRE_VAL
+		,		SMS_ST
+		)VALUES(
+				#{cmpMsgId}
+		,		'00000'
+		,		'1'
+		,		'1'
+		,		'00'
+		,		'A'
+		,		REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120),'-',''),':',''),' ','')
+		<choose>
+			<when test="transmissionDate != null and transmissionDate != ''">
+		,		#{transmissionDate}
+			</when>
+			<otherwise>
+		,		REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120),'-',''),':',''),' ','')
+			</otherwise>
+		</choose>
+		,		#{call_from}
+		,		#{call_to}
+		,		#{call_from}
+		,		#{sms_txt}
+		,		0
+		,		'0'
+		)
+	</insert>
+	
+	<!-- ******************************비회원 로그인 시작****************************** -->
+	<select id="selectBusinessCnt" resultType="Integer">
+	/*common.etc.selectBusinessCnt */
+		SELECT COUNT(1) AS BUSINESSNUM_CNT
+		FROM
+		(
+			SELECT BUSINESSNUM
+			FROM
+			(
+				SELECT BUSINESSNUM FROM SMPBRANCHS  WITH(NOLOCK) UNION ALL
+				SELECT BUSINESSNUM FROM SMPVENDORS  WITH(NOLOCK) 
+			)A
+			WHERE A.BUSINESSNUM = #{businessNum}
+			GROUP BY A.BUSINESSNUM
+		)A
+	</select>
+	
+	<select id="selectGuestUserIdByLoginId" resultType="String">
+	/*common.etc.selectGuestUserIdByLoginId*/
+		SELECT	A.USERID
+		FROM	SMPUSERS A WITH(NOLOCK) 
+		WHERE	A.LOGINID = #{loginId}
+	</select>
+	<select id="selectGuestNoneUserId" resultType="String">
+	/*common.etc.selectGuestNoneUserId*/
+		SELECT	A.NONUSERID
+		FROM	SMPNONUSERS A WITH(NOLOCK) 
+		WHERE	A.BUSINESSNUM = #{businessNum}
+		AND		A.PWD = #{guestPassword}
+	</select>
+	<insert id="insertGuestUser">
+	/*common.etc.insertGuestUser*/
+		INSERT INTO SMPNONUSERS (
+				NONUSERID
+		,		USERID
+		,		BUSINESSNUM
+		,		PWD
+		,		BUSSINESSNM
+		,		LOGINDATE
+		,		LOGINCNT
+		,		REMOTEIP
+		,		USERNM
+		) VALUES (
+				#{nonUserId}
+		,		#{userId}
+		,		#{businessNum}
+		,		#{guestPassword}
+		,		#{bussName}
+		,		GETDATE()
+		,		0
+		,		#{remoteIp}
+		,		#{userNm}
+		)
+	</insert>
+	<update id="updateGuestUser">
+	/*common.etc.updateGuestUser*/
+		UPDATE	SMPNONUSERS
+		SET		LOGINDATE = GETDATE()
+		,		LOGINCNT = LOGINCNT+1
+		,		REMOTEIP = #{remoteIp}
+		WHERE	NONUSERID = #{nonUserId}
+	</update>
+	<select id="selectNonUserInfo" resultType="kr.co.bitcube.system.dto.NonUsersDto">
+	/*common.etc.selectNonUserInfo*/
+		SELECT	TOP 1
+				A.NONUSERID
+		,		A.USERID
+		,		A.BUSINESSNUM
+		,		A.PWD
+		,		A.BUSSINESSNM
+		,		B.BORGID
+		,		A.USERNM
+		FROM	SMPNONUSERS A WITH(NOLOCK) 
+		INNER JOIN SMPBORGS_USERS B WITH(NOLOCK) 
+			ON	A.USERID = B.USERID
+		WHERE	A.NONUSERID = #{nonUserId}
+	</select>
+	<!-- ******************************비회원 로그인 끝****************************** -->
+	
+	
+	
+
+<!-- 팀장님 물품공급 계약서 작업  -->
+<!-- 	<update id="updateContractRegist"> -->
+<!-- 	/*common.etc.updateContractRegist*/ -->
+<!-- 	UPDATE	SMPBORGS -->
+<!-- 	SET		CONTRACT_DATE = GETDATE() -->
+<!-- 	,		CONTRACT_USERNM = #{contract_userNm} -->
+<!-- 	,		CONTRACT_VERSION = #{contract_version} -->
+<!-- 	WHERE	SVCTYPECD = #{svcTypeCd} -->
+<!-- 	AND		BORGID = (	CASE	WHEN 'BUY' = #{svcTypeCd} THEN (	SELECT	TOP 1 C.BORGID -->
+<!-- 														FROM	SMPBRANCHS A -->
+<!-- 														INNER JOIN SMPBORGS B -->
+<!-- 															ON	A.BRANCHID = B.BORGID -->
+<!-- 														INNER JOIN SMPBORGS C -->
+<!-- 															ON	B.PARBORGID = C.BORGID -->
+<!-- 														WHERE	A.BUSINESSNUM = #{businessNum}) -->
+<!-- 								WHEN 'VEN' = #{svcTypeCd} THEN	(	SELECT	TOP 1 A.VENDORID -->
+<!-- 														FROM	SMPVENDORS A -->
+<!-- 														WHERE	A.BUSINESSNUM = #{businessNum}) -->
+<!-- 								ELSE '0' -->
+<!-- 						END) -->
+<!-- 	</update> -->
+
+	<insert id="insertTblSubmitQueue">
+		INSERT INTO TBL_SUBMIT_QUEUE
+		VALUES
+		(
+			#{seqMmsId}
+		,	'1'
+		,	'SKTS2'
+		,	'1'
+		<if test= "used_cd != null and used_cd !=''">
+		,	#{used_cd}
+		</if>
+		<choose>
+			<when test="transmissionDate != null and transmissionDate != ''">
+		,	'R'
+		,	#{transmissionDate}
+			</when>
+			<otherwise>
+		,	'I'
+		,	REPLACE(REPLACE(REPLACE(convert(varchar, GETDATE(), 120),'-',''),':',''),' ','')
+			</otherwise>
+		</choose>
+		,	'1'
+		,	#{call_to}
+		,	#{call_from}
+		,	''
+		,	'00'
+		,	#{sms_txt}
+		,	''
+		<if test="content_cnt != null and content_cnt !=''">
+		,	#{content_cnt}
+		</if>
+		<if test="content_mime_type != null and content_mime_type !=''">
+		,	#{content_mime_type}
+		</if>
+		,	''
+		<choose>
+			<when test="transmissionDate != null and transmissionDate != ''">
+		,	#{transmissionDate}
+			</when>
+			<otherwise>
+		,	REPLACE(REPLACE(REPLACE(convert(varchar, GETDATE(), 120),'-',''),':',''),' ','')
+			</otherwise>
+		</choose>
+		,	''
+		,	''
+		,	''
+		,	''
+		,	'0'
+		,	''
+		,	'[OK플라자]'
+		,	''
+		,	''
+		,	''
+		,	''
+		,	''
+		,	''
+		,	0
+		,	0
+		)
+	</insert>
+	
+	<select id="selectOrderReceiveDeliverySmsEmail" resultType="java.util.HashMap">
+		/*common.etc.selectOrderReceiveDeliverySmsEmail*/
+		SELECT	A.orde_iden_numb 
+		,		C.vendorid 
+		,		DBO.FNS_BORG_STRING(A.branchid) AS borgNms 
+		,		DBO.FNS_BORGNAMEBYBORGID(A.branchid) AS branchNm 
+		,		dbo.FNS_BorgNameByBorgID(C.vendorid) AS vendorNm 
+		,		A.orde_user_id 
+		,		COUNT(1) AS orderProdCnt 
+		,		MAX(E.good_name) AS good_name
+		,		MAX(D.deli_prod_quan ) AS deliProdQuan
+		FROM MRORDM A WITH(NOLOCK) 
+		INNER JOIN MRORDT B WITH(NOLOCK) 
+			ON A.orde_iden_numb = B.orde_iden_numb
+		INNER JOIN MRPURT C WITH(NOLOCK) 
+			ON B.orde_iden_numb = C.orde_iden_numb
+			AND B.orde_sequ_numb = C.orde_sequ_numb
+		INNER JOIN MRACPT D WITH(NOLOCK) 
+			ON C.orde_iden_numb = D.orde_iden_numb
+			AND C.orde_sequ_numb = D.orde_sequ_numb
+			AND C.purc_iden_numb = D.purc_iden_numb
+		INNER JOIN MCGOOD E WITH(NOLOCK) 
+			ON C.good_iden_numb = E.good_iden_numb
+		WHERE 1=1
+		AND (A.orde_type_clas &lt;&gt; '90' and B.norm_trus_flag &lt;&gt; '1') 
+		AND (D.orde_iden_numb = #{orde_iden_numb} and D.orde_sequ_numb = #{orde_sequ_numb} and D.purc_iden_numb = #{purc_iden_numb} AND D.deli_iden_numb = #{deli_iden_numb})
+		AND D.deli_stat_flag = '60'
+		AND (D.invoiceDate IS NOT NULL OR D.invoiceDate != '')
+		GROUP BY A.orde_iden_numb, C.vendorid, A.orde_user_id, A.branchid
+		
+	</select>
+
+	<select id="selectIndividualContractDetail" resultType="java.util.HashMap">
+		/* common.etc.selectIndividualContractDetail */
+		SELECT TOP 1 CONTRACT_CONTENTS
+		FROM COMMODITY_CONTRACT WITH(NOLOCK) 
+		WHERE CONTRACT_VERSION LIKE 'I%'
+		AND CONTRACT_CLASSIFY = 'BUY'
+		ORDER BY CONTRACT_DATE DESC
+	</select>
+
+	<select id="selectUnconditionalSmsUser" resultType="java.util.HashMap">
+		/* common.etc.selectUnconditionalSmsUser */
+		SELECT	MOBILE
+		FROM SMPUSERS WITH(NOLOCK) 
+		WHERE LOGINID = #{codeVal1}
+	</select>
+	
+	<select id="selectAllocationStatus" resultType="java.util.HashMap">
+		/* common.etc.selectAllocationStatus */
+		select	orde_requ_quan	--주문수량
+		,		purc_requ_quan	--발주수량
+		,		orde_requ_quan - purc_requ_quan as restQuan --남은수량
+		,		case when (orde_requ_quan - purc_requ_quan) >= #{purc_requ_quan} then '0'
+					 else '1'
+				end flag
+		from mrordt WITH(NOLOCK) 
+		where orde_iden_numb = #{orde_iden_numb}
+		and orde_sequ_numb = #{orde_sequ_numb}
+	</select>
+	
+	<select id="selectAttachOringinName" resultType="string">
+		/* common.etc.selectAttachOringinName */
+		SELECT	ATTACH_FILE_NAME
+		FROM ATTACHINFO WITH(NOLOCK) 
+		WHERE ATTACH_FILE_PATH = #{attachFilePath}
+	</select>
+	
+	<select id="selectWorkInfoList" resultType="kr.co.bitcube.common.dto.WorkInfoDto">
+		/* common.etc.selectWorkInfoList*/
+		SELECT	WORKID
+		,		USERID
+		,		WORKNM
+		,		IS_SKTS_MANAGE
+		,		MAT_KIND
+		FROM SMPWORKINFO WITH(NOLOCK)  
+		<if test=" isSktsManage != null and isSktsManage != ''">
+		WHERE IS_SKTS_MANAGE = #{isSktsManage}
+		</if>
+		ORDER BY WORKID
+	</select>
+	
+	<insert id="insertMenuAccessLog">
+		/*common.etc.insertMenuAccessLog*/
+		INSERT INTO SMPMENUACCESSLOG (
+				LOGID
+		,		SVCTYPECD
+		,		GROUPID
+		,		CLIENTID
+		,		BRANCHID
+		,		BRANCHNM
+		,		USERID
+		,		USERNM
+		,		MENUID
+		,		MENUNM
+		,		ACCESSDATE
+		,		LOGINDATE
+		,		REMOTEIP
+		) VALUES (
+				#{logId}
+		,		#{userInfoDto.svcTypeCd}
+		,		#{userInfoDto.groupId}
+		,		#{userInfoDto.clientId}
+		,		#{userInfoDto.borgId}
+		,		#{userInfoDto.borgNm}
+		,		#{userInfoDto.userId}
+		,		#{userInfoDto.userNm}
+		,		#{menuId}
+		,		#{menuNm}
+		,		GETDATE()
+		,		#{userInfoDto.lastLoginDate}
+		,		#{userInfoDto.remoteIp}
+		)
+	</insert>
+	
+	
+	<select id="selectOrderDistributeEmailSmsByOrderNumList" resultType="java.util.HashMap">
+		/* common.etc.selectOrderDistributeEmailSmsByOrderNumList */
+		SELECT	B.ORDE_IDEN_NUMB AS orde_iden_numb
+		,		B.ORDE_SEQU_NUMB AS orde_sequ_numb
+		,		C.GOOD_NAME AS good_name
+		,		C.PRODUCT_MANAGER AS product_manager
+		,		C.GOOD_IDEN_NUMB AS good_iden_numb
+		,		A.BRANCHID AS branchId
+		,		DBO.FNS_BORGNAMEBYBORGID(A.BRANCHID) AS branchNm
+		,		DBO.FNS_BORG_STRING(a.branchid) as borgNms
+		FROM MRORDM A WITH(NOLOCK) 
+		,		MRORDT B  WITH(NOLOCK) 
+		,		MCGOOD C WITH(NOLOCK)  
+		WHERE A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB 
+		AND B.GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB 
+		AND B.ORDE_REQU_QUAN > B.PURC_REQU_QUAN 
+		<![CDATA[
+		AND (A.ORDE_TYPE_CLAS <> '90' AND B.NORM_TRUS_FLAG <> '1')
+		]]>
+		AND (C.PRODUCT_MANAGER IS NOT NULL OR C.PRODUCT_MANAGER != '')
+		AND A.ORDE_IDEN_NUMB = #{orderNum}
+	</select>
+	
+	<select id="selectProductManagerInfo" resultType="kr.co.bitcube.common.dto.SmsEmailInfo">
+		/* common.etc.selectProductManagerInfo */
+		SELECT	C.USERID
+		,		(CASE WHEN C.EMAIL='' OR C.EMAIL IS NULL THEN '0'
+					  ELSE B.ISEMAIL
+				END) AS ISEMAIL
+		,		(CASE WHEN REPLACE(C.MOBILE,'-','')='' OR C.MOBILE IS NULL THEN '0'
+					  ELSE B.ISSMS
+				END) AS ISSMS
+		,		C.EMAIL AS emailAddr
+		,		REPLACE(C.MOBILE,'-','') AS mobileNum
+		FROM MCGOOD A WITH(NOLOCK) 
+		INNER JOIN SMPRECEIVEINFO B WITH(NOLOCK) 
+			ON	A.PRODUCT_MANAGER = B.USERID
+		INNER JOIN SMPUSERS C WITH(NOLOCK) 
+			ON B.USERID = C.USERID
+			AND	C.ISUSE = '1'
+		WHERE A.PRODUCT_MANAGER = #{productManager}
+		AND A.GOOD_IDEN_NUMB = #{goodIdenNumb}
+	</select>
+	
+	<select id="selectIsdefaultCnt" resultType="int">
+		/* common.etc.selectIsdefaultCnt */
+		SELECT	COUNT(1)
+		FROM	SMPBORGS_USERS A WITH(NOLOCK) 
+		WHERE	A.LOGINID = #{loginId}
+		AND		A.ISDEFAULT = '1'
+	</select>
+	
+	<update id="updateIsDefaultZero">
+		/* common.etc.updateIsDefaultZero */
+		UPDATE	SMPBORGS_USERS
+		SET		ISDEFAULT = '0'
+		WHERE	LOGINID = #{loginId}
+	</update>
+	
+	<update id="updateIsDefaultOne">
+		/* common.etc.updateIsDefaultOne */
+		UPDATE	SMPBORGS_USERS
+		SET		ISDEFAULT = '1'
+		WHERE	LOGINID = #{loginId}
+		AND		BORGID = (
+				SELECT	TOP 1
+						A.BORGID
+				FROM	SMPBORGS_USERS A WITH(NOLOCK) 
+				WHERE	LOGINID = #{loginId}
+				AND		EXISTS(SELECT 1 FROM SMPBORGS WITH(NOLOCK)  WHERE BORGID = A.BORGID AND ISUSE='1')
+				ORDER BY CREATEDATE DESC
+		)
+	</update>
+	
+	
+	
+	<select id="selectNoneBusinessCnt" resultType="int">
+		/* common.etc.selectNoneBusinessCnt */
+		SELECT	COUNT(1)
+		FROM 	SMPNONUSERS A WITH(NOLOCK) 
+		WHERE	A.BUSINESSNUM = #{businessNum}
+	</select>
+	<select id="selectNoneBusinessNumNameCnt" resultType="int">
+		/* common.etc.selectNoneBusinessNumNameCnt */
+		SELECT	COUNT(1)
+		FROM 	SMPNONUSERS A WITH(NOLOCK) 
+		WHERE	A.BUSINESSNUM = #{businessNum}
+		AND		A.BUSSINESSNM = #{bussName}
+	</select>
+	
+	<select id="selectNoticePopBoardMainList" resultType="kr.co.bitcube.board.dto.BoardDto">
+		/* board.selectNoticePopBoardNoList */
+		SELECT	A.BOARD_NO
+		FROM	NOTICEBOARD A WITH(NOLOCK) 
+		WHERE	A.BOARD_TYPE = '0111'
+		AND		A.BOARD_BORG_TYPE = 'ALL'
+		AND		GETDATE() BETWEEN A.POPUP_START AND A.POPUP_END+1
+	</select>
+	
+	<!-- menuId를 String 으로 리턴하는 쿼리 -->
+	<select id="selectMenuIdForMenuCd" resultType="java.lang.String">
+		/* common.etc.selectMenuIdForMenuCd */
+        SELECT MENUID
+        FROM SMPMENUS WITH(NOLOCK) 
+        WHERE MENUCD = #{menuCd}	
+	</select>
+	
+	<!-- 계약서서약 관련 쿼리들 -->
+	<!-- 로그인 아이디의 기본 조직 아이디 조회 -->
+	<select id="selectDefaultBorgIdByLoginId" resultType="java.lang.String">
+		/* common.etc.selectDefaultBorgIdByLoginId */
+		SELECT	TOP 1
+				B.BORGID
+		FROM	
+			SMPUSERS A WITH(NOLOCK) 
+		INNER JOIN SMPBORGS_USERS B WITH(NOLOCK) ON A.USERID = B.USERID AND B.ISDEFAULT = '1'
+		WHERE
+			A.LOGINID = #{loginId}
+	</select>
+	<!-- 조직의 서비스 타입을 반환하는 메소드  -->
+	<select id="selectSvctypeByBorgId" resultType="java.lang.String">
+		/* common.etc.selectSvctypeByBorgId */
+		SELECT
+			SVCTYPECD
+		FROM
+			SMPBORGS  WITH(NOLOCK)
+		WHERE
+			BORGID = #{borgId}
+	</select>
+	<select id="selectBIQContractSameCnt" resultType="java.util.HashMap">
+		/* common.etc.selectBIQContractSameCnt */
+		WITH AAA AS (
+				SELECT	A.CONTRACT_CLASSIFY
+				,		A.CONTRACT_VERSION
+				FROM	COMMODITY_CONTRACT_NEW A WITH(NOLOCK) 
+				WHERE	A.SVCTYPECD = #{svcTypeCd}
+				<if test="svcTypeCd eq 'BUY'.toString()">
+				AND		A.CONTRACT_CLASSIFY IN ('B','I')
+				UNION ALL
+				SELECT	A.CONTRACT_CLASSIFY
+				,		A.CONTRACT_VERSION
+				FROM	COMMODITY_CONTRACT_NEW A WITH(NOLOCK) 
+				WHERE	A.SVCTYPECD = 'BUY'
+				AND		A.CONTRACT_CLASSIFY = 'S'
+				AND		A.CONTRACT_SPECIAL = (SELECT B.CONTRACTSPECIAL FROM SMPBRANCHS B WITH(NOLOCK)  WHERE B.BRANCHID = #{borgId})
+				</if>
+				<if test="svcTypeCd eq 'VEN'.toString()">
+				AND		A.CONTRACT_CLASSIFY IN ('B','I','Q')
+				</if>
+		)
+		SELECT	(SELECT COUNT(1) FROM AAA) AS ALL_CNT
+		,		COUNT(1) AS SAME_CNT
+		FROM	AAA
+		LEFT OUTER JOIN SMPBORG_CONTRACT BBB WITH(NOLOCK) 
+			ON	AAA.CONTRACT_CLASSIFY = BBB.CONTRACT_CLASSIFY
+			AND	AAA.CONTRACT_VERSION = BBB.CONTRACT_VERSION
+		WHERE	BBB.BORGID = #{borgId}
+	</select>
+	<select id="selectSpecialVerList" resultType="java.util.HashMap">
+		/* common.etc.selectSpecialVerList */
+		SELECT	C.CONTRACTSPECIAL
+		,		D.CONTRACT_VERSION
+		FROM	SMPBORGS A WITH(NOLOCK) 
+		INNER JOIN SMPBORGS B WITH(NOLOCK) 
+			ON	A.BORGID = B.PARBORGID
+		INNER JOIN SMPBRANCHS C WITH(NOLOCK) 
+			ON	B.BORGID = C.BRANCHID
+		LEFT OUTER JOIN SMPBORG_CONTRACT D WITH(NOLOCK) 
+			ON	A.BORGID = D.BORGID
+			AND	D.CONTRACT_CLASSIFY = 'S'
+			AND	C.CONTRACTSPECIAL = D.CONTRACT_SPECIAL
+		WHERE	A.BORGID = #{borgId}
+		AND		A.ISUSE = '1'
+		AND		B.ISUSE = '1'
+		GROUP BY C.CONTRACTSPECIAL
+		,		D.CONTRACT_VERSION
+	</select>
+	<select id="selectSpecialSameCnt" resultType="int">
+		/* common.etc.selectSpecialSameCnt */
+		SELECT	COUNT(1)
+		FROM 	SMPBORG_CONTRACT WITH(NOLOCK) 
+		WHERE	BORGID = #{borgId}
+		AND		CONTRACT_VERSION = #{contractVersion}
+		AND		CONTRACT_CLASSIFY = #{contractClassify}
+		AND		CONTRACT_SPECIAL = #{contractSpecial}
+	</select>
+	
+		<select id="selectSmpFavoritesMenuByUserId" resultType="java.util.HashMap">
+		/*common.etc.selectSmpFavoritesMenuByUserId*/
+		SELECT	A.USERID AS userId
+		,		A.MENUID AS menuId
+		,		B.MENUNM AS menuNm
+		,		CONVERT (VARCHAR(10),A.INSERT_DATE,121) insert_date
+		FROM	SMPFAVORITESMENU A WITH(NOLOCK) 
+			INNER JOIN SMPMENUS B  WITH(NOLOCK) ON A.MENUID = B.MENUID 
+		WHERE	A.USERID = #{userId}	
+			AND B.ISUSE = 1
+		ORDER BY INSERT_DATE ASC
+	</select>
+	
+	<insert id="insertSmpFavoritesMenu">
+		/*common.etc.insertSmpFavoritesMenu*/
+		INSERT INTO SMPFAVORITESMENU (
+			USERID
+		,	MENUID
+		,	INSERT_DATE
+		) VALUES (
+			#{userId}
+		,	#{menuId}
+		,	getdate()
+		);
+	</insert>
+	
+	<select id="selectSmpFavoritesMenuCntByPk" resultType="int" >
+		/* common.etc.selectSmpFavoritesMenuCntByPk */
+		SELECT	COUNT(1) 
+		FROM	SMPFAVORITESMENU WITH(NOLOCK) 
+		WHERE	MENUID = #{menuId}
+			AND USERID = #{userId}
+	</select>
+	
+	<delete id="deleteSmpFavoritesMenu">
+		/*common.etc.deleteSmpFavoritesMenu*/
+		DELETE FROM	SMPFAVORITESMENU
+		WHERE	MENUID = #{menuId}
+			AND USERID = #{userId}
+	</delete>
+	
+	<select id="selectContractSvcTypeCd" resultType="String">
+		/* common.etc.selectContractSvcTypeCd */
+		SELECT	SVCTYPECD
+		FROM SMPBORGS WITH(NOLOCK) 
+		WHERE BORGID = #{borgId}
+	</select>
+	
+	<select id="selectBranchContractToDoList" resultType="java.util.HashMap">
+		<![CDATA[
+		/* common.etc.selectBranchContractToDoList */
+		SELECT
+			AA.CONTRACT_NM,
+			AA.CONTRACT_VERSION,
+			AA.CONTRACT_CLASSIFY,
+			CASE
+				WHEN
+					BB.CONTRACT_VERSION IS NULL
+				THEN
+					'N'
+				ELSE
+					'Y'
+			END CONTRACT_SIGN_YN,
+			AA.BORG_ID,
+			AA.SVCTYPECD,
+			AA.IS_OLD,
+			AA.CONTRACT_SPECIAL,
+			AA.LIMIT_CONTRACT_DATE
+		FROM(	
+			SELECT
+				CASE
+					WHEN
+						A.CONTRACT_CLASSIFY = 'B'
+					THEN
+						'물품공급 기본 계약서'
+					WHEN
+						A.CONTRACT_CLASSIFY = 'I'
+					THEN
+						'개인정보 취급 동의서'
+					WHEN
+						A.CONTRACT_CLASSIFY = 'S'
+					THEN
+						C.CODENM1 
+				END AS CONTRACT_NM,
+				A.CONTRACT_VERSION,
+				A.CONTRACT_CLASSIFY,
+				#{borgId} AS BORG_ID,
+				A.SVCTYPECD,
+				CASE
+					WHEN
+						DATEADD(dd, 45, A.CONTRACT_DATE) <= GETDATE()
+					THEN
+						'Y'
+					ELSE
+						'N'
+				END AS IS_OLD,
+				A.CONTRACT_SPECIAL,
+				convert(char(10), DATEADD(dd, 45, A.CONTRACT_DATE) ,112) AS LIMIT_CONTRACT_DATE 
+			FROM
+				COMMODITY_CONTRACT_NEW A WITH(NOLOCK) 
+			LEFT OUTER JOIN (
+				SELECT
+					CONTRACTSPECIAL AS CONTRACT_SPECIAL,
+					BRANCHID		AS BORG_ID
+				FROM
+					SMPBRANCHS WITH(NOLOCK) 
+				WHERE
+					BRANCHID = #{borgId}
+			) B ON A.CONTRACT_SPECIAL = B.CONTRACT_SPECIAL
+			LEFT OUTER JOIN SMPCODES C ON B.CONTRACT_SPECIAL = C.CODEVAL1 AND C.CODETYPECD = 'CONTRACT_SPECIAL'
+			WHERE
+				A.SVCTYPECD = 'BUY'
+		)AA
+		LEFT OUTER JOIN SMPBORG_CONTRACT BB ON AA.CONTRACT_VERSION = BB.CONTRACT_VERSION AND AA.BORG_ID = BB.BORGID
+		WHERE
+			AA.CONTRACT_NM IS NOT NULL
+		]]>
+	</select>
+	
+	<select id="selectVendorContractToDoList" resultType="java.util.HashMap">
+		<![CDATA[
+		/* common.etc.selectVendorContractToDoList */
+		SELECT
+			AA.CONTRACT_NM,
+			AA.CONTRACT_VERSION,
+			AA.CONTRACT_CLASSIFY,
+			CASE
+				WHEN
+					BB.CONTRACT_VERSION IS NULL
+				THEN
+					'N'
+				ELSE
+					'Y'
+			END CONTRACT_SIGN_YN,
+			AA.BORG_ID,
+			AA.SVCTYPECD,
+			AA.IS_OLD,
+			AA.CONTRACT_SPECIAL,
+			AA.LIMIT_CONTRACT_DATE
+		FROM(	
+			SELECT
+				CASE
+					WHEN
+						A.CONTRACT_CLASSIFY = 'B'
+					THEN
+						'물품공급 기본 계약서'
+					WHEN
+						A.CONTRACT_CLASSIFY = 'I'
+					THEN
+						'개인정보 취급 동의서'
+					WHEN
+						A.CONTRACT_CLASSIFY = 'Q'
+					THEN
+						'품질계약서'
+				END CONTRACT_NM,
+				A.CONTRACT_VERSION,
+				A.CONTRACT_CLASSIFY,
+				#{borgId} AS BORG_ID,
+				A.SVCTYPECD,
+				CASE
+					WHEN
+						DATEADD(dd, 45, A.CONTRACT_DATE) <= GETDATE()
+					THEN
+						'Y'
+					ELSE
+						'N'
+				END AS IS_OLD,
+				A.CONTRACT_SPECIAL,
+				convert(char(10), DATEADD(dd, 45, A.CONTRACT_DATE) ,112) AS LIMIT_CONTRACT_DATE
+			FROM
+				COMMODITY_CONTRACT_NEW A WITH(NOLOCK) 
+			WHERE
+				A.SVCTYPECD = 'VEN'
+		)AA
+		LEFT OUTER JOIN SMPBORG_CONTRACT BB WITH(NOLOCK)  ON AA.CONTRACT_VERSION = BB.CONTRACT_VERSION AND AA.BORG_ID = BB.BORGID
+		WHERE
+			AA.CONTRACT_NM IS NOT NULL
+		]]>
+	</select>
+	
+	<select id="selectSmpborgContractBranchInfo" resultType="java.util.HashMap">
+		/* common.etc.selectSmpborgContractBranchInfo */
+		SELECT	AA.BORGID
+		,		BB.CONTRACT_VERSION
+		,		BB.CONTRACT_CLASSIFY
+		,		BB.CONTRACT_SPECIAL
+		,		AA.USERID
+		,		AA.SVCTYPECD
+		FROM(	
+			SELECT	A.USERID
+			,		A.BORGID
+			,		B.SVCTYPECD
+			,		#{contractVersion} AS CONTRACT_VERSION
+			FROM SMPBORGS_USERS A WITH(NOLOCK) 
+			INNER JOIN SMPBORGS B WITH(NOLOCK) 
+				ON A.BORGID = B.BORGID
+			INNER JOIN SMPBRANCHS C WITH(NOLOCK) 
+				ON B.BORGID = C.BRANCHID
+			WHERE A.LOGINID = #{loginId}
+			AND A.BORGID = #{borgId}
+		)AA
+		INNER JOIN COMMODITY_CONTRACT_NEW BB WITH(NOLOCK) 
+			ON AA.CONTRACT_VERSION = BB.CONTRACT_VERSION
+			AND AA.SVCTYPECD = BB.SVCTYPECD
+	</select>
+	
+	<select id="selectSmpborgContractVendorInfo" resultType="java.util.HashMap">
+		/* common.etc.selectSmpborgContractVendorInfo */
+		SELECT	AA.BORGID
+		,		BB.CONTRACT_VERSION
+		,		BB.CONTRACT_CLASSIFY
+		,		BB.CONTRACT_SPECIAL
+		,		AA.USERID
+		,		AA.SVCTYPECD
+		FROM(	
+			SELECT	A.USERID
+			,		A.BORGID
+			,		B.SVCTYPECD
+			,		#{contractVersion} AS CONTRACT_VERSION
+			FROM SMPBORGS_USERS A WITH(NOLOCK) 
+			INNER JOIN SMPBORGS B WITH(NOLOCK) 
+				ON A.BORGID = B.BORGID
+			WHERE A.LOGINID = #{loginId}
+			AND A.BORGID = #{borgId}
+		)AA
+		INNER JOIN COMMODITY_CONTRACT_NEW BB WITH(NOLOCK) 
+			ON AA.CONTRACT_VERSION = BB.CONTRACT_VERSION
+			AND AA.SVCTYPECD = BB.SVCTYPECD
+	</select>
+	
+	<insert id="saveSmpborgContract">
+		/* common.etc.saveSmpborgContract */
+		MERGE	SMPBORG_CONTRACT AS A
+		USING(
+			SELECT	#{BORGID}				AS BORGID
+			,		#{CONTRACT_VERSION}		AS CONTRACT_VERSION
+			,		#{CONTRACT_CLASSIFY}	AS CONTRACT_CLASSIFY
+			,		#{CONTRACT_SPECIAL}		AS CONTRACT_SPECIAL
+			,		#{USERID}				AS CONTRACT_USERID
+		) B
+			ON (A.BORGID = B.BORGID AND A.CONTRACT_VERSION = B.CONTRACT_VERSION)
+		WHEN	NOT MATCHED
+			THEN	INSERT (BORGID, CONTRACT_VERSION, CONTRACT_CLASSIFY, CONTRACT_SPECIAL, CONTRACT_USERID, CONTRACT_DATE)
+					VALUES (B.BORGID, B.CONTRACT_VERSION, B.CONTRACT_CLASSIFY, B.CONTRACT_SPECIAL, B.CONTRACT_USERID, GETDATE())
+		WHEN	MATCHED
+			THEN UPDATE SET BORGID = B.BORGID, CONTRACT_VERSION = B.CONTRACT_VERSION, CONTRACT_CLASSIFY = B.CONTRACT_CLASSIFY, CONTRACT_SPECIAL=B.CONTRACT_SPECIAL, CONTRACT_USERID=B.CONTRACT_USERID, CONTRACT_DATE=GETDATE();
+	</insert>
+	
+	<insert id="insertContractSign">
+		/* common.etc.insertContractSign */
+		INSERT INTO CONTRACT_SIGN(
+			CONTRACT_VERSION
+		,	SVCTYPECD
+		,	BORGID
+		,	CONTRACT_USERID
+		,	CONTRACT_DATE
+		)VALUES(
+			#{CONTRACT_VERSION}
+		,	#{SVCTYPECD}
+		,	#{BORGID}
+		,	#{USERID}
+		,	GETDATE()
+		)
+	</insert>
+	
+	
+	<!-- 공급사에서 역주문용 사업장조회 쿼리 -->
+	<sql id="buyBorgListDivForVenOrdRequSql">
+		FROM	SMPBORGS A WITH(NOLOCK)
+		LEFT OUTER JOIN	SMPBRANCHS B WITH(NOLOCK)
+		ON		A.BORGID = B.BRANCHID
+		INNER JOIN SMPBORGS C WITH(NOLOCK)
+			ON	A.PARBORGID = C.BORGID
+		WHERE	1=1
+		AND		A.ISUSE = 1
+		AND		A.SVCTYPECD = 'BUY'
+		AND		A.BORGTYPECD = 'BCH'
+		AND    A.BORGTYPECD != 'GRP'
+		<if test="srcBorgNm != null and srcBorgNm != ''">
+		AND		A.BORGNM LIKE '%${srcBorgNm}%'
+		</if>
+	</sql>
+	<select id="selectBorgDivListVenOrdReqCnt" resultType="int">
+		/*common.etc.buyBorgListDivForVenOrdRequCnt*/
+		SELECT	COUNT(1)
+		<include refid="buyBorgListDivForVenOrdRequSql"/>
+	</select>
+	<select id="selectBorgDivListVenOrdReq" resultType="java.util.HashMap">
+		/*common.etc.buyBorgListDivForVenOrdRequList*/
+		SELECT	dbo.FNS_BORG_STRING(A.BORGID) AS BORGNMS
+		,		A.BORGID
+		,		DBO.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE', B.AREATYPE) AS AREANM
+		<include refid="buyBorgListDivForVenOrdRequSql"/>
+		ORDER BY BORGNMS ASC
+	</select>
+	<select id="selectWorkManagerIdByWorkId" resultType="string">
+		/*common.etc.selectWorkManagerIdByWorkId*/
+		SELECT	USERID 
+		FROM		SMPWORKINFO WITH(NOLOCK)  
+		WHERE	WORKID = #{workId}
+	</select>
+	
+	<sql id="selectSmsSvcUserListSql2">
+		FROM	SMPBORGS A WITH(NOLOCK)
+		INNER JOIN SMPBORGS_USERS B WITH(NOLOCK)
+			ON	A.BORGID = B.BORGID
+		INNER JOIN SMPUSERS C WITH(NOLOCK)
+			ON	B.USERID = C.USERID
+			AND	C.ISUSE = '1'
+		LEFT OUTER JOIN SMPBRANCHS D WITH(NOLOCK)
+			ON	A.BORGID = D.BRANCHID
+		LEFT OUTER JOIN SMPVENDORS E WITH(NOLOCK)
+			ON	A.BORGID = E.VENDORID
+		WHERE	A.ISUSE = '1'
+		<if test="srcSmsSvcTypeNm != null and srcSmsSvcTypeNm != '' and srcSmsSvcTypeNm neq '0'.toString() ">
+		AND		A.SVCTYPECD = #{srcSmsSvcTypeNm}
+		</if>
+		<if test="srcSmsDeliAreaCodeNm != null and srcSmsDeliAreaCodeNm != '' and srcSmsDeliAreaCodeNm neq '0'.toString() ">
+		AND		(CASE WHEN D.BRANCHID IS NOT NULL THEN D.AREATYPE WHEN E.VENDORID IS NOT NULL THEN E.AREATYPE ELSE '' END) = #{srcSmsDeliAreaCodeNm}
+		</if>
+		<if test="srcSmsUserNm != null and srcSmsUserNm != '' and srcSmsUserNm neq '0'.toString() ">
+		AND		C.USERNM LIKE '%'+#{srcSmsUserNm}+'%'
+		</if>
+		<if test="srcSmsBorgNms != null and srcSmsBorgNms != '' and srcSmsBorgNms neq '0'.toString() ">
+		AND 	A.BORGNM LIKE '%'+#{srcSmsBorgNms}+'%'
+		</if>
+        <if test="srcWorkInfo != null and srcWorkInfo != '' and srcWorkInfo neq '0'.toString() ">
+        AND		EXISTS(	
+                        SELECT 1
+                        FROM SMPBRANCHS Z
+                        WHERE Z.BRANCHID = A.BORGID
+                        AND Z.WORKID = #{srcWorkInfo}
+                       ) 
+        </if>
+        ${addSql}
+	</sql>
+	<select id="selectSmsSvcUserListCnt2" resultType="int">
+		/*common.etc.selectSmsSvcUserListCnt2*/
+		SELECT	COUNT(1)
+		<include refid="selectSmsSvcUserListSql2"/>
+	</select>
+	<select id="selectSmsSvcUserList2" resultType="java.util.HashMap">
+		/*common.etc.selectSmsSvcUserList2*/
+		SELECT	A.SVCTYPECD
+		,		DBO.FNS_CODENM1BYCODEVAL1('SVCTYPECD', A.SVCTYPECD) AS SVCTYPENM
+		,		DBO.FNS_BORG_STRING(A.BORGID) AS BORGNMS
+		,		C.USERID
+		,		ISNULL(DBO.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE', ISNULL((CASE WHEN D.BRANCHID IS NOT NULL THEN D.AREATYPE WHEN E.VENDORID IS NOT NULL THEN E.AREATYPE ELSE '' END),'')),'') AS DELI_AREA_CODE_NAME
+		,		A.BORGID
+		,		C.USERNM
+		,		C.LOGINID
+		,		ISNULL(C.MOBILE,'') AS MOBILE
+		,		B.ISDEFAULT
+		<include refid="selectSmsSvcUserListSql2"/>
+		<if test="orderString != null and orderString != ''">
+		ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<!-- 공인인증 처리를 위한 정보 조회 받을 맵 -->
+	<resultMap id="selectAuthUserMap" type="java.util.Map">
+ 		<result property="clientId"    column="CLIENTID"    javaType="string"/>
+		<result property="businessNum" column="BUSINESSNUM" javaType="string"/>
+ 	</resultMap>
+ 	<!-- 고객사 공인인증 관련 정보 조회 -->
+	<select id="selectBuyAuthUserInfo" resultMap="selectAuthUserMap">
+	<![CDATA[
+		/* common.etc.selectBuyAuthUserInfo */
+		SELECT
+			B.CLIENTID,
+			A.BUSINESSNUM
+		FROM
+			SMPBRANCHS      A WITH(NOLOCK)
+		INNER JOIN SMPBORGS B WITH(NOLOCK) ON A.BRANCHID = B.BORGID
+		WHERE
+			A.BRANCHID = #{borgId}
+	]]>
+	</select>
+	<!-- 공급사 공인인증 관련 정보 조회 -->
+	<select id="selectVenAuthUserInfo" resultMap="selectAuthUserMap">
+	<![CDATA[
+		/* common.etc.selectVenAuthUserInfo */
+		SELECT
+			VENDORID,
+			BUSINESSNUM
+		FROM
+			SMPVENDORS WITH(NOLOCK)
+		WHERE
+			VENDORID = #{borgId}
+	]]>
+	</select>
+	
+	<select id="selectOrderPrepayInfo" resultType="java.util.HashMap">
+		/*common.etc.selectOrderPrepayInfo*/
+        SELECT 
+            SUM(B.ORDE_REQU_QUAN * B.ORDE_REQU_PRIC) AS PREPAY_PRICE
+        ,	MAX(A.ORDE_USER_ID) AS ORDE_USER_ID
+        FROM	MRORDM A
+        ,		MRORDT B
+        WHERE A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+        AND B.ORDE_IDEN_NUMB = #{createdOrdeIdenNumb}
+	</select>
+	
+	
+	<select id="selectOrderSmsListByCancelRequest" resultType="java.util.HashMap">
+		/* common.etc.selectOrderSmsListByCancelRequest*/
+		SELECT 
+            USERID
+        FROM SMPBORGS_USERS
+        WHERE BORGID  = 
+        (
+            SELECT 
+                VENDORID
+            FROM MRPURT
+            WHERE ORDE_IDEN_NUMB = #{ordeIdenNumb}
+            AND ORDE_SEQU_NUMB = #{ordeSequNumb}
+            AND PURC_IDEN_NUMB = #{purcIdenNumb}
+        )
+	</select>
+	
+	<!-- 부모 조직 정보의 코드를 조회하는 메소드 -->
+	<select id="selectParborgCdInfoByBorgId" resultType="string">
+		/* common.etc.selectParborgCdInfoByBorgId */
+		SELECT
+			BORGCD
+		FROM
+			SMPBORGS
+		WHERE
+			BORGID = (
+				SELECT
+					PARBORGID
+				FROM
+					SMPBORGS
+				WHERE
+					BORGID = #{borgId}
+			)
+	</select>
+</mapper>

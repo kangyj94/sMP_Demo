@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 	default-autowire="byName"
+		xmlns="http://www.springframework.org/schema/beans"
+       	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:jee="http://www.springframework.org/schema/jee"
+		xmlns:p="http://www.springframework.org/schema/p" 
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:aop="http://www.springframework.org/schema/aop"
+		xmlns:task="http://www.springframework.org/schema/task"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans 
+       		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+			http://www.springframework.org/schema/jee
+			http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
+			http://www.springframework.org/schema/context 
+			http://www.springframework.org/schema/context/spring-context-3.0.xsd
+			http://www.springframework.org/schema/aop
+        	http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+        	http://www.springframework.org/schema/task 
+        	http://www.springframework.org/schema/task/spring-task-3.1.xsd">
+
+	<!-- ===== Handler mapping =============================== -->
+	<bean id="urlHandlerMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+		<property name="order" value="0"/>
+		<property name="alwaysUseFullPath" value="true"/>
+		<property name="mappings">
+			<props>
+				<prop key="/*/*/*.home">urlController</prop>
+				<prop key="/*/*.home">urlController</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="urlController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"/>
+	<!-- @RequestMapping mapping controller call -->
+	<bean id="annotationHandlerMapping" class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" p:alwaysUseFullPath="true" />
+	
+	<!-- ===== View Resolver =============================== -->
+	<!--  View Resolver  -->
+	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+      <property name="order" value="0"/>
+	</bean>
+	<!--  Json Resolver  -->
+	<bean name="lenient" class="net.sf.json.util.CycleDetectionStrategy$LenientCycleDetectionStrategy"/>
+    <bean name="jsonConfig" class="net.sf.json.JsonConfig">
+        <property name="cycleDetectionStrategy" ref="lenient" />
+    </bean>
+	<bean name="jsonViewResolver" class="org.springframework.web.servlet.view.XmlViewResolver">
+        <property name="order" value="1"/>
+        <property name="location" value="classpath:config/jsonView.xml"/>
+    </bean>
+	<!--  Jsp Resolver  -->
+	<bean id="jspViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="order" value="2"/>
+		<property name="prefix" value="/WEB-INF/jsp/"/>
+		<property name="suffix" value=".jsp"/>
+	</bean>
+	<!--  Excel Resolver  -->
+<!-- 	<bean id="commonExcelViewResolver" class="kr.co.bitcube.common.utils.ExcelView"/> -->
+	<bean id="commonExcelViewResolver" class="kr.co.bitcube.common.utils.JxlExcelView"/>
+	<!--  Error Handler Resolver  -->
+	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<prop key="kr.co.bitcube.system.exception.SystemUserLoginException">system/loginError</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- File Download Resolver -->
+	<bean id="fileDownViewResolver" class="kr.co.bitcube.common.utils.FileDownloadView" />
+	<!-- Method Name Resolver -->
+	<bean id="pathResolver" class="org.springframework.web.servlet.mvc.multiaction.InternalPathMethodNameResolver" />
+	
+	<!-- MultiPart Setting -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+ 		<property name="maxUploadSize" value="100000000" />
+<!--     	<property name="uploadTempDir" value="${common.upload.path}" />	classpath:config/framework.properties -->
+ 	</bean>
+ 	
+	<aop:aspectj-autoproxy/>
+	<bean class="kr.co.bitcube.common.ControllerAspect"/>
+	
+	<!-- Anotation Scan -->
+	<context:component-scan base-package="kr.co.bitcube.common"/>
+	<context:component-scan base-package="kr.co.bitcube.system"/>
+	<context:component-scan base-package="kr.co.bitcube.board"/>
+	<context:component-scan base-package="kr.co.bitcube.order"/>
+	<context:component-scan base-package="kr.co.bitcube.product"/>
+	<context:component-scan base-package="kr.co.bitcube.organ"/>
+	<context:component-scan base-package="kr.co.bitcube.adjust"/>
+	<context:component-scan base-package="kr.co.bitcube.analysis"/>
+	<context:component-scan base-package="kr.co.bitcube.schedule"/>
+	<context:component-scan base-package="kr.co.bitcube.ebill"/>
+	<context:component-scan base-package="kr.co.bitcube.evaluate"/>
+	<context:component-scan base-package="kr.co.bitcube.proposal"/>
+	<context:component-scan base-package="kr.co.bitcube.manage"/>
+    <context:component-scan base-package="kr.co.bitcube.evaluation"/>
+    <context:component-scan base-package="kr.co.bitcube.buyController"/>
+    <context:component-scan base-package="kr.co.bitcube.venController"/>
+	<context:component-scan base-package="kr.co.bitcube.mig"/>
+    <context:component-scan base-package="kr.co.bitcube.quality"/>
+	
+	<task:scheduler id="taskScheduler" pool-size="10" />
+	<task:executor id="taskExecutor" pool-size="10"/>
+	<task:annotation-driven executor="taskExecutor" scheduler="taskScheduler"/>	
+	
+	<!-- Auto Product Name & Admin Main Info SetUp Init -->
+	<bean id="scheduleMethodInvokingJobDetailFactoryBean" class="kr.co.bitcube.schedule.ScheduleMethodInvokingJobDetailFactoryBean" />
+
+</beans>

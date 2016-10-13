@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+<mapper namespace="order.orderCommon">
+	<select id="selectOrderChangeMessage" resultType="kr.co.bitcube.order.dto.OrderHistDto">
+		/* order.orderCommon.selectOrderChangeMessage*/
+	    SELECT A.CODENM1 AS CHAN_CONT_DESC FROM SMPCODES A  WITH(NOLOCK) WHERE CODETYPECD = 'ORDERCHANGEMESSAGE' AND CODEVAL1 = #{histCode}
+	</select>
+	<insert id="insertMrordtHist">
+	/* order.orderCommon.insertMrordtHist*/
+		INSERT INTO MRORDTHIST ( 
+	           orde_hist_numb,
+	           orde_iden_numb,
+	           orde_sequ_numb,
+	           purc_iden_numb,
+	           deli_iden_numb,
+	           rece_iden_numb,
+	           chan_cont_desc,
+	           chan_reas_desc,
+	           regi_user_id,
+	           regi_user_date 
+	       ) VALUES ( 
+	       		#{orde_hist_numb}
+	           , #{orde_iden_numb}
+	           , #{orde_sequ_numb}
+				<if test="purc_iden_numb != ''">
+	           , #{purc_iden_numb}
+				</if>
+				<if test="purc_iden_numb == ''">
+	           , '0'
+				</if>
+				<if test="deli_iden_numb != ''">
+	           , #{deli_iden_numb}
+				</if>
+				<if test="deli_iden_numb == ''">
+	           , '0'
+				</if>
+				<if test="rece_iden_numb != ''">
+	           , #{rece_iden_numb}
+				</if>
+				<if test="rece_iden_numb == ''">
+	           , '0'
+				</if>
+	           , #{chan_cont_desc}
+				<if test="chan_reas_desc != ''">
+	           , #{chan_reas_desc}
+				</if>
+				<if test="chan_reas_desc == ''">
+	           , ''
+				</if>
+	           , #{regi_user_id}
+	           , GETDATE()
+	       )  
+	</insert>
+	
+	<!-- 담당자 조회 -->
+	<select id="selectWorkUserInfo" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/* order.orderRequest.selectWorkUserInfo*/
+		SELECT Z.USERID, Z.USERNM FROM SMPUSERS Z  WITH(NOLOCK) WHERE Z.USERID IN (
+			SELECT A.USERID
+			FROM SMPWORKINFO A WITH(NOLOCK) 
+			GROUP BY USERID
+		)
+	</select>
+	
+	<insert id="insertMcgoodvendorStockQuan">
+	/* order.orderCommon.insertMcgoodvendorStockQuan*/
+	INSERT INTO MCGOODVENDOR_STOCK 
+       ( 
+           GOOD_IDEN_NUMB
+         ,VENDORID
+         ,BEFORE_QUANTITY
+         ,AFTER_QUANTITY
+         ,STOCK_TYPE
+         ,INSERT_USER_ID
+         ,INSERT_DATE 
+       ) 
+       VALUES 
+       ( 
+       		#{good_iden_numb}
+         , #{vendorid}
+         , #{before_quantity}
+         , #{after_quantity}
+         , #{stock_type}
+         , #{userId}
+         , GETDATE()
+       ) 
+	</insert>
+	
+	<update id="updateMcgoodvendorQuan">
+	/* order.orderCommon.updateMcgoodvendorQuan*/
+	UPDATE MCGOODVENDOR SET GOOD_INVENTORY_CNT = #{quantity} 
+	WHERE GOOD_IDEN_NUMB = #{good_iden_numb}
+	AND VENDORID = #{vendorid}
+	</update>
+	
+	<select id="selectStockOrderInfo" resultType="java.util.HashMap">
+		/* order.orderCommon.selectStockOrderInfo*/
+		SELECT 
+			C.GOOD_TYPE AS GOOD_CLAS_CODE 
+		,	CONVERT(VARCHAR(500), B.GOOD_IDEN_NUMB) AS GOOD_IDEN_NUMB
+		,	B.VENDORID
+		,	CONVERT(INT, ISNULL(A.GOOD_INVENTORY_CNT,0)) AS BEFORE_QUANTITY 
+		FROM	MCGOODVENDOR A WITH(NOLOCK) 
+		INNER JOIN MRPURT B WITH(NOLOCK) 
+			ON	A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+			AND	A.VENDORID = B.VENDORID
+		INNER JOIN MCGOOD C WITH(NOLOCK) 
+			ON	A.GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB
+		WHERE 	B.ORDE_IDEN_NUMB  = #{orde_iden_numb}
+		AND 	B.ORDE_SEQU_NUMB = #{orde_sequ_numb}
+		AND 	B.PURC_IDEN_NUMB  = #{purc_iden_numb}
+	</select>
+	
+	<select id="selectProductManager" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/* order.orderCommon.selectProductManager*/
+		SELECT	AA.USERID
+		,		AA.USERNM 
+		FROM SMPUSERS AA WITH(NOLOCK) 
+		WHERE USERID IN (
+			SELECT	PRODUCT_MANAGER
+			FROM MCGOOD A WITH(NOLOCK) 
+			GROUP BY PRODUCT_MANAGER
+		)
+	</select>
+	
+	
+	<!-- 재고관리 여부 및 재고 수량 조회 -->
+	<select id="selectGoodVendorInfoForStock" resultType="java.util.HashMap">
+		/* order.orderCommon.selectGoodVendorInfoForStock*/
+		SELECT 
+            A.GOOD_IDEN_NUMB
+        ,	B.VENDORID
+        ,	ISNULL(A.STOCK_MNGT,'N') AS STOCK_MNGT
+        ,	ISNULL(B.GOOD_INVENTORY_CNT,0) AS GOOD_INVENTORY_CNT
+        FROM MCGOOD A WITH(NOLOCK) 
+        INNER JOIN MCGOODVENDOR B WITH(NOLOCK)  
+        ON A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+        INNER JOIN (
+            SELECT
+                VENDORID
+            ,	GOOD_IDEN_NUMB 
+            FROM MRPURT WITH(NOLOCK) 
+            WHERE ORDE_IDEN_NUMB = #{orde_iden_numb}
+            AND ORDE_SEQU_NUMB = #{orde_sequ_numb}
+            AND PURC_IDEN_NUMB = #{purc_iden_numb}
+        )C
+        ON B.GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB
+        AND B.VENDORID = C.VENDORID
+	</select>
+	<!--  재고수량 변경 -->
+	<update id="updateGoodVendorInventoryQuan">
+        /* order.orderCommon.updateGoodVendorInventoryQuan*/
+        UPDATE MCGOODVENDOR 
+        SET GOOD_INVENTORY_CNT = #{GOOD_INVENTORY_CNT} 
+        WHERE GOOD_IDEN_NUMB = #{GOOD_IDEN_NUMB}
+        AND VENDORID = #{VENDORID}
+	</update>
+	<!--  재고수량 히스토리 insert -->
+	<insert id="insertGoodVendorInventoryQuanHist">
+        /* order.orderCommon.insertGoodVendorInventoryQuanHist*/
+        INSERT INTO MCSTOCKCHGHIST
+               (
+               STOCK_CHG_HIST_ID
+               ,GOOD_IDEN_NUMB
+               ,VENDORID
+               ,CHG_REASON
+               ,STOCK_VARIATION
+               ,INSERT_DATE
+               ,INSERT_USER_ID
+               ,ORDER_IDEN_NUMB
+               ,STOCK
+               )
+         VALUES
+               (
+               #{seqMcStockChgHist}
+               ,#{good_iden_numb}
+               ,#{vendorid}
+               ,#{chg_reason}
+               ,#{stock_variation}
+               ,GETDATE()
+               ,#{insert_user_id}
+               ,#{order_iden_numb}
+               ,#{stock}
+               )
+
+        
+	</insert>
+	
+</mapper>

@@ -1,0 +1,1507 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+<mapper namespace="product.manage" >
+	
+	<select id="selectCateId" resultType="String">
+	   /*product.manage.selectCateId*/
+	   SELECT  CATE_ID
+	   FROM    MCGOOD WITH(NOLOCK) 
+	   WHERE   GOOD_IDEN_NUMB = #{good_iden_numb}
+	</select>
+	
+	<select id="selectProductDetailInfo" resultType="kr.co.bitcube.product.dto.ProductMasterDto">
+		/*product.manage.selectProductDetailInfo*/
+		/*Cheak selectProductDetailInfo*/
+		WITH TMP_TABLE 
+		       ( 
+		           cate_id 
+		         , majo_code_name 
+		         , mojo_code_desc 
+		         , ref_cate_seq 
+		         , cate_level 
+		         , ord_num 
+		         , insert_user_id 
+		         , insert_date 
+		         , update_user_id 
+		         , update_date 
+		         , remoteip 
+		         , LEV 
+		         , FULL_CATE_NAME 
+		       ) AS 
+		       (SELECT cate_id 
+		            , majo_code_name 
+		            , mojo_code_desc 
+		            , CONVERT (VARCHAR , '-1')  
+		            , cate_level 
+		            , ord_num 
+		            , insert_user_id 
+		            , insert_date 
+		            , update_user_id 
+		            , update_date 
+		            , remoteip 
+		            , 0 AS LEV 
+		            , CONVERT (VARCHAR(255) , '' ) 
+		         FROM mccategorymaster MASTERCATE WITH(NOLOCK)  
+		        WHERE CATE_ID = '0' 
+		           UNION ALL 
+		       SELECT OL.cate_id 
+		            , OL.majo_code_name 
+		            , OL.mojo_code_desc 
+		            , CONVERT (VARCHAR ,OL.ref_cate_seq ) 
+		            , OL.cate_level 
+		            , OL.ord_num 
+		            , OL.insert_user_id 
+		            , OL.insert_date 
+		            , OL.update_user_id 
+		            , OL.update_date 
+		            , OL.remoteip 
+		            , CTE.LEV+1 
+		            , CONVERT (VARCHAR(255) , CASE 
+		                  WHEN CTE.LEV+1 = 1 
+		                  THEN OL.majo_code_name 
+		                  ELSE CTE.FULL_CATE_NAME + ' > ' + OL.majo_code_name 
+		              END ) 
+		         FROM mccategorymaster OL WITH(NOLOCK)  
+		            , TMP_TABLE CTE 
+		        WHERE OL.REF_CATE_SEQ = CTE.CATE_ID 
+		       ) 
+		SELECT GOOD.GOOD_IDEN_NUMB, GOOD.GOOD_IDEN_NUMB as orggood_iden_numb
+		     , GOOD.CATE_ID, GOOD.CATE_ID as orgcate_id
+		     , GOOD.GOOD_NAME, GOOD.GOOD_NAME as orggood_name
+		     , GOOD.VTAX_CLAS_CODE, GOOD.VTAX_CLAS_CODE as orgvtax_clas_code
+		     , GOOD.SALE_CRITERION_TYPE, GOOD.SALE_CRITERION_TYPE as orgsale_criterion_type
+		     , GOOD.STAN_BUYING_RATE, GOOD.STAN_BUYING_RATE as orgstan_buying_rate
+		     , GOOD.STAN_BUYING_MONEY, GOOD.STAN_BUYING_MONEY as orgstan_buying_money
+		     , GOOD.ISDISTRIBUTE, GOOD.ISDISTRIBUTE as orgisdistribute
+		     , GOOD.ISDISPPASTGOOD, GOOD.ISDISPPASTGOOD as orgisdisppastgood
+		     , GOOD.INSERT_USER_ID, GOOD.INSERT_USER_ID as orginsert_user_id
+		     , GOOD.INSERT_DATE, GOOD.INSERT_DATE as orginsert_date
+		     , TMP.FULL_CATE_NAME
+		     , GOOD.PRODUCT_MANAGER
+		     , GOOD.IS_ADD_GOOD
+		  FROM MCGOOD GOOD  WITH(NOLOCK) , TMP_TABLE TMP 
+		 WHERE GOOD.GOOD_IDEN_NUMB = #{good_iden_numb}
+		   AND GOOD.CATE_ID = TMP.cate_id
+	</select>
+	
+	<select id="selectGoodVendorListByGoodIdenNum" resultType="kr.co.bitcube.product.dto.ProductVendorDto">
+		/* product.manage.selectGoodVendorListByGoodIdenNum */
+		SELECT PRODVEND.good_iden_numb, PRODVEND.good_iden_numb as orggood_iden_numb      /*  상품코드          */
+		     , GOOD.good_name               /*  상품명             */
+		     , PRODVEND.vendorid, PRODVEND.vendorid as orgvendorid            /*  공급사ID    */
+			 , VENDOR.VENDORCD, VENDOR.VENDORCD as orgvendorcd              /*  공급사코드        */
+			 , VENDOR.VENDORNM, VENDOR.VENDORNM as orgvendornm              /*  공급사명          */
+			 , VENDOR.PRESSENTNM, VENDOR.PRESSENTNM as orgpressentnm           /*  대표자명          */
+			 , VENDOR.phonenum, VENDOR.phonenum as orgphonenum              /*  대표연락처        */
+			 , VENDOR.areatype, VENDOR.areatype as orgareatype              /*  권역              */
+		     , PRODVEND.req_good_id, PRODVEND.req_good_id as orgreq_good_id         /*  상품등록요청SEQ   */
+		     , PRODVEND.sale_unit_pric, PRODVEND.sale_unit_pric as orgsale_unit_pric      /*  매입단가          */
+		     , PRODVEND.good_spec_desc, PRODVEND.good_spec_desc as orggood_spec_desc      /*  규격              */
+		     , '' AS good_spec_desc1 /*  규격1            */
+			 , '' AS good_spec_desc2 /*  규격2            */
+			 , '' AS good_spec_desc3 /*  규격 3            */
+			 , '' AS good_spec_desc4 /*  규격4            */
+			 , '' AS good_spec_desc5 /*  규격5            */
+			 , '' AS good_spec_desc6 /*  규격6            */
+			 , '' AS good_spec_desc7 /*  규격7            */
+			 , '' AS good_spec_desc8 /*  규격8            */
+			 , PRODVEND.good_st_spec_desc, PRODVEND.good_st_spec_desc as orggood_st_spec_desc   /*  표준규격       */
+			 , '' AS good_st_spec_desc1 /*  표준규격1      */
+			 , '' AS good_st_spec_desc2 /*  표준규격2      */
+			 , '' AS good_st_spec_desc3 /*  표준규격3      */
+			 , '' AS good_st_spec_desc4 /*  표준규격4      */
+			 , '' AS good_st_spec_desc5 /*  표준규격5      */
+			 , '' AS good_st_spec_desc6 /*  표준규격6      */
+			 , GOOD.ORDER_UNIT AS orde_clas_code
+			 , GOOD.ORDER_UNIT AS orgorde_clas_code      /*  단위              */
+		     , PRODVEND.deli_mini_day, PRODVEND.deli_mini_day as orgdeli_mini_day       /*  납품소요일수      */
+		     , PRODVEND.deli_mini_quan, PRODVEND.deli_mini_quan as orgdeli_mini_quan      /*  최소구매수량      */
+		     , PRODVEND.make_comp_name, PRODVEND.make_comp_name as orgmake_comp_name      /*  제조사            */
+			 , CASE WHEN LEN(PRODVEND.original_img_path) > 0 THEN 'Y' ELSE 'N' END AS isexistimg  /*  이미지 등록여부   */
+			 , CASE WHEN LEN(PRODVEND.original_img_path) > 0 THEN 'Y' ELSE 'N' END AS orgisexistimg  /*  이미지 등록여부   */
+		     , PRODVEND.original_img_path, PRODVEND.original_img_path as orgoriginal_img_path   /*  대표이미지원본    */
+		     , PRODVEND.large_img_path, PRODVEND.large_img_path as orglarge_img_path      /*  대표이미지대      */
+		     , PRODVEND.middle_img_path, PRODVEND.middle_img_path as orgmiddle_img_path     /*  대표이미지중      */
+		     , PRODVEND.small_img_path, PRODVEND.small_img_path as orgsmall_img_path      /*  대표이미지소      */
+		     , PRODVEND.good_same_word, PRODVEND.good_same_word as orggood_same_word      /*  동의어            */
+			 , '' AS good_same_word1 /*  동의어1            */
+			 , '' AS good_same_word2 /*  동의어2            */
+			 , '' AS good_same_word3 /*  동의어3            */
+			 , '' AS good_same_word4 /*  동의어4            */
+			 , '' AS good_same_word5 /*  동의어5            */
+			 , CASE WHEN LEN(PRODVEND.good_desc) > 0 THEN 'Y' ELSE 'N' END AS isexistgooddesc /*  상품설명 등록여부 */
+			 , CASE WHEN LEN(PRODVEND.good_desc) > 0 THEN 'Y' ELSE 'N' END AS orgisexistgooddesc /*  상품설명 등록여부 */
+		     , PRODVEND.good_desc, PRODVEND.good_desc as orggood_desc           /*  상품설명          */
+		     , PRODVEND.issub_ontract, PRODVEND.issub_ontract as orgissub_ontract       /*  하도급법대상여부  */
+		     , GOOD.GOOD_TYPE AS good_clas_code
+		     , GOOD.GOOD_TYPE as orggood_clas_code      /*  상품구분          */
+		     , CONVERT(INT,PRODVEND.good_inventory_cnt) AS good_inventory_cnt
+		     , PRODVEND.good_inventory_cnt as orggood_inventory_cnt  /*  재고수량          */
+		     , CONVERT(VARCHAR , PRODVEND.regist_date , 23) AS regist_date, CONVERT(VARCHAR , PRODVEND.regist_date , 23) AS orgregist_date /*  등록일            */
+		     , '' as bidid
+		     , '' as bid_vendorid
+		     , dbo.FNS_ISEXSIST_PRODVENDORAPP( PRODVEND.good_iden_numb , PRODVEND.vendorid )  as prodvendorAppFlag
+		     , dbo.FNS_ISEXSIST_PRODVENDORAPP( PRODVEND.good_iden_numb , PRODVEND.vendorid )  as orgprodvendorappflag
+		     , CASE WHEN PRODVEND.isUse = '0' THEN '종료' WHEN PRODVEND.isUse = '2' THEN '대기' ELSE '' END AS isUse  /*  종료 여부  */ 
+		     , PRODVEND.isUse as orgisUse
+		     , CASE WHEN LEN(PRODVEND.original_img_path) > 0 THEN 'Y' ELSE 'N' END AS orgisexistimg  /*  이미지 등록여부   */
+		     
+		     , PRODVEND.distri_rate, PRODVEND.distri_rate as orgdistri_rate
+		     , dbo.FNS_ISEXSIST_REQUEST_PRODUCT_BY_VENDOR( PRODVEND.good_iden_numb , PRODVEND.vendorid )  as chageProductRequest
+		     , dbo.FNS_ISEXSIST_REQUEST_PRODUCT_BY_VENDOR( PRODVEND.good_iden_numb , PRODVEND.vendorid )  as orgchageproductrequest
+		     , 0 AS isModify
+		     , PRODVEND.GOOD_REG_YEAR AS GOOD_REG_YEAR
+		     , PRODVEND.VENDOR_PRIORITY AS VENDOR_PRIORITY 
+		     , ISNULL(PRODVEND.THE_DAY_POST, 0) AS THE_DAY_POST
+		  FROM MCGOODVENDOR PRODVEND WITH(NOLOCK)     
+		     , MCGOOD GOOD WITH(NOLOCK) 
+		     , SMPVENDORS VENDOR   WITH(NOLOCK) 
+		 WHERE GOOD.good_iden_numb = PRODVEND.good_iden_numb
+		   AND PRODVEND.vendorid = VENDOR.VENDORID
+		   AND GOOD.good_iden_numb = #{good_iden_numb}
+		<if test="vendorid != null and vendorid != '' and vendorid neq '0'.toString() ">
+		   AND PRODVEND.vendorid = #{vendorid}		
+		</if>
+	</select>
+	
+	<delete id="deleteProdVendor">
+		/* product.manage.deleteProdVendor */
+		DELETE 
+		  FROM mcgoodvendor
+		 WHERE good_iden_numb = #{good_iden_numb} 
+		   AND vendorid       = #{vendorid}
+	</delete>
+	
+	<insert id="insertProductMstInfomation">
+		/* product.manage.insertProductMstInfomation*/
+		INSERT INTO mcgood( 
+			good_iden_numb
+		,	cate_id
+		,	good_name
+		,	vtax_clas_code
+		,	sale_criterion_type
+		,	stan_buying_rate
+		,	stan_buying_money
+		,	isdistribute
+		,	isdisppastgood
+		,	insert_user_id
+		,	insert_date 
+		,	product_manager
+		,	is_add_good
+		)VALUES(
+			#{good_iden_numb}			/*상품코드         */
+		,	#{cate_id}					/*표준카테고리SEQ   */
+		,	#{good_name}				/*상품명            */
+		,	#{vtax_clas_code}			/*과세구분          */
+		,	#{sale_criterion_type}		/*판가산출옵션      */
+		,	#{stan_buying_rate}			/*기준매익률        */
+		,	#{stan_buying_money}		/*절대매입가        */
+		,	#{isdistribute}				/*물량배분여부      */
+		,	#{isdisppastgood}			/*과거상품 판매여부 */
+		,	#{insert_user_id}			/*등록자            */
+		,	getdate()					/*등록일자          */
+		,	#{product_manager}			/*상품담당자        */
+		,	#{is_add_good}
+		) 
+	</insert>
+	
+	<update id="updateProductMstInfoppp">
+		/* product.manage.updateProductMstInfoppp*/
+		UPDATE mcgood
+		       SET
+		       good_name           = #{good_name}           /*상품명            */
+		     , cate_id			   = #{cate_id}				/*표준카테고리SEQ   */
+		     , vtax_clas_code      = #{vtax_clas_code}      /*과세구분          */
+		     , sale_criterion_type = #{sale_criterion_type} /*판가산출옵션      */
+		     , stan_buying_rate    = #{stan_buying_rate}    /*기준매익률        */
+		     , stan_buying_money   = #{stan_buying_money}   /*절대매입가        */
+		     , isdistribute        = #{isdistribute}        /*물량배분여부      */
+		     , isdisppastgood      = #{isdisppastgood}      /*과거상품판매여부  */
+		     , insert_user_id      = #{insert_user_id}      /*등록자            */
+<!-- 		     , insert_date         = getdate()              /*등록일자          */ -->
+		     , product_manager     = #{product_manager}     /*상품담당자        */
+		     , is_add_good 		   = #{is_add_good}
+		 WHERE good_iden_numb      = #{good_iden_numb}      /*상품코드          */
+	</update>
+	
+	<insert id="insertProductMstHistInfoByGood_iden_numb">
+		/* product.manage.insertProductMstHistInfoByGood_iden_numb*/
+		INSERT INTO mcgood_hist 
+		       ( 
+		           good_hist_id
+		         , good_iden_numb
+		         , cate_id
+		         , good_name
+		         , vtax_clas_code
+		         , sale_criterion_type
+		         , stan_buying_rate
+		         , stan_buying_money
+		         , isdistribute
+		         , isdisppastgood
+		         , insert_user_id
+		         , insert_date 
+		         , product_manager
+		       ) 
+		SELECT #{good_hist_id}
+		     , GOOD.good_iden_numb
+		     , GOOD.cate_id
+		     , GOOD.good_name
+		     , GOOD.vtax_clas_code
+		     , GOOD.sale_criterion_type
+		     , GOOD.stan_buying_rate
+		     , GOOD.stan_buying_money
+		     , GOOD.isdistribute
+		     , GOOD.isdisppastgood
+		     , GOOD.insert_user_id
+		     , GOOD.insert_date 
+		     , ISNULL(GOOD.product_manager,'')
+		  FROM mcgood GOOD WITH(NOLOCK)  
+		 WHERE GOOD.good_iden_numb = #{good_iden_numb} 
+	</insert>
+	<select id="selectProductVendorCount" resultType="int">
+		/* product.manage.selectProductVendorCount*/
+		SELECT COUNT(*) as cnt 
+		  FROM MCGOODVENDOR GOODVENDOR WITH(NOLOCK)  
+		 WHERE GOODVENDOR.good_iden_numb = #{good_iden_numb}
+		   AND GOODVENDOR.vendorid       = #{vendorid}
+	</select>
+	
+	<insert id="insertProductVendorInfo">
+		/* product.manage.insertProductVendorInfo*/
+		INSERT INTO mcgoodvendor 
+			( 
+			    good_iden_numb        /*상품코드*/
+			  , vendorid              /*공급사ID*/
+			  , req_good_id           /*상품등록요청SEQ*/
+              , sell_price            /*판매가*/
+			  , sale_unit_pric        /*매입단가*/
+			  , good_st_spec_desc     /*표준규격*/
+			  , good_spec_desc        /*규격*/
+			  , orde_clas_code        /*단위*/
+			  , deli_mini_day         /*납품소요일수*/
+			  , deli_mini_quan        /*최소구매수량*/
+			  , make_comp_name        /*제조사*/
+			  , original_img_path     /*대표이미지원본*/
+			  , large_img_path        /*대표이미지대*/
+			  , middle_img_path       /*대표이미지중*/
+			  , small_img_path        /*대표이미지소*/
+			  , good_same_word        /*동의어*/
+			  , good_desc             /*상품설명*/
+			  , issub_ontract         /*하도급법대상여부*/
+			  , good_clas_code        /*상품구분*/
+			  , good_inventory_cnt    /*재고수량*/
+			  , regist_date           /*등록일*/
+			  , distri_rate			  /*물량배분율*/
+			  , isUse                 /*사용여부*/
+			  , good_reg_year         /*상품실적년도*/
+			  , vendor_priority       /*우선순위*/
+			  , the_day_post          /*당일발송*/
+			) 
+			VALUES 
+			(  #{good_iden_numb}    	/*상품코드*/
+			 , #{vendorid}    			/*공급사ID*/
+			 , #{req_good_id}    		/*상품등록요청SEQ*/
+             , #{sell_price}            /*판매가*/
+			 , #{sale_unit_pric}    	/*매입단가*/
+			 , #{good_st_spec_desc}    	/*표준규격*/
+			 , #{good_spec_desc}    	/*규격*/
+			 , #{orde_clas_code}    	/*단위*/
+			 , #{deli_mini_day}    		/*납품소요일수*/
+			 , #{deli_mini_quan}    	/*최소구매수량*/
+			 , #{make_comp_name}    	/*제조사*/
+			 , #{original_img_path}    	/*대표이미지원본*/
+			 , #{large_img_path}    	/*대표이미지대*/
+			 , #{middle_img_path}    	/*대표이미지중*/
+			 , #{small_img_path}    	/*대표이미지소*/
+			 , #{good_same_word}    	/*동의어*/
+			 , #{good_desc}    			/*상품설명*/
+			 , #{issub_ontract}    		/*하도급법대상여부*/
+			 , #{good_clas_code}    	/*상품구분*/
+			 , #{good_inventory_cnt}    /*재고수량*/
+			 , GETDATE()    			/*등록일*/
+			 , #{distri_rate}			/*물량배분율*/
+			 <if test="isUse = null or isUse = ''">
+			 , '1'						/*사용여부*/
+			 </if>
+			 <if test="isUse != null and isUse != ''">
+			 , #{isUse}                 /*사용여부*/
+			 </if>
+			 , #{good_reg_year}
+			 , #{vendor_priority}       /*우선순위*/
+			 , #{the_day_post}          /*당일발송*/
+			) 
+	</insert>
+	
+	<update id="updateProductVendorInfo">
+		/* product.manage.updateProductVendorInfo*/
+		UPDATE dbo.mcgoodvendor 
+		       SET 
+		       good_iden_numb     = #{good_iden_numb    }   /*상품코드          */
+		     , vendorid           = #{vendorid}   			/*공급사ID          */
+		     /*, req_good_id        =  		*//*상품등록요청SEQ   */
+		     /*, sale_unit_pric     =    	*//*매입단가          */
+		     , good_st_spec_desc  = #{good_st_spec_desc}  	/*표준규격          */
+		     , good_spec_desc     = #{good_spec_desc}   	/*규격              */
+		     , orde_clas_code     = #{orde_clas_code}   	/*단위              */
+		     , deli_mini_day      = #{deli_mini_day}   		/*납품소요일수      */
+		     , deli_mini_quan     = #{deli_mini_quan}   	/*최소구매수량      */
+		     , make_comp_name     = #{make_comp_name}   	/*제조사            */
+		     , original_img_path  = #{original_img_path}   	/*대표이미지원본    */
+		     , large_img_path     = #{large_img_path}   	/*대표이미지대      */
+		     , middle_img_path    = #{middle_img_path}   	/*대표이미지중      */
+		     , small_img_path     = #{small_img_path}   	/*대표이미지소      */
+		     , good_same_word     = #{good_same_word}   	/*동의어            */
+		     , good_desc          = #{good_desc}   			/*상품설명          */
+			<if test="issub_ontract != null and issub_ontract != ''">
+		     , issub_ontract      = #{issub_ontract}   		/*하도급법대상여부  */
+			</if>
+		     , good_clas_code     = #{good_clas_code}   	/*상품구분          */
+<!-- 			<if test="good_inventory_cnt != null and good_inventory_cnt != ''"> -->
+		     , good_inventory_cnt = isnull(#{good_inventory_cnt},0)   /*재고수량          */
+<!-- 			</if> -->
+			<if test="distri_rate != null and distri_rate != ''">
+		     , distri_rate        = #{distri_rate}          /*물량배분율*/
+			</if>
+			, good_reg_year = #{good_reg_year}              /*상품실적년도      */
+			<if test="vendor_priority != null and vendor_priority != ''">
+			, vendor_priority = #{vendor_priority}          /*상품우선순위      */
+			</if>
+			<if test="the_day_post != null and the_day_post != ''">
+			, the_day_post = #{the_day_post}                /*당일발송*/
+			</if>
+		,		UPDATE_DATE = GETDATE()
+		 WHERE good_iden_numb     = #{good_iden_numb}   	/*상품코드          */
+		   AND vendorid           = #{vendorid}   			/*공급사ID    */
+
+	</update>
+	
+	<update id="updateProductVendorUnitPric">
+		/* product.manage.updateProductVendorUnitPric*/
+		UPDATE dbo.mcgoodvendor 
+		SET 	sale_unit_pric     = #{sale_unit_pric}   	/*매입단가          */
+		,		UPDATE_DATE = GETDATE()
+		 WHERE good_iden_numb     = #{good_iden_numb}   	/*상품코드          */
+		   AND vendorid           = #{vendorid}   			/*공급사ID          */
+
+	</update>
+	
+	<insert id="insertAppProdVendorUnitPrice">
+		/* product.manage.insertAppProdVendorUnitPrice*/
+		INSERT INTO mcappgoodprice 
+		   ( 
+			   app_good_id           /* 단가변경SEQ   */
+			 , chn_price_clas        /* 단가변경타입  */
+			 , good_iden_numb        /* 상품코드      */
+			 , fix_good_id           /* 요청SEQ  */
+			 , disp_good_id          /* 진열SEQ  */
+			 , before_price          /* 기존단가      */
+			 , after_price           /* 변경단가      */
+			 , change_reason         /* 변경사유      */
+			 , app_sts_flag          /* 승인상태      */
+			 , register_userid       /* 등록자ID  */
+			 , register_date         /* 등록일자      */
+			 , confirm_userid        /* 확인자ID  */
+			 , confirm_date          /* 확인일자      */
+			 , vendorid              /* 공급사ID  */
+		   ) 
+		   VALUES 
+		   (  #{app_good_id}         /* 단가변경SEQ   */
+			 ,  #{chn_price_clas}    /* 단가변경타입   */
+			 ,  #{good_iden_numb}    /* 상품코드      */
+			 ,  #{fix_good_id}       /* 요청SEQ  */
+			 ,  #{disp_good_id}      /* 진열SEQ  */
+			 ,  #{before_price}      /* 기존단가      */
+			 ,  #{after_price}       /* 변경단가      */
+			 ,  #{change_reason}     /* 변경사유      */
+			 ,  #{app_sts_flag}      /* 승인상태      */
+			 ,  #{register_userid}   /* 등록자ID  */
+			 ,  convert(datetime, #{register_date} , 112)     /* 등록일자      */
+			 ,  #{confirm_userid}    /* 확인자ID  */
+			 ,  convert(datetime, #{confirm_date}  , 112)     /* 확인일자      */
+			 ,  #{vendorid}          /* 공급사ID  */
+		   ) 
+		 
+	</insert>
+
+	<insert id="insertProductVendorHistInfoBySeq">
+		/* product.manage.insertProductVendorHistInfoBySeq*/
+		INSERT 
+		  INTO mcgoodvendor_hist 
+		       ( 
+		          good_hist_id	      /*상품히스토리SEQ    */
+		        , good_iden_numb	  /*상품코드           */
+		        , vendorid	          /*공급사ID           */
+		        , req_good_id	      /*상품등록요청SEQ    */
+		        , sale_unit_pric	  /*매입단가           */
+		        , good_st_spec_desc  /*표준규격           */
+		        , good_spec_desc	  /*규격               */
+		        , orde_clas_code	  /*단위               */
+		        , deli_mini_day	      /*납품소요일수       */
+		        , deli_mini_quan	  /*최소구매수량       */
+		        , make_comp_name	  /*제조사             */
+		        , original_img_path	  /*대표이미지원본     */
+		        , large_img_path	  /*대표이미지대       */
+		        , middle_img_path     /*대표이미지중       */
+		        , small_img_path	  /*대표이미지소       */
+		        , good_same_word	  /*동의어             */
+		        , good_desc	          /*상품설명           */
+		        , issub_ontract	      /*하도급법대상여부   */
+		        , good_clas_code	  /*상품구분           */
+		        , good_inventory_cnt	/*재고수량           */
+		        , regist_date	      /*등록일             */
+		        , insert_user_id       /*등록자*/
+		        , isUse                /*정상여부*/
+		        ) 
+		SELECT #{good_hist_id}                      	  /*상품히스토리SEQ    */
+		     , GOODVENDOR.good_iden_numb	  /*상품코드           */ 
+		     , GOODVENDOR.vendorid	          /*공급사ID           */
+		     , GOODVENDOR.req_good_id	      /*상품등록요청SEQ    */
+		     , GOODVENDOR.sale_unit_pric	  /*매입단가           */
+		     , GOODVENDOR.good_st_spec_desc	  /*표준규격           */
+		     , GOODVENDOR.good_spec_desc	  /*규격               */
+		     , GOODVENDOR.orde_clas_code	  /*단위               */
+		     , GOODVENDOR.deli_mini_day	      /*납품소요일수       */
+		     , GOODVENDOR.deli_mini_quan	  /*최소구매수량       */
+		     , GOODVENDOR.make_comp_name	  /*제조사             */
+		     , GOODVENDOR.original_img_path	  /*대표이미지원본     */
+		     , GOODVENDOR.large_img_path	  /*대표이미지대       */
+		     , GOODVENDOR.middle_img_path     /*대표이미지중       */
+		     , GOODVENDOR.small_img_path	  /*대표이미지소       */
+		     , GOODVENDOR.good_same_word	  /*동의어             */
+		     , GOODVENDOR.good_desc	          /*상품설명           */
+		     , GOODVENDOR.issub_ontract	      /*하도급법대상여부   */
+		     , GOODVENDOR.good_clas_code	  /*상품구분           */
+		     , GOODVENDOR.good_inventory_cnt	/*재고수량           */
+		     , GETDATE()				      /*등록일             */
+		     , #{inser_user_id}               /*등록자*/
+		     , GOODVENDOR.isUse               /*정상여부*/
+		  FROM mcgoodvendor GOODVENDOR WITH(NOLOCK)        
+		 WHERE GOODVENDOR.good_iden_numb = #{good_iden_numb} 
+		       AND GOODVENDOR.vendorid   = #{vendorid}   
+	</insert>
+	
+	<select id="selectDisplayGoodList" resultType="kr.co.bitcube.product.dto.ProductDispDto">
+		/* product.manage.selectDisplayGoodList */
+		SELECT disp_good_id                                   /*진열SEQ*/
+		     , groupid                                        /*그룹id */
+			 , dbo.FNS_BorgNameByBorgID(groupid) AS groupnm   /*그룹명 */
+			 , clientid                                       /*법인id*/
+			 , dbo.FNS_BorgNameByBorgID(clientid) AS clientnm /*법인명 */
+			 , branchid                                       /*사업장id*/ 
+			 , dbo.FNS_BorgNameByBorgID(branchid) AS branchnm /*사업장명 */
+			 , vendorid                                       /*공급사 ID*/
+			 , dbo.FNS_BorgNameByBorgID(vendorid) AS vendornm /*공급사명 */
+			 , CASE
+			      WHEN (groupid != '0' AND LEN(groupid) > 0   )   
+				   AND (clientid != '0' AND LEN(clientid) > 0 ) 
+				   AND (branchid != '0' AND LEN(branchid) >  0) 
+				     THEN  dbo.FNS_BorgNameByBorgID(groupid) + ' > ' + dbo.FNS_BorgNameByBorgID(clientid) + ' > ' + dbo.FNS_BorgNameByBorgID(branchid)
+			      WHEN (groupid != '0' AND LEN(groupid) > 0   )   
+				   AND (clientid != '0' AND LEN(clientid) > 0 ) 
+				     THEN  dbo.FNS_BorgNameByBorgID(groupid) + ' > ' + dbo.FNS_BorgNameByBorgID(clientid)
+			      WHEN (groupid != '0' AND LEN(groupid) > 0   )   
+				     THEN  dbo.FNS_BorgNameByBorgID(groupid) 
+			   END AS fullborgnms                             /*고객사 조직명 */
+			 , CONVERT(VARCHAR , cont_from_date , 23) AS cont_from_date /*계약시작일*/
+		     , CONVERT(VARCHAR , cont_to_date , 23) AS cont_to_date   /*계약종료일*/
+			 , ispast_sell_flag                               /*과거상품판매여부*/
+			 , sale_unit_pric                                 /*매입가*/
+			 , sell_price                                     /*판매가 */
+			 , cust_good_iden_numb                            /*고객사 상품코드*/
+			 , AREACODE.CODEVAL1 AS areatype 
+			 , AREACODE.CODENM1  AS areanm
+		  FROM MCGOOD GOOD WITH(NOLOCK) 
+		     , MCDISPLAYGOOD DISPGOOD WITH(NOLOCK) 
+		     , (
+					SELECT CODES.CODEVAL1 , CODES.CODENM1
+				  	  FROM SMPCODES CODES  WITH(NOLOCK) , SMPCODETYPES CODETYPES WITH(NOLOCK) 
+				 	 WHERE CODES.CODETYPEID = CODETYPES.CODETYPEID
+				       AND CODETYPES.CODETYPECD = 'DELI_AREA_CODE'
+				       AND CODES.ISUSE = '1' 
+			   ) AREACODE
+		 WHERE GOOD.good_iden_numb = DISPGOOD.good_iden_numb
+		   AND DISPGOOD.final_good_sts = '1' 
+		   AND GOOD.good_iden_numb = #{good_iden_numb}
+		   AND DISPGOOD.areaType = AREACODE.CODEVAL1  
+		ORDER BY ${orderString}
+	</select>
+	
+	<update id="deleteProdSalePriceDel">
+		/* product.manage.deleteProdSalePriceDel */
+		UPDATE mcdisplaygood SET 
+		       final_good_sts = '0'
+		     , disp_to_date = getdate()
+		     , tran_user_id = #{tranUserId}
+		 WHERE disp_good_id = #{disp_good_id}
+	</update>
+	
+	
+	
+	<select id="selectIsExsistDispproductApp" resultType="kr.co.bitcube.product.dto.ProductDispDto">
+		/* product.manage.selectIsExsistDispproductApp */
+		SELECT dbo.FNS_ISEXSIST_DISPPRODUCTAPP(#{disp_good_id}) as dispAppFlag
+	</select>
+	
+	<select id="selectIsExsistProdVendorApp" resultType="kr.co.bitcube.product.dto.ProductDispDto">
+		/* product.manage.selectIsExsistDispproductApp */
+		SELECT dbo.FNS_ISEXSIST_PRODVENDORAPP(#{good_iden_numb},#{vendorid}) as prodvendorAppFlag
+	</select>
+	
+	<insert id="insertDisplayGood">
+		/* product.manage.insertDisplayGood */
+		INSERT INTO MCDISPLAYGOOD (
+				DISP_GOOD_ID
+		,		GOOD_IDEN_NUMB
+		,       areaType
+		,		GROUPID
+		,		CLIENTID
+		,		BRANCHID
+		,		CONT_FROM_DATE
+		,		CONT_TO_DATE
+		,		REF_GOOD_SEQ
+		,		ISPAST_SELL_FLAG
+		,		FINAL_GOOD_STS
+		,		SELL_PRICE
+		,		SALE_UNIT_PRIC
+		,       disp_from_date
+		,		CUST_GOOD_IDEN_NUMB
+		,		VENDORID
+		,		INSERT_USER_ID
+		) VALUES (
+				#{disp_good_id}       
+		,		#{good_iden_numb}
+		,       #{areatype}
+		,		#{groupid}
+		,		#{clientid}
+		,		#{branchid}
+		,		convert ( date , #{cont_from_date} , 23 )
+		,		convert ( date , #{cont_to_date} , 23 ) 
+		,		#{ref_good_seq}
+		,		#{ispast_sell_flag}
+		,		#{final_good_sts}
+		,		#{sell_price}
+		,		#{sale_unit_pric}
+		,		getdate()            
+		,		#{cust_good_iden_numb}
+		,		#{vendorid}
+		,		#{insertUserId}
+		)
+	</insert>
+	
+	
+	
+	
+	
+	
+	
+	<insert id="insertAppGoodPrice">
+		/* product.manage.insertAppGoodPrice */
+		INSERT INTO MCAPPGOODPRICE (
+				APP_GOOD_ID
+		,		CHN_PRICE_CLAS
+		,		GOOD_IDEN_NUMB
+		,		FIX_GOOD_ID
+		,		DISP_GOOD_ID
+		,		BEFORE_PRICE
+		,		AFTER_PRICE
+		,		CHANGE_REASON
+		,		APP_STS_FLAG
+		,		REGISTER_USERID
+		,		REGISTER_DATE
+		,		CONFIRM_USERID
+		,		CONFIRM_DATE
+		,		VENDORID
+		) VALUES (
+				#{app_good_id}    
+		,		'10' 
+		,		#{good_iden_numb} 
+		,		''    
+		,		#{disp_good_id}
+		,		#{before_price}  
+		,		#{sell_price}   
+		,		#{change_reason}  
+		,		'0'   
+		,		#{registerUserid}
+		,		GETDATE()  
+		,		#{registerUserid} 
+		,		GETDATE()
+		,		#{vendorid}       
+		)
+	</insert>
+	
+	<update id="updateMcDispGoodCustGoodIdenNumb">
+		/* product.manage.updateMcDispGoodCustGoodIdenNumb */
+		UPDATE mcdisplaygood 
+		   SET cust_good_iden_numb 	= #{cust_good_iden_numb}  
+		 WHERE disp_good_id 		= #{disp_good_id}
+	</update>
+	
+	<update id="updateAppGoodPrice">
+		/* product.manage.updateAppGoodPrice */
+		UPDATE	MCAPPGOODPRICE
+		SET	APP_STS_FLAG = '1'
+		,		APP_USERID = #{insertUserId}
+		,		APP_DATE = GETDATE()
+		WHERE	APP_GOOD_ID = #{appProdSequence} 
+	</update>
+	
+	<update id="updateRefDisplayGood">
+		/* product.manage.updateRefDisplayGood */
+		UPDATE	MCDISPLAYGOOD
+		SET	FINAL_GOOD_STS = '0'
+		,		DISP_TO_DATE = GETDATE()
+		,		TRAN_USER_ID = #{tranUserId}
+		WHERE	DISP_GOOD_ID = #{ref_good_seq} 
+	</update>
+	
+	<update id="updatedisplayGoodUpdateTrans">
+		/* product.manage.updatedisplayGoodUpdateTrans */
+		UPDATE	MCDISPLAYGOOD
+		SET		ISPAST_SELL_FLAG = #{ispast_sell_flag}
+		WHERE	DISP_GOOD_ID = #{disp_good_id} 
+	</update>
+	
+	<update id="updateDisplayGood">
+		/* product.manage.updateDisplayGood */
+		UPDATE	MCDISPLAYGOOD
+		SET	FINAL_GOOD_STS = '1'
+		,		DISP_FROM_DATE = GETDATE()
+		WHERE	DISP_GOOD_ID = #{disp_good_id}
+	</update>
+
+	<select id="selectCategoryInfoListByCateId" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* product.manage.selectCategoryInfoListByCateId */
+		SELECT	CATEMST.CATE_ID
+		,		DISPMST.CATE_DISP_NAME
+		,		dbo.FNS_BORG_STRING(
+					CASE	WHEN BRANCHS.BORGID > '' THEN BRANCHS.BORGID
+							WHEN BRANCHS.BORGID IS NULL AND CLIENTS.BORGID > '' THEN CLIENTS.BORGID
+							WHEN BRANCHS.BORGID IS NULL AND CLIENTS.BORGID IS NULL AND GROUPS.BORGID > '' THEN GROUPS.BORGID
+					END
+				) AS BORGNMS
+		,       DISPMST.cate_disp_desc
+		,       CASE WHEN DISPMST.IS_DISP_USE = '0' THEN '미사용' ELSE '사용' END AS is_Disp_Use  /*  이미지 등록여부   */
+		FROM	MCCATEGORYMASTER CATEMST WITH(NOLOCK) 
+		,		MCDISPLAYCATEGORY DISPCATE WITH(NOLOCK) 
+		,		MCDISPLAYMASTER DISPMST WITH(NOLOCK) 
+		,		MCCATEGORYBORG CATEBORG WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPBORGS GROUPS WITH(NOLOCK) 
+			ON		CATEBORG.groupid = GROUPS.BORGID
+		LEFT OUTER JOIN SMPBORGS CLIENTS WITH(NOLOCK) 
+			ON		CATEBORG.clientid = CLIENTS.BORGID
+		LEFT OUTER JOIN SMPBORGS BRANCHS WITH(NOLOCK) 
+			ON		CATEBORG.branchid = BRANCHS.BORGID
+		WHERE	CATEMST.CATE_ID = DISPCATE.CATE_ID
+		AND		DISPCATE.CATE_DISP_ID = DISPMST.CATE_DISP_ID
+		AND		DISPMST.CATE_DISP_ID = CATEBORG.CATE_DISP_ID
+		AND		CATEMST.CATE_ID = #{cate_id}
+	</select>
+	
+	<update id="delDisplayGoodAppGoodPrice">
+		/* product.manage.delDisplayGoodAppGoodPrice*/
+		UPDATE mcdisplaygood SET 
+		       final_good_sts = #{final_good_sts}
+		 WHERE  disp_good_id = #{disp_good_id}
+	</update>
+	
+	<select id="selectDisplayGoodHistList" resultType="kr.co.bitcube.product.dto.ProductDispDto">
+		/* product.manage.selectDisplayGoodHistList*/
+		WITH TMP_TABLE AS	(
+			SELECT disp_good_id
+				 , disp_from_date
+				 , disp_to_date
+				 , sale_unit_pric
+				 , sell_price
+				 , DISPGOOD.ref_good_seq
+				 , DISPGOOD.ispast_sell_flag
+			  FROM mcdisplaygood DISPGOOD WITH(NOLOCK) 
+			 WHERE DISPGOOD.disp_good_id = #{disp_good_id}
+			UNION ALL 
+			SELECT PARENTDISPGOOD.disp_good_id
+				 , PARENTDISPGOOD.disp_from_date
+				 , PARENTDISPGOOD.disp_to_date
+				 , PARENTDISPGOOD.sale_unit_pric
+				 , PARENTDISPGOOD.sell_price
+				 , PARENTDISPGOOD.ref_good_seq 
+				 , PARENTDISPGOOD.ispast_sell_flag
+			  FROM mcdisplaygood PARENTDISPGOOD WITH(NOLOCK) 
+				 , TMP_TABLE TMP
+			 WHERE TMP.ref_good_seq = PARENTDISPGOOD.disp_good_id 
+		) 
+		SELECT disp_good_id
+			 , CONVERT(VARCHAR , disp_from_date ,23) AS disp_from_date  
+			 , CONVERT(VARCHAR , disp_to_date , 23) AS disp_to_date  
+			 , sale_unit_pric
+			 , sell_price
+			 , ref_good_seq 
+			 , ispast_sell_flag
+		  FROM TMP_TABLE
+		 WHERE TMP_TABLE.disp_good_id != #{disp_good_id}
+	</select>
+	
+	<select id="selectVendorAutionInfoForInsProduct" resultType="kr.co.bitcube.product.dto.ProductVendorDto">
+		/*	product.manage.selectVendorAutionInfoForInsProduct*/
+		SELECT #{good_iden_numb} as good_iden_numb
+		     , VENDOR.VENDORID                                                                  AS vendorid               /*  vendorid            공급사ID    */ 
+			 , VENDOR.VENDORCD                                                                  AS VENDORCD               /*  VENDORCD            공급사코드       */ 
+			 , VENDOR.VENDORNM                                                                  AS VENDORNM               /*  VENDORNM            공급사명          */ 
+			 , VENDOR.PRESSENTNM                                                                AS PRESSENTNM             /*  PRESSENTNM          대표자명          */ 
+			 , VENDOR.PHONENUM                                                                  AS phonenum               /*  phonenum            대표연락처       */ 
+			 , VENDOR.AREATYPE                                                                  AS areatype               /*  areatype            권역              */ 
+			 , ''                                                                               AS req_good_id            /*  req_good_id         상품등록요청SEQ   */ 
+			 , AUCTION.sale_unit_price                                                          AS sale_unit_pric         /*  sale_unit_pric      매입단가          */ 
+			 , AUCTION.good_spec_desc                                                           AS good_spec_desc         /*  good_spec_desc      규격                */ 
+			 , ''                                                                               AS good_spec_desc1        /*  good_spec_desc1     규격1       */ 
+			 , ''                                                                               AS good_spec_desc2        /*  good_spec_desc2     규격2       */ 
+			 , ''                                                                               AS good_spec_desc3        /*  good_spec_desc3     규격 3       */
+			 , ''                                                                               AS good_spec_desc4        /*  good_spec_desc4     규격4        */
+			 , ''                                                                               AS good_spec_desc5        /*  good_spec_desc5     규격5        */
+			 , ''                                                                               AS good_spec_desc6        /*  good_spec_desc6     규격6        */
+			 , ''                                                                               AS good_spec_desc7        /*  good_spec_desc7     규격7        */
+			 , ''                                                                               AS good_spec_desc7        /*  good_spec_desc8    규격8        */
+			 , AUCTION.good_st_spec_desc                                                        AS good_st_spec_desc         /*  good_spec_desc   표준규격                */ 
+			 , ''                                                                               AS good_st_spec_desc1        /*  good_spec_desc1     표준규격1       */ 
+			 , ''                                                                               AS good_st_spec_desc2        /*  good_spec_desc2     표준규격2       */ 
+			 , ''                                                                               AS good_st_spec_desc3        /*  good_spec_desc3     표준규격 3       */
+			 , ''                                                                               AS good_st_spec_desc4        /*  good_spec_desc4     표준규격4        */
+			 , ''                                                                               AS good_st_spec_desc5        /*  good_spec_desc5     표준규격5        */
+			 , ''                                                                               AS good_st_spec_desc6        /*  good_spec_desc6     표준규격6        */
+			 , AUCTION.orde_clas_code                                                           AS orde_clas_code         /*  orde_clas_code      단위                 */ 
+			 , AUCTION.deli_mini_day                                                            AS deli_mini_day          /*  deli_mini_day       납품소요일수   */ 
+			 , AUCTION.deli_mini_quan                                                           AS deli_mini_quan         /*  deli_mini_quan      최소구매수량   */ 
+			 , AUCTION.make_comp_name                                                           AS make_comp_name         /*  make_comp_name      제조사                */ 
+			 , CASE WHEN LEN(AUCTION.original_img_path) > 0 THEN 'Y' ELSE 'N' END               AS isexistimg             /*  isexistimg          이미지 등록여부   */ 
+			 , AUCTION.original_img_path                                                        AS original_img_path      /*  original_img_path   대표이미지원본    */ 
+			 , AUCTION.large_img_path                                                           AS large_img_path         /*  large_img_path      대표이미지대      */ 
+			 , AUCTION.middle_img_path                                                          AS middle_img_path        /*  middle_img_path     대표이미지중      */ 
+			 , AUCTION.small_img_path                                                           AS small_img_path         /*  small_img_path      대표이미지소      */ 
+			 , AUCTION.good_same_word                                                           AS good_same_word         /*  good_same_word      동의어            */ 
+			 , ''                                                                               AS good_same_word1        /*  good_same_word1     동의어1            */
+			 , ''                                                                               AS good_same_word2        /*  good_same_word2     동의어2            */
+			 , ''                                                                               AS good_same_word3        /*  good_same_word3     동의어3            */
+			 , ''                                                                               AS good_same_word4        /*  good_same_word4     동의어4            */
+			 , ''                                                                               AS good_same_word5        /*  good_same_word5     동의어5            */
+			 , CASE WHEN LEN(AUCTION.good_desc) > 0 THEN 'Y' ELSE 'N' END                       AS isexistgooddesc        /*  isexistgooddesc     상품설명 등록여부 */ 
+			 , AUCTION.good_desc                                                                AS good_desc              /*  good_desc           상품설명          */ 
+			 , ''                                                                               AS issub_ontract          /*  issub_ontract       하도급법대상여부  */ 
+			 , ''                                                                               AS good_clas_code         /*  good_clas_code      상품구분          */ 
+			 , ''                                                                               AS good_inventory_cnt     /*  good_inventory_cnt  재고수량          */ 
+			 , ''                                                                               AS regist_date            /*  regist_date         등록일            */
+			 , BIDMST.bidid                                                                     as bidid
+			 , AUCTION.vendorid                                                                 as bid_vendorid
+			 , AUCTION.good_name                                                                as good_name
+		  FROM mcbidauction AUCTION WITH(NOLOCK) 
+		     , mcbid BIDMST WITH(NOLOCK) 
+		     , SMPVENDORS VENDOR  WITH(NOLOCK) 
+		WHERE AUCTION.bidid = BIDMST.bidid
+		  AND AUCTION.vendorid = VENDOR.VENDORID
+		  AND BIDMST.bidid     = #{bidid}
+		  AND AUCTION.vendorid = #{bid_vendorid}
+	</select>
+	
+	<select id="selectReqProductDetailInfo" resultType="kr.co.bitcube.product.dto.ReqProductDto">
+		/*	product.manage.selectReqProductDetailInfo*/
+		select	reqgood.req_good_id					/*상품등록요청SEQ */
+		,		reqgood.good_iden_numb				/*상품코드        */
+		,		reqgood.vendorid					/*공급사코드      */
+		,		reqgood.good_name					/*상품명          */
+		,		reqgood.sale_unit_pric				/*매입단가        */
+		,		reqgood.good_st_spec_desc			/*표준규격        */
+		,		reqgood.good_spec_desc				/*규격            */
+		,		'' as good_spec_desc1				/*규격1*/
+		,		'' as good_spec_desc2				/*규격2*/
+		,		'' as good_spec_desc3				/*규격3*/
+		,		'' as good_spec_desc4				/*규격4*/
+		,		'' as good_spec_desc5				/*규격5*/
+		,		'' as good_spec_desc6				/*규격6*/
+		,		'' as good_spec_desc7				/*규격7*/
+		,		'' as good_spec_desc8				/*규격8*/
+		,		reqgood.good_st_spec_desc			/*표준규격            */
+		,		'' as good_st_spec_desc1			/*표준규격1*/
+		,		'' as good_st_spec_desc2			/*표준규격2*/
+		,		'' as good_st_spec_desc3			/*표준규격3*/
+		,		'' as good_st_spec_desc4			/*표준규격4*/
+		,		'' as good_st_spec_desc5			/*표준규격5*/
+		,		'' as good_st_spec_desc6			/*표준규격6*/
+		,		reqgood.orde_clas_code				/*단위            */
+		,		reqgood.deli_mini_day				/*납품소요일수    */
+		,		reqgood.deli_mini_quan				/*최소구매수량    */
+		,		reqgood.make_comp_name				/*제조사          */
+		,		reqgood.good_same_word				/*동의어          */
+		,		reqgood.original_img_path			/*대표이미지원본  */
+		,		reqgood.large_img_path				/*대표이미지대    */
+		,		reqgood.middle_img_path				/*대표이미지중    */
+		,		reqgood.small_img_path				/*대표이미지소    */
+		,		reqgood.good_desc					/*상품설명        */
+		,		reqgood.good_clas_code				/*상품구분        */
+		,		reqgood.good_inventory_cnt			/*재고수량        */
+		,		reqgood.insert_user_id				/*등록자ID        */
+		,		dbo.FNS_USERNAME_BY_USERID(reqgood.insert_user_id , 1) as inser_user_nm /* 등록자 명 */
+		,		reqgood.insert_date					/*등록일          */
+		,		reqgood.app_sts						/*처리상태        */
+		,		reqgood.admin_user_id				/*담당운영자ID    */
+		,		dbo.FNS_USERNAME_BY_USERID(reqgood.admin_user_id , 1) as admin_user_nm /* 담당운영자 명 */
+		,		reqgood.app_user_id					/*확인자ID        */
+		,		dbo.FNS_USERNAME_BY_USERID(reqgood.app_user_id , 1) as app_user_nm /* 확인자 명 */
+		,		reqgood.app_date					/*확인일          */
+		,		reqgood.create_good_date			/*품목등록일      */
+		,		vendor.VENDORNM as vendornm			/*공급사명 */     
+		,		vendor.VENDORCD as vendorcd			/*공급사코드 */   
+		,		vendor.AREATYPE as areatype			/*공급사권역 */   
+		,		vendor.PRESSENTNM as pressentnm		/*대표자명 */     
+		,		vendor.PHONENUM as phonenum			/*공급사연락처 */
+		,		reqgood.cancel_reason
+				/*원본 데이터 조회*/
+		,		reqgood.req_good_id			as org_req_good_id
+		,		reqgood.good_iden_numb		as org_good_iden_numb
+		,		reqgood.vendorid	as org_vendorid
+		,		reqgood.good_name			as org_good_name
+		,		reqgood.sale_unit_pric		as org_sale_unit_pric
+		,		reqgood.good_st_spec_desc	as org_good_st_spec_desc
+		,		reqgood.good_spec_desc		as org_good_spec_desc
+		,		reqgood.orde_clas_code		as org_orde_clas_code
+		,		reqgood.deli_mini_day		as org_deli_mini_day
+		,		reqgood.deli_mini_quan		as org_deli_mini_quan
+		,		reqgood.make_comp_name		as org_make_comp_name
+		,		reqgood.good_same_word		as org_good_same_word
+		,		reqgood.original_img_path	as org_original_img_path
+		,		reqgood.large_img_path		as org_large_img_path
+		,		reqgood.middle_img_path		as org_middle_img_path
+		,		reqgood.small_img_path		as org_small_img_path
+		,		reqgood.good_desc			as org_good_desc
+		,		reqgood.good_clas_code		as org_good_clas_code
+		,		reqgood.good_inventory_cnt	as org_good_inventory_cnt
+		,		reqgood.insert_user_id		as org_insert_user_id
+		,		dbo.FNS_USERNAME_BY_USERID(reqgood.insert_user_id , 1) as org_inser_user_nm
+		,		reqgood.insert_date			as org_insert_date
+		,		reqgood.app_sts				as org_app_sts
+		,		reqgood.admin_user_id		as org_admin_user_id
+		,		dbo.FNS_USERNAME_BY_USERID(reqgood.admin_user_id , 1) as org_admin_user_nm
+		,		reqgood.app_user_id			as org_app_user_id
+		,		dbo.FNS_USERNAME_BY_USERID(reqgood.app_user_id , 1) as org_app_user_nm
+		,		reqgood.app_date			as org_app_date
+		,		reqgood.create_good_date	as org_create_good_date
+		
+		,		SPEC.SPEC_SPEC
+		,		SPEC.SPEC_PI
+		,		SPEC.SPEC_WIDTH
+		,		SPEC.SPEC_DEEP
+		,		SPEC.SPEC_HEIGHT
+		,		SPEC.SPEC_LITER
+		,		SPEC.SPEC_TON
+		,		SPEC.SPEC_METER
+		,		SPEC.SPEC_MATERIAL
+		,		SPEC.SPEC_SIZE
+		,		SPEC.SPEC_WEIGHT_SUM
+		,		SPEC.SPEC_COLOR
+		,		SPEC.SPEC_TYPE
+		,		SPEC.SPEC_WEIGHT_REAL
+		
+		,		SPEC.SPEC_SPEC AS ORG_SPEC_SPEC
+		,		SPEC.SPEC_PI AS ORG_SPEC_PI
+		,		SPEC.SPEC_WIDTH AS ORG_SPEC_WIDTH
+		,		SPEC.SPEC_DEEP AS ORG_SPEC_DEEP
+		,		SPEC.SPEC_HEIGHT AS ORG_SPEC_HEIGHT
+		,		SPEC.SPEC_LITER AS ORG_SPEC_LITER
+		,		SPEC.SPEC_TON AS ORG_SPEC_TON
+		,		SPEC.SPEC_METER AS ORG_SPEC_METER
+		,		SPEC.SPEC_MATERIAL AS ORG_SPEC_MATERIAL
+		,		SPEC.SPEC_SIZE AS ORG_SPEC_SIZE
+		,		SPEC.SPEC_WEIGHT_SUM AS ORG_SPEC_WEIGHT_SUM
+		,		SPEC.SPEC_COLOR AS ORG_SPEC_COLOR
+		,		SPEC.SPEC_TYPE AS ORG_SPEC_TYPE
+		,		SPEC.SPEC_WEIGHT_REAL AS ORG_SPEC_WEIGHT_REAL
+		from 	mcgoodrequest reqgood WITH(NOLOCK)
+		INNER JOIN SMPVENDORS vendor WITH(NOLOCK)
+			ON	reqgood.vendorid = vendor.VENDORID
+		LEFT OUTER JOIN MCGOODREQUEST_SPEC SPEC WITH(NOLOCK)
+			ON	REQGOOD.REQ_GOOD_ID = SPEC.REQ_GOOD_ID
+		where  	reqgood.req_good_id = #{req_good_id}
+	</select>
+	
+	<insert id="insertVendorReqProductInfoMation">
+		/*	product.manage.insertVendorReqProductInfoMation	*/
+		INSERT INTO mcgoodrequest 
+		       (   req_good_id             /* 상품등록요청SEQ    */
+		         , good_iden_numb          /* 상품코드           */
+		         , vendorid                /* 공급사코드         */
+		         , good_name               /* 상품명             */
+		         , sale_unit_pric          /* 매입단가           */
+		         , good_st_spec_desc       /* 표준규격           */
+		         , good_spec_desc          /* 규격               */
+		         , orde_clas_code          /* 단위               */
+		         , deli_mini_day           /* 납품소요일수       */
+		         , deli_mini_quan          /* 최소구매수량       */
+		         , make_comp_name          /* 제조사             */
+		         , good_same_word          /* 동의어             */
+		         , original_img_path       /* 대표이미지원본     */
+		         , large_img_path          /* 대표이미지대       */
+		         , middle_img_path         /* 대표이미지중       */
+		         , small_img_path          /* 대표이미지소       */
+		         , good_desc               /* 상품설명           */
+		         , good_clas_code          /* 상품구분           */
+		         , good_inventory_cnt      /* 재고수량           */
+		         , insert_user_id          /* 등록자ID           */
+		         , insert_date             /* 등록일             */
+		         , app_sts                 /* 처리상태           */
+		         , admin_user_id           /* 담당운영자ID       */
+		       ) 
+		       VALUES 
+		       (   #{req_good_id}              /* 상품등록요청SEQ    */
+		         , #{good_iden_numb}           /* 상품코드           */
+		         , #{vendorid}                 /* 공급사코드         */
+		         , #{good_name}                /* 상품명             */
+		         , #{sale_unit_pric}           /* 매입단가           */
+		         , #{good_st_spec_desc}        /* 표준규격           */
+		         , #{good_spec_desc}           /* 규격               */
+		         , #{orde_clas_code}           /* 단위               */
+		         , #{deli_mini_day}            /* 납품소요일수       */
+		         , #{deli_mini_quan}           /* 최소구매수량       */
+		         , #{make_comp_name}           /* 제조사             */
+		         , #{good_same_word}           /* 동의어             */
+		         , #{original_img_path}        /* 대표이미지원본     */
+		         , #{large_img_path}           /* 대표이미지대       */
+		         , #{middle_img_path}          /* 대표이미지중       */
+		         , #{small_img_path}           /* 대표이미지소       */
+		         , #{good_desc}                /* 상품설명           */
+		         , #{good_clas_code}           /* 상품구분           */
+		         , #{good_inventory_cnt}       /* 재고수량           */
+		         , #{insert_user_id}           /* 등록자ID           */
+		         , getdate()                   /* 등록일             */
+		         , #{app_sts}                  /* 처리상태           */
+		         , #{admin_user_id}            /* 담당운영자ID       */
+		       ) 
+	</insert>
+	
+	<insert id="insertMcgoodRequestSpec">
+		/* product.manage.insertMcgoodRequestSpec */
+		INSERT INTO MCGOODREQUEST_SPEC(
+				REQ_GOOD_ID
+		,		SPEC_SPEC
+		,		SPEC_PI
+		,		SPEC_WIDTH
+		,		SPEC_DEEP
+		,		SPEC_HEIGHT
+		,		SPEC_LITER
+		,		SPEC_TON
+		,		SPEC_METER
+		,		SPEC_MATERIAL
+		,		SPEC_SIZE
+		,		SPEC_WEIGHT_SUM
+		,		SPEC_COLOR
+		,		SPEC_TYPE
+		,		SPEC_WEIGHT_REAL
+		) VALUES (
+				#{req_good_id}
+		,		#{spec_spec}
+		,		#{spec_pi}
+		,		#{spec_width}
+		,		#{spec_deep}
+		,		#{spec_height}
+		,		#{spec_liter}
+		,		#{spec_ton}
+		,		#{spec_meter}
+		,		#{spec_material}
+		,		#{spec_size}
+		,		#{spec_weight_sum}
+		,		#{spec_color}
+		,		#{spec_type}
+		,		#{spec_weight_real}
+		)
+	</insert>
+	
+	
+	<update id="updateVendorReqProductInfoMation">
+		/*	product.manage.updateVendorReqProductInfoMation	*/
+		UPDATE mcgoodrequest  SET 
+		       good_name           = #{good_name}
+		     , sale_unit_pric      = #{sale_unit_pric}
+		     , good_st_spec_desc   = #{good_st_spec_desc}
+		     , good_spec_desc      = #{good_spec_desc}
+		     , orde_clas_code      = #{orde_clas_code}
+		     , deli_mini_day       = #{deli_mini_day}
+		     , deli_mini_quan      = #{deli_mini_quan}
+		     , make_comp_name      = #{make_comp_name}
+		     , good_same_word      = #{good_same_word}
+		     , original_img_path   = #{original_img_path}
+		     , large_img_path      = #{large_img_path}
+		     , middle_img_path     = #{middle_img_path}
+		     , small_img_path      = #{small_img_path}
+		     , good_desc           = #{good_desc}
+		     , good_clas_code      = #{good_clas_code}
+		     , good_inventory_cnt  = #{good_inventory_cnt}
+		     , insert_user_id      = #{insert_user_id}
+		     , insert_date         = getdate()
+		     , admin_user_id       = #{admin_user_id}
+		 WHERE req_good_id         = #{req_good_id}
+	</update>
+	
+	<update id="updateMcgoodRequestSpec">
+		/*	product.manage.updateMcgoodRequestSpec	*/
+		UPDATE	MCGOODREQUEST_SPEC
+		SET		SPEC_SPEC = #{spec_spec}
+		,		SPEC_PI = #{spec_pi}
+		,		SPEC_WIDTH = #{spec_width}
+		,		SPEC_DEEP = #{spec_deep}
+		,		SPEC_HEIGHT = #{spec_height}
+		,		SPEC_LITER = #{spec_liter}
+		,		SPEC_TON = #{spec_ton}
+		,		SPEC_METER = #{spec_meter}
+		,		SPEC_MATERIAL = #{spec_material}
+		,		SPEC_SIZE = #{spec_size}
+		,		SPEC_WEIGHT_SUM = #{spec_weight_sum}
+		,		SPEC_COLOR = #{spec_color}
+		,		SPEC_TYPE = #{spec_type}
+		,		SPEC_WEIGHT_REAL = #{spec_weight_real}
+		WHERE	REQ_GOOD_ID = #{req_good_id}
+	</update>
+	
+	<delete id="deleteVendorReqProductInfoMation">
+		/*product.manage.deleteVendorReqProductInfoMation*/
+		DELETE FROM mcgoodrequest
+		 WHERE req_good_id = #{req_good_id}
+	</delete>
+	
+	<delete id="deleteMcgoodRequestSpec">
+		/*product.manage.deleteMcgoodRequestSpec*/
+		DELETE	FROM MCGOODREQUEST_SPEC
+		WHERE	req_good_id = #{req_good_id}
+	</delete>
+	
+	<update id="updateReqProductAppSts">
+		/*	product.manage.updateReqProductAppSts	*/
+		UPDATE mcgoodrequest  SET 
+		       app_sts             = #{app_sts}
+		     , app_user_id         = #{app_user_id}
+		     , app_date            = getdate() 
+		     , cancel_reason       = #{cancel_reason}
+		 WHERE req_good_id         = #{req_good_id}
+		 
+	</update>
+	
+	<update id="updateRegistReqProductByAdmin">
+		/*	product.manage.updateRegistReqProductByAdmin	*/
+		UPDATE dbo.mcgoodrequest SET 
+		       good_iden_numb   = #{good_iden_numb}
+		     , app_sts          = '2'
+		     , app_user_id      = #{app_user_id}
+		     , app_date         = getdate()
+		     , create_good_date = getdate() 
+		 WHERE req_good_id      = #{req_good_id}  
+	</update>
+	
+	<select id="selectGoodVendorListForVendor" resultType="kr.co.bitcube.product.dto.ProductVendorDto">
+		/*	product.manage.selectGoodVendorListForVendor	*/
+
+	   WITH TMP_TABLE 
+       ( 
+           cate_id 
+         , majo_code_name 
+         , LEV 
+         , FULL_CATE_NAME 
+       ) AS 
+       (
+       SELECT cate_id 
+            , majo_code_name 
+            , CONVERT (INT , CATE_LEVEL ) AS LEV 
+            , CONVERT (VARCHAR(255) , '' ) 
+         FROM mccategorymaster MASTERCATE WITH(NOLOCK)  
+        WHERE CATE_ID = 0 
+           UNION ALL 
+       SELECT OL.cate_id 
+            , OL.majo_code_name 
+            , CTE.LEV+1 
+            , CONVERT (VARCHAR(255) , CASE WHEN CTE.LEV+1 = 1 THEN OL.majo_code_name ELSE CTE.FULL_CATE_NAME + ' > ' + OL.majo_code_name 
+              END ) 
+         FROM mccategorymaster OL WITH(NOLOCK)  
+            , TMP_TABLE CTE 
+        WHERE OL.REF_CATE_SEQ = CTE.CATE_ID 
+       ) 
+			SELECT PRODVEND.good_iden_numb                                                            /* 상품코드 */ 
+			     , GOOD.good_name                                                                     /* 상품명 */ 
+			     , PRODVEND.vendorid                                                                  /* 공급사ID */ 
+			     , VENDOR.VENDORCD                                                                    /* 공급사코드 */ 
+			     , VENDOR.VENDORNM                                                                    /* 공급사명 */ 
+			     , VENDOR.PRESSENTNM                                                                  /* 대표자명 */ 
+			     , VENDOR.phonenum                                                                    /* 대표연락처 */ 
+			     , VENDOR.areatype                                                                    /* 권역 */ 
+			     , PRODVEND.req_good_id                                                               /* 상품등록요청SEQ */ 
+			     , PRODVEND.sale_unit_pric                                                            /* 매입단가 */ 
+			     , PRODVEND.good_st_spec_desc                                                         /* 표준규격 */ 
+			     , PRODVEND.good_spec_desc                                                            /* 규격 */
+			     , '' AS good_spec_desc1                                                              /* 규격1 */ 
+			     , '' AS good_spec_desc2                                                              /* 규격2 */ 
+			     , '' AS good_spec_desc3                                                              /* 규격 3 */ 
+			     , '' AS good_spec_desc4                                                              /* 규격4 */ 
+			     , '' AS good_spec_desc5                                                              /* 규격5 */ 
+			     , '' AS good_spec_desc6                                                              /* 규격6 */ 
+			     , '' AS good_spec_desc7                                                              /* 규격7 */ 
+			     , GOOD.ORDER_UNIT AS orde_clas_code                                                            /* 단위 */ 
+			     , PRODVEND.deli_mini_day                                                             /* 납품소요일수 */ 
+			     , PRODVEND.deli_mini_quan                                                            /* 최소구매수량 */ 
+			     , PRODVEND.make_comp_name                                                            /* 제조사 */ 
+			     , CASE 
+			          WHEN LEN(PRODVEND.original_img_path) > 0 THEN 'Y' ELSE 'N' 
+			       END AS isexistimg                                                                  /* 이미지 등록여부 */ 
+			     , PRODVEND.original_img_path                                                         /* 대표이미지원본 */ 
+			     , PRODVEND.large_img_path                                                            /* 대표이미지대 */ 
+			     , PRODVEND.middle_img_path                                                           /* 대표이미지중 */ 
+			     , PRODVEND.small_img_path                                                            /* 대표이미지소 */ 
+			     , PRODVEND.good_same_word                                                            /* 동의어 */ 
+			     , '' AS good_same_word1                                                              /* 동의어1 */ 
+			     , '' AS good_same_word2                                                              /* 동의어2 */ 
+			     , '' AS good_same_word3                                                              /* 동의어3 */ 
+			     , '' AS good_same_word4                                                              /* 동의어4 */ 
+			     , '' AS good_same_word5                                                              /* 동의어5 */ 
+			     , CASE 
+			          WHEN LEN(PRODVEND.good_desc) > 0 THEN 'Y' ELSE 'N' 
+			       END AS isexistgooddesc                                                             /* 상품설명 등록여부 */ 
+			     , PRODVEND.good_desc                                                                 /* 상품설명 */ 
+			     , PRODVEND.issub_ontract                                                             /* 하도급법대상여부 */ 
+			     , GOOD.GOOD_TYPE AS good_clas_code                                                            /* 상품구분 */ 
+			     , PRODVEND.good_inventory_cnt                                                        /* 재고수량 */ 
+			     , CONVERT(VARCHAR , PRODVEND.regist_date , 23) AS regist_date                        /* 등록일 */ 
+			     , '' as bidid 
+			     , '' as bid_vendorid 
+				 , ISNULL (
+			             CASE  WHEN GOODFIX.fix_good_id > 0 THEN 'Y' END 
+				       , 'N' 
+				   ) AS ISFIXAPPEXISTS																	/* 승인 존재여부 */
+			     , ISNULL (
+			             CASE  WHEN GOODFIX.fix_good_id > 0 AND GOODFIX.applt_fix_code = '20' THEN 'Y' END 
+				       , 'N' 
+				   ) AS ISCHANGEPRICEEXISTS                                                             /* 매입가 변경요청 존재여부 */
+				 , ISNULL (
+			             CASE  WHEN GOODFIX.fix_good_id > 0 AND GOODFIX.applt_fix_code = '30' THEN 'Y' END 
+				       , 'N' 
+				   ) AS ISCHANGESOLDOUTEXISTS                                                           /* 종료 변경요청 존재여부 */
+				 , CATE.FULL_CATE_NAME
+				 , PRODVEND.THE_DAY_POST                                                                /* 당일발송 */
+			  FROM MCGOOD GOOD WITH(NOLOCK)  
+			          INNER JOIN MCGOODVENDOR PRODVEND WITH(NOLOCK)  
+					     ON   GOOD.good_iden_numb = PRODVEND.good_iden_numb
+				      LEFT OUTER JOIN mcgoodfix GOODFIX  WITH(NOLOCK) 
+					     ON PRODVEND.GOOD_IDEN_NUMB = GOODFIX.good_iden_numb
+						AND PRODVEND.VENDORID = GOODFIX.vendorid
+						AND GOODFIX.fix_app_sts IN ('1','0')
+			          INNER JOIN SMPVENDORS VENDOR  WITH(NOLOCK) 
+			             ON PRODVEND.vendorid = VENDOR.VENDORID
+			          INNER JOIN TMP_TABLE CATE WITH(NOLOCK)  ON GOOD.CATE_ID = CATE.CATE_ID      
+			 WHERE GOOD.good_iden_numb = #{good_iden_numb}
+			   AND PRODVEND.vendorid = #{vendorid}		
+	</select>
+	
+	<insert id="insertFixGoodUnitPriceTrans">
+		/*	product.manage.insertFixGoodUnitPriceTrans	*/
+		INSERT INTO mcgoodfix 
+			( 
+			   fix_good_id    /*요청SEQ    */
+			  ,good_iden_numb  /*상품코드        */
+			  ,vendorid        /*공급사ID   */
+			  ,applt_fix_code  /*변경구분        */
+			  ,price           /*변경요청매입단가*/
+			  ,apply_desc      /*요청사유        */
+			  ,fix_app_sts     /*처리상태        */
+			  ,insert_user_id  /*등록자ID   */
+			  ,insert_date     /*등록일           */
+			  ,before_price
+			  <if test="app_user_id != null and app_user_id !=''">
+			  ,app_user_id
+			  ,app_date
+			  </if>
+			) 
+			VALUES 
+			(   #{fix_good_id}     /*요청SEQ   */
+			  , #{good_iden_numb}  /*상품코드        */
+			  , #{vendorid}        /*공급사ID   */
+			  , #{applt_fix_code}  /*변경구분        */
+			  , #{price}           /*변경요청매입단가*/
+			  , #{apply_desc}      /*요청사유        */
+			  , #{fix_app_sts}     /*처리상태        */
+			  , #{insert_user_id}  /*등록자ID   */
+			  , getdate()          /*등록일          */
+			  , #{before_price}
+			  <if test="app_user_id != null and app_user_id !=''">
+			  , #{app_user_id}
+			  , getdate()
+			  </if>
+			) 
+	</insert>
+	
+	<update id="updateModifyUseState">
+		/*	product.manage.updateModifyUseState	*/
+		UPDATE mcgoodvendor 
+		SET 	isUse = #{isUse}
+		,		UPDATE_DATE = GETDATE()
+		 WHERE good_iden_numb   = #{good_iden_numb}
+		   AND vendorid 		= #{vendorid} 
+	</update>
+	
+	<select id="selectCateCountByCate_id" resultType="int">
+		/*	select exists cate_id	*/
+		SELECT count(*) FROM mccategorymaster  WITH(NOLOCK) WHERE CATE_LEVEL = '3' AND CATE_ID = #{cate_id}
+	</select>
+	
+	<select id="selectVendorCountById" resultType="string">
+		/*	select exists cate_id	*/
+		SELECT top 1 vendorid FROM SMPVENDORS A WITH(NOLOCK) WHERE VENDORCD = #{vendorcd}
+	</select>
+	
+	<!-- 상품공급사 관련 발주정보가 있는지 조회 -->
+	<select id="selectProdVendorOrdeCntSearch" resultType="java.util.HashMap">
+		/* order.orderRequest.selectProdVendorOrdeCntSearch*/
+		SELECT 
+			COUNT(1) AS ORDERPURCCNT
+		FROM MRPURT A WITH(NOLOCK)
+		WHERE A.GOOD_IDEN_NUMB = #{goodIdenNumb}
+		AND A.VENDORID = #{vendorId}
+	</select>
+	<select id="selectGoodVendorListByGoodIdenNumByExcelUpload" resultType="kr.co.bitcube.product.dto.ProductVendorDto">
+		/*	product.manage.selectGoodVendorListByGoodIdenNumByExcelUpload*/
+		SELECT
+			SALE_UNIT_PRIC
+		FROM MCGOODVENDOR WITH(NOLOCK) 
+		WHERE GOOD_IDEN_NUMB = #{good_iden_numb}
+		AND VENDORID = #{vendorid}
+	</select>
+	
+	<select id="selectMcGoodNameForProdDips" resultType="string" >
+		SELECT  GOOD_NAME
+		FROM	MCGOOD WITH(NOLOCK)  
+		WHERE	GOOD_IDEN_NUMB = #{good_iden_numb} 	
+	</select>
+
+	<select id="selectSmpVendorNmForProdDisp" resultType="java.util.HashMap" >
+		SELECT  TOP 1 
+				B.VENDORNM 
+		,		A.SALE_UNIT_PRIC
+		FROM 	MCGOODVENDOR A WITH(NOLOCK) 
+		,		SMPVENDORS B WITH(NOLOCK) 
+		,		SMPBORGS C WITH(NOLOCK) 
+		WHERE 	A.VENDORID = B.VENDORID
+		AND		A.VENDORID = C.BORGID
+		AND 	C.ISUSE = '1'
+		AND 	A.ISUSE = '1'
+		AND 	A.GOOD_IDEN_NUMB = #{good_iden_numb}
+		AND 	A.VENDORID = #{vendorid}
+
+<!-- 		SELECT	TOP 1 -->
+<!-- 				A.VENDORNM -->
+<!-- 		,ISNULL(( -->
+<!-- 				SELECT 	TOP 1 -->
+<!-- 						C.SALE_UNIT_PRIC -->
+<!-- 				FROM	MCGOODVENDOR C -->
+<!-- 				WHERE	C.GOOD_IDEN_NUMB = #{good_iden_numb} -->
+<!-- 				AND		C.VENDORID = A.VENDORID -->
+<!-- 				AND		C.isUse = '1' -->
+<!-- 		),0) AS SALE_UNIT_PRIC -->
+<!-- 		FROM	SMPVENDORS A -->
+<!-- 		INNER JOIN SMPBORGS B -->
+<!-- 			ON	A.VENDORID = B.BORGID -->
+<!-- 			AND	B.ISUSE = '1' -->
+<!-- 		WHERE	A.VENDORID = #{vendorid} -->
+	</select>
+	
+	<select id="selectAreaCodeByNameForProdDisp" resultType="string" >
+		SELECT 	CODENM1 
+		FROM 	SMPCODES WITH(NOLOCK)  
+		WHERE 	CODETYPECD = 'DELI_AREA_CODE' 
+		AND 	ISUSE = '1'
+		AND 	CODEVAL1 = #{areatypecd}
+	</select>
+	
+	<update id="updateMcDisplayGoodStatus">
+		/*product.manage.updateMcDisplayGoodStatus*/
+		update	MCDISPLAYGOOD
+		set		FINAL_GOOD_STS = '0'
+		where	GOOD_IDEN_NUMB = #{good_iden_numb}
+		AND		VENDORID = #{vendorid}
+		AND		AREATYPE = #{areaTypeCdArray}
+		AND		GROUPID = '0'
+		AND 	CLIENTID = '0'
+		AND 	BRANCHID = '0'
+		and		FINAL_GOOD_STS = '1'
+	</update>
+	<insert id="insertMcDisplay">
+		/*product.manage.insertMcDisplay*/
+		INSERT INTO MCDISPLAYGOOD (
+					DISP_GOOD_ID
+			,		GOOD_IDEN_NUMB
+			,		AREATYPE
+			,		GROUPID
+			,		CLIENTID
+			,		BRANCHID
+			,		CONT_FROM_DATE
+			,		CONT_TO_DATE
+			,		REF_GOOD_SEQ
+			,		ISPAST_SELL_FLAG
+			,		FINAL_GOOD_STS
+			,		SELL_PRICE
+			,		SALE_UNIT_PRIC
+			,		disp_from_date
+			,		CUST_GOOD_IDEN_NUMB
+			,		VENDORID
+			,		INSERT_USER_ID
+			)VALUES(
+					#{disp_good_id}
+			,		#{good_iden_numb}
+			,		#{areatypecd}
+			,		'0'
+			,		'0'
+			,		'0'
+			,		convert ( date , GETDATE() , 23 )
+			,		convert ( date , '9999-12-31' , 23 ) 
+			,		'0'
+			,		'0'
+			,		'1'
+			,		#{sell_price}
+			,		#{sale_unit_pric}
+			,		getdate()
+			,		''
+			,		#{vendorid}
+			,		#{userid}
+			);
+	</insert>
+	
+	
+	<update id="updateMcDispalyGoodForProdDisp">
+		MERGE INTO MCDISPLAYGOOD AS MT
+		USING (
+			VALUES	(	#{good_iden_numb}
+					,	#{vendorid}
+					,	#{areatypecd}
+					,	'0'
+					, 	'0'
+					,	'0' 
+					,	#{sell_price} 
+					)
+				) 
+			AS SOURCE	(	GOOD_IDEN_NUMB
+						,	VENDORID
+						,	AREATYPE
+						,	GROUPID
+						, 	CLIENTID
+						,	BRANCHID
+						,	SELL_PRICE
+					 	)
+		ON 	MT.GOOD_IDEN_NUMB = SOURCE.GOOD_IDEN_NUMB
+		AND	MT.VENDORID = SOURCE.VENDORID
+		AND	MT.AREATYPE = SOURCE.AREATYPE
+		AND	MT.GROUPID = SOURCE.GROUPID
+		AND MT.CLIENTID = SOURCE.CLIENTID
+		AND MT.BRANCHID = SOURCE.BRANCHID
+		WHEN MATCHED  
+		THEN
+			UPDATE 
+			SET 
+			     MT.AREATYPE = SOURCE.AREATYPE
+			,    MT.SELL_PRICE = SOURCE.SELL_PRICE
+			,    MT.FINAL_GOOD_STS = '1'
+		WHEN NOT MATCHED THEN 
+			INSERT (
+					DISP_GOOD_ID
+			,		GOOD_IDEN_NUMB
+			,       AREATYPE
+			,		GROUPID
+			,		CLIENTID
+			,		BRANCHID
+			,		CONT_FROM_DATE
+			,		CONT_TO_DATE
+			,		REF_GOOD_SEQ
+			,		ISPAST_SELL_FLAG
+			,		FINAL_GOOD_STS
+			,		SELL_PRICE
+			,		SALE_UNIT_PRIC
+			,       disp_from_date
+			,		CUST_GOOD_IDEN_NUMB
+			,		VENDORID
+			)VALUES(
+					#{disp_good_id}       
+			,		#{good_iden_numb}
+			,       #{areatypecd}
+			,		'0'
+			,		'0'
+			,		'0'
+			,		convert ( date , GETDATE() , 23 )
+			,		convert ( date , '9999-12-31' , 23 ) 
+			,		'0'
+			,		'0'
+			,		'1'
+			,		#{sell_price}
+			,		#{sale_unit_pric}
+			,		getdate()            
+			,		''
+			,		#{vendorid}
+			);	
+	</update>
+	
+	<select id="selectDisplayGoodByGoodIdenNumByExcelUpload" resultType="string">
+		SELECT	MIN(SELL_PRICE) AS SELL_PRICE
+		FROM MCDISPLAYGOOD WITH(NOLOCK)  
+		WHERE GOOD_IDEN_NUMB = #{good_iden_numb}
+		AND VENDORID = #{vendorid}
+		AND FINAL_GOOD_STS = '1'
+	</select>
+	
+	<select id="selectMcGoodVendorsByGoodIdenNumByExcelUpload" resultType="string">
+		SELECT	MAX(SALE_UNIT_PRIC) AS SALE_UNIT_PRIC
+		FROM MCGOODVENDOR WITH(NOLOCK)  
+		WHERE GOOD_IDEN_NUMB = #{good_iden_numb}
+		AND VENDORID = #{vendorid}
+		AND ISUSE = '1'
+	</select>
+	
+	<select id="updateMcDispalyGoodForNoneProdDisp">
+		/*product.manage.updateMcDispalyGoodForNoneProdDisp*/
+		UPDATE	MCDISPLAYGOOD
+		SET		final_good_sts = '0'
+		WHERE	final_good_sts = '1'
+		AND		GOOD_IDEN_NUMB = #{good_iden_numb}
+		<if test="vendorId != null and vendorId != ''">
+		AND		vendorId = #{vendorId}
+		</if>
+	</select>
+	
+	
+	<select id="selectProductSameCheck" resultType="int">
+		/**product.manage.selectProductSameCheck**/
+		SELECT	GOOD_IDEN_NUMB
+		FROM	MCGOODREQUEST WITH(NOLOCK) 
+		WHERE	REQ_GOOD_ID = #{reqGoodId}
+	</select>
+	
+	<select id="selectGoodName" resultType="string">
+		/**product.manage.selectGoodName **/
+		SELECT	GOOD_NAME
+		FROM	MCGOODREQUEST WITH(NOLOCK) 
+		WHERE	REQ_GOOD_ID = #{reqGoodId}
+	</select>
+	
+	<select id="selectUserId" resultType="string">
+		/** product.manager.selectUserId**/
+		SELECT USERID FROM SMPUSERS  WITH(NOLOCK) WHERE LOGINID = #{product_manager}
+	</select>
+	<select id="selectAreaCodeByNameForProdDisp2" resultType="string" >
+		SELECT 	CODENM1 
+		FROM 	SMPCODES WITH(NOLOCK)  
+		WHERE 	CODETYPECD = 'DELI_AREA_CODE' 
+		AND 	ISUSE = '1'
+		AND 	CODEVAL1 = #{areaTypeCdArray}
+	</select>
+	
+	<update id="updateMcDisplayGoodStatus2">
+		/*product.manage.updateMcDisplayGoodStatus2*/
+		update	MCDISPLAYGOOD set
+			FINAL_GOOD_STS = '0'
+		,	TRAN_USER_ID = #{userid}
+		where	GOOD_IDEN_NUMB = #{good_iden_numb}
+		AND		VENDORID = #{vendorid}
+		AND		AREATYPE = #{areatypecd}
+		AND		GROUPID = '0'
+		AND 	CLIENTID = '0'
+		AND 	BRANCHID = '0'
+		and		FINAL_GOOD_STS = '1'
+	</update>
+	
+</mapper>

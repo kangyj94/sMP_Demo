@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="system.code">
+
+	<sql id="selectCodeTypeListSql">
+		FROM    SMPCODETYPES A WITH(NOLOCK)
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="srcCodeTypeCd != null and srcCodeTypeCd != ''">
+				AND A.CODETYPECD LIKE '%${srcCodeTypeCd}%'
+			</if>
+			<if test="srcCodeTypeNm != null and srcCodeTypeNm != ''">
+				AND A.CODETYPENM LIKE '%${srcCodeTypeNm}%'
+			</if>
+			<if test="srcCodeFlag != null and srcCodeFlag != ''">
+				AND A.CODEFLAG = #{srcCodeFlag}
+			</if>
+		</trim>
+	</sql>
+	<select id="selectCodeTypeListCnt" resultType="int">
+		/* system.code.selectCodeTypeListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectCodeTypeListSql"/>
+	</select>
+	<select id="selectCodeTypeList" resultType="kr.co.bitcube.system.dto.CodeTypesDto">
+		/* system.code.selectCodeTypeList */
+		SELECT  A.CODETYPEID
+		,       A.CODETYPECD
+		,       A.CODETYPENM
+		,       A.CODETYPEDESC
+		
+		<choose>
+            <when test="@MybatisUtils@isNotEmpty(isExcel) and isExcel == 1">
+		,		(CASE WHEN A.CODEFLAG = '1' THEN '사용자정의코드' ELSE '시스템코드' END) AS CODEFLAG
+		,		(CASE WHEN A.ISUSE = '1' THEN '사용' ELSE '미사용' END) AS ISUSE
+            </when>
+            <otherwise>
+		,       A.CODEFLAG
+		,       A.ISUSE
+			</otherwise>
+		</choose>
+
+		<include refid="selectCodeTypeListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectCodeList" resultType="kr.co.bitcube.common.dto.CodesDto">
+		/* system.code.selectCodeList */
+		SELECT  A.CODEID
+		,       A.CODETYPEID
+		,       A.CODETYPECD
+		,       A.CODENM1
+		,       A.CODEVAL1
+		,       A.CODENM2
+		,       A.CODEVAL2
+		,       A.DISORDER
+		<choose>
+            <when test="@MybatisUtils@isNotEmpty(isExcel) and isExcel == 1">
+		,		(CASE WHEN A.ISUSE = '1' THEN '사용' ELSE '미사용' END) AS ISUSE
+            </when>
+            <otherwise>
+		,       A.ISUSE
+			</otherwise>
+		</choose>
+		
+		FROM    SMPCODES A WITH(NOLOCK)
+		WHERE	1 = 1
+		<choose>
+            <when test="@MybatisUtils@isNotEmpty(isExcel) and isExcel == 1">
+				<foreach item="item" collection="list" open=" AND A.CODETYPEID IN (" separator="," close=")">
+				#{item.codeTypeId}
+				</foreach>
+		ORDER BY A.CODETYPEID DESC, A.DISORDER ASC
+            </when>
+            <otherwise>
+				<if test="srcCodeId != null and srcCodeId != ''">
+		AND		A.CODEID = #{srcCodeId}
+				</if>
+				<if test="srcCodeTypeId != null and srcCodeTypeId != ''">
+		AND		A.CODETYPEID = #{srcCodeTypeId}
+				</if>
+				<if test="srcCodeTypeCd != null and srcCodeTypeCd != ''">
+		AND		A.CODETYPECD = #{srcCodeTypeCd}
+				</if>
+				<if test="srcIsUse != null and srcIsUse != ''">
+		AND		A.ISUSE = #{srcIsUse}
+				</if>
+				<if test="orderString != null and orderString != ''">
+		ORDER BY ${orderString}
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectCodeTypeCdCnt" resultType="int">
+		/* system.code.selectCodeTypeCdCnt */
+		SELECT COUNT(1) FROM SMPCODETYPES WITH(NOLOCK)
+		WHERE UPPER(CODETYPECD) = UPPER(#{codeTypeCd})
+	</select>
+	
+	<insert id="insertCodeType">
+		/* system.code.insertCodeType */
+		INSERT INTO SMPCODETYPES (CODETYPEID, CODETYPECD, CODETYPENM, CODETYPEDESC, CODEFLAG, REMOTEIP, CREATEDATE, CREATORID, UPDATEDATE, UPDATERID, ISUSE)
+		VALUES (#{codeTypeId}, #{codeTypeCd}, #{codeTypeNm}, #{codeTypeDesc}, #{codeFlag}, #{remoteIp}, GETDATE(), #{creatorId}, GETDATE(), #{updaterId}, #{isUse})
+	</insert>
+	
+	<update id="updateCodeType">
+		/* system.code.updateCodeType */
+		UPDATE 	SMPCODETYPES 
+		SET 	CODETYPENM = #{codeTypeNm}
+		, 		CODETYPEDESC = #{codeTypeDesc}
+		, 		REMOTEIP = #{remoteIp}
+		,		UPDATEDATE = GETDATE()
+		, 		UPDATERID = #{updaterId}
+		, 		ISUSE = #{isUse}
+		<if test="codeFlag != null and codeFlag != ''">
+		,		codeFlag = #{codeFlag}
+		</if>
+		WHERE 	CODETYPEID = #{codeTypeId}
+	</update>
+	
+	<select id="selectCodesCnt" resultType="int">
+		/* system.code.selectCodesCnt */
+		SELECT COUNT(1) FROM SMPCODES WITH(NOLOCK) WHERE CODETYPEID = #{codeTypeId}
+	</select>
+	
+	<update id="deleteCodeType">
+		/* system.code.deleteCodeType */
+		DELETE SMPCODETYPES WHERE CODETYPEID = #{codeTypeId}
+	</update>
+	
+	<select id="selectDupliCodesCnt" resultType="int">
+		/* system.code.selectDupliCodesCnt */
+		SELECT COUNT(1) FROM SMPCODES WITH(NOLOCK) WHERE CODETYPEID = #{codeTypeId} AND CODEVAL1 = #{codeVal1}
+	</select>
+	
+	<insert id="insertCodes">
+		/* system.code.insertCodes */
+		INSERT INTO SMPCODES(CODEID, CODETYPEID, CODETYPECD, CODENM1, CODEVAL1, CODENM2, CODEVAL2, DISORDER, ISUSE)
+		VALUES(#{codeId}, #{codeTypeId}, #{codeTypeCd}, #{codeNm1}, #{codeVal1}, #{codeNm2}, #{codeVal2}, #{disOrder}, #{isUse})
+	</insert>
+	
+	<update id="updateCodes">
+		/* system.code.updateCodes */
+		UPDATE	SMPCODES
+		SET		CODENM1 = #{codeNm1}
+		,		CODEVAL1 = #{codeVal1}
+		,		CODENM2 = #{codeNm2}
+		,		CODEVAL2 = #{codeVal2}
+		,		DISORDER = #{disOrder}
+		,		ISUSE = #{isUse}
+		WHERE	CODEID = #{codeId}
+	</update>
+	
+	<update id="deleteCodes">
+		/* system.code.deleteCodes */
+		DELETE SMPCODES WHERE CODEID = #{codeId}
+	</update>
+</mapper>

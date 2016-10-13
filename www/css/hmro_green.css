@@ -1,0 +1,63 @@
+/* CSS Document */
+
+body {margin-top:0px; margin-left:10px; margin-bottom:10px; margin-right:10px; background-color:#c8c8c8}
+.popbody {margin-top:10px; margin-left:10px; margin-bottom:10px; margin-right:10px; background-image:url(/images/SBS/FR/bg_top.gif) ;background-color:#c8c8c8; background-repeat:repeat-x; background-position:center 1000px}
+td,textarea,input {font-family:dotum; font-size:9pt; color:#505050}
+.footer {height:38px; }
+
+
+/* Title */
+.ptitle {font-size:15px; font-weight:bold; letter-spacing:-1px; color:#000000; padding-top:1px;vertical-align:middle;}
+.stitle {font-weight:bold ;white-space:nowrap}
+.bullet_stitle {margin-top:9px; margin-left:5px ;white-space:nowrap}
+.bullet_stitle2 {margin-top:10px; margin-left:5px}
+.bullet_stitle3 {margin-top:3px}
+.bold {font-weight:bold}
+.tight {letter-spacing:-1px}
+.8pt {font-size:8pt}
+.dotum {font-family:dotum}
+.point {color:#F26522}
+.blue {color: #09638F}
+.tip {font-size:9pt; color:#2787B6; padding-left:10px}
+.moneyGuide {font-family:dotum; font-size:8pt; font-weight:normal; letter-spacing:-1px; color: #2787B6}
+.imgborder {border:1px solid silver; margin-right:5px}
+.money_align {text-align:right}
+.normal {font-weight:normal}
+.popup_title {font-size:14px; color:#FFFFFF; font-weight:bold; padding-bottom:3px}
+.part1 {padding-top:8px}
+.part2 {padding-top:12px}
+
+
+/* Link */
+a {text-decoration:none; font-family:dotum; font-size:9pt; color:#3366FF}
+a:hover {text-decoration:none; font-family:dotum; font-size:9pt; color:#FF3300}
+
+a.sort {text-decoration:none; font-family:dotum; font-size:9pt; color:#505050}
+a.sort:hover {text-decoration:underline; font-family:dotum; font-size:9pt; color:#505050}
+
+
+/* Table */
+.table_top_line {background-color:#1D8ABE; height:2px}
+.table_td_subject {background-color:#DBEAF7; font-weight:bold; padding-left:20px; padding-right:20px; height:25px; padding-top:4px ;white-space:nowrap}
+.table_td_subject1_1 {font-weight:bold; padding-left:20px; padding-right:20px; height:25px; padding-top:4px}
+.table_td_subject2 {background-color:#DBEAF7; font-weight:bold; padding-left:5px; padding-right:5px; height:25px; padding-top:4px; text-align:center}
+.table_td_subject3 {padding-top:8px; padding-bottom:5px; text-align:center}
+.table_td_subject4 {background-color:#DBEAF7; text-align:center; padding-left:5px; padding-right:5px}
+.table_td_subject5 {background-color:#DBEAF7; font-weight:bold; padding-left:10px; padding-right:10px; height:25px; padding-top:4px}
+.table_td_subject8 {background-color:#DBEAF7; font-weight:bold; padding-left:17px; padding-right:5px; height:25px; padding-top:4px;}
+.table_td_contents {padding-left:6px;padding-right:6px}
+.table_td_contents2 {padding-top:8px; padding-bottom:5px}
+.table_td_contents3 {padding-left:6px; padding-top:4px}
+.table_td_split {width:1px}
+.table_td_split2 {width:1px; background-color:#eaeaea}
+.innertable {padding-top:1px; padding-bottom:5px}
+.space {height:15px}
+.paddingleft5 {padding-left:5px}
+
+
+/* FORM */
+.select {font-family:arial; font-size:8pt; color:#505050; height:18px}
+.input_text {height:18px; background-color:#f7f7f7; border:1px solid #aeaeae; font-family:dotum; font-size:9pt; color:#505050}
+.icon_search {margin-left:-1px}
+.right {text-align:right}
+

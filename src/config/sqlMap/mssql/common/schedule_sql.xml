@@ -1,0 +1,1644 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+		
+<mapper namespace="common.schedule">
+	<select id="selectAutoReceiveListAfter5Day" resultType="java.util.HashMap">
+		/*common.schedule.selectAutoReceiveListAfter5Day*/
+		SELECT	(A.orde_iden_numb + '-' + A.orde_sequ_numb) AS orde_iden_numb
+		,		A.purc_iden_numb
+		,		A.deli_iden_numb
+		,		A.deli_prod_quan
+		,		ISNULL((SELECT A.ORDE_IDEN_NUMB + '-' + Z.ORDE_SEQU_NUMB FROM MRORDT Z WITH(NOLOCK) WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB AND Z.ADD_REPRE_SEQU_NUMB = A.ORDE_SEQU_NUMB),'') AS ADD_ORDE_SEQU_NUMB  
+		FROM	mracpt A WITH(NOLOCK)
+		,		mrordm B WITH(NOLOCK)
+		,		mrordt c WITH(NOLOCK)
+		WHERE	a.orde_iden_numb = c.orde_iden_numb
+		and		a.orde_sequ_numb = c.orde_sequ_numb
+		and		A.deli_stat_flag = '60'
+		<![CDATA[
+		AND		A.INVOICEDATE < GETDATE() - 5
+		AND		A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+		AND		B.ORDE_TYPE_CLAS <> '90'
+		AND		C.NORM_TRUS_FLAG <> '1'
+		AND		RTRIM(LTRIM(A.DELI_INVO_IDEN)) <> ''
+		]]>
+		AND		(C.ADD_REPRE_SEQU_NUMB IS NULL OR C.ADD_REPRE_SEQU_NUMB = '')
+		
+		<!-- 강제인수 -->
+<!-- 		SELECT	(A.orde_iden_numb + '-' + A.orde_sequ_numb) AS orde_iden_numb -->
+<!-- 		,		B.purc_iden_numb -->
+<!-- 		,		B.deli_iden_numb -->
+<!-- 		,		B.deli_prod_quan -->
+<!-- 		,		'' AS ADD_ORDE_SEQU_NUMB -->
+<!-- 		FROM	MIG_TEMP2 A -->
+<!-- 		INNER JOIN MRACPT B -->
+<!-- 			ON	A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB -->
+<!-- 			AND	A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB -->
+<!-- 		WHERE	B.DELI_STAT_FLAG = '60' -->
+<!-- 		AND		B.DELI_IDEN_NUMB = '1' -->
+	</select>
+	
+	<select id="selectNotReceiveSaleList" resultType="java.util.HashMap">
+		/*common.schedule.selectNotReceiveSaleList*/
+			SELECT	A.sale_sequ_numb
+			,		A.CLIENTID
+			,		dbo.FNS_BorgNameByBorgID(A.CLIENTID) AS CLIENTNM
+			FROM	mssalm A WITH(NOLOCK)
+			INNER JOIN SMPBORGS B WITH(NOLOCK)
+				ON	A.clientid = B.BORGID
+			<![CDATA[
+			WHERE	(A.SAP_JOUR_NUMB IS NOT NULL OR A.SAP_JOUR_NUMB <> '')
+			AND		A.EXPIRATION_DATE < CONVERT(DATETIME,CONVERT(VARCHAR(10),GETDATE(),121))
+			AND		A.SALE_TOTA_AMOU - ISNULL(A.PAY_AMOU,0) > 10
+			AND		B.GROUPID <> '304451'
+			]]>
+			AND		A.tran_stat_flag = '0'
+			GROUP BY A.sale_sequ_numb
+			,		A.CLIENTID
+	</select>
+	
+	<select id="selectOrderLimitList" resultType="java.util.HashMap">
+		/*common.schedule.selectOrderLimitList*/
+			SELECT	A.CLIENTID
+			,		dbo.FNS_BorgNameByBorgID(A.CLIENTID) AS CLIENTNM
+			FROM	mssalm A WITH(NOLOCK)
+			INNER JOIN SMPBORGS B WITH(NOLOCK)
+				ON	A.clientid = B.BORGID
+				AND	ISNULL(B.ISLIMIT,'0') = '0'
+			INNER JOIN SMPBRANCHS C WITH(NOLOCK)
+				ON	A.BRANCHID = C.BRANCHID
+			<![CDATA[
+			WHERE	(A.SAP_JOUR_NUMB IS NOT NULL OR A.SAP_JOUR_NUMB <> '')
+			AND		CONVERT(DATETIME,CONVERT(VARCHAR(10),GETDATE(),121)) = (CASE WHEN C.AUTORDERLIMITPERIOD = 60 THEN A.EXPIRATION_DATE+30 ELSE A.EXPIRATION_DATE+10 END)
+		--	AND		CONVERT(DATETIME,CONVERT(VARCHAR(10),GETDATE(),121)) > (CASE WHEN C.AUTORDERLIMITPERIOD = 60 THEN A.EXPIRATION_DATE+30 ELSE A.EXPIRATION_DATE+10 END)
+			AND		A.SALE_TOTA_AMOU - ISNULL(A.PAY_AMOU,0) > 10
+			AND		B.GROUPID <> '304451'
+			]]>
+			AND		A.tran_stat_flag = '1'
+			AND		A.TRANSFER_STATUS = '1'
+			GROUP BY A.CLIENTID
+	</select>
+	
+	<select id="selectCltUserSmsList" resultType="java.util.HashMap">
+		/*common.schedule.selectCltUserSmsList*/
+		SELECT	DISTINCT
+				CONVERT(VARCHAR(10),A.EXPIRATION_DATE,120) AS EXPIRATION_DATE
+		,		D1.MOBILE
+		,		(A.SALE_TOTA_AMOU - ISNULL(A.PAY_AMOU,0)) AS PAYMENT
+		FROM	MSSALM A WITH(NOLOCK)
+		INNER JOIN SMPBORGS B WITH(NOLOCK)
+			ON	A.CLIENTID = B.BORGID
+			AND	ISNULL(B.ISLIMIT,'0') = '0'
+		INNER JOIN SMPBRANCHS C WITH(NOLOCK)
+			ON	A.BRANCHID = C.BRANCHID
+		INNER JOIN SMPBORGS_USERS D WITH(NOLOCK)
+			ON	A.BRANCHID = D.BORGID
+			AND	D.ISDEFAULT = '1'
+		INNER JOIN SMPUSERS D1 WITH(NOLOCK)
+			ON	D.USERID = D1.USERID
+			AND	D1.ISUSE = '1'
+			AND	D1.ISLOGIN = '1'
+		LEFT OUTER JOIN SMPRECEIVEINFO D2 WITH(NOLOCK)
+			ON	D1.USERID = D2.USERID
+			AND	D2.ISSMS = '1'
+		INNER JOIN SMPBORGS_USERS_ROLES E WITH(NOLOCK)
+			ON	D.BORGID = E.BORGID
+			AND	D.USERID = E.USERID
+			AND	E.ISDEFAULT = '1'
+		INNER JOIN SMPROLES F WITH(NOLOCK)
+			ON	E.ROLEID = F.ROLEID
+			AND	F.ROLECD = 'BUY_CLT'
+		WHERE	A.TRAN_STAT_FLAG = '1'
+		AND		A.TRANSFER_STATUS = '1'
+		<![CDATA[
+		AND		B.GROUPID <> '304451'
+		AND		A.SALE_TOTA_AMOU-ISNULL(A.PAY_AMOU,0) > 10
+		]]>
+		AND		CONVERT(VARCHAR(10),A.EXPIRATION_DATE+1,120) = CONVERT(VARCHAR(10),GETDATE(),120)
+	</select>
+	
+	<update id="updateStatusNotGiveBuyManage">
+		/*common.schedule.updateStatusNotGiveBuyManage*/
+		update	msbuym
+		set		tran_stat_flag = '1'
+		<![CDATA[
+		where	(SAP_JOUR_NUMB IS NOT NULL OR SAP_JOUR_NUMB <> '')
+		and		expiration_date < GETDATE()
+		and		buyi_tota_amou - ISNULL(pay_amou,0) > 10
+		AND		tran_stat_flag = '0'
+		]]>
+	</update>
+	
+	<update id="updateManageBorgOfNotReceiveSale">
+		/*common.schedule.updateManageBorgOfNotReceiveSale*/
+		UPDATE	mssalm
+		SET		TRAN_STAT_FLAG = '1'
+		WHERE	SALE_SEQU_NUMB = #{sale_sequ_numb}
+	</update>
+	
+	<update id="updateBorgOrderLimitByClientId">
+		/*common.schedule.updateBorgOrderLimitByClientId*/
+		UPDATE	SMPBORGS
+		SET		ISLIMIT = '1'
+		,		UPDATERID = '0'
+		,		UPDATEDATE = GETDATE()
+		WHERE	BORGID = #{cliendId}
+	</update>
+	
+	<update id="updateBondOverMonthDay">
+		/*common.schedule.updateBondOverMonthDay*/
+		UPDATE	mssalm
+		SET		sale_over_month = DATEDIFF(MONTH, expiration_date, GETDATE())
+		,		sale_over_day = DATEDIFF(DAY, expiration_date, GETDATE())
+		<![CDATA[
+		WHERE	(SAP_JOUR_NUMB IS NOT NULL OR SAP_JOUR_NUMB <> '')
+		AND		sale_tota_amou > ISNULL(pay_amou,0)
+		]]>
+	</update>
+	
+	<update id="updateBuyOverMonthDay">
+		/*common.schedule.updateBuyOverMonthDay*/
+		update	msbuym
+		set		buyi_over_month = DATEDIFF(MONTH, expiration_date, GETDATE())
+		,		buyi_over_day = DATEDIFF(DAY, expiration_date, GETDATE())
+		<![CDATA[
+		WHERE	(SAP_JOUR_NUMB IS NOT NULL OR SAP_JOUR_NUMB <> '')
+		AND		buyi_tota_amou > ISNULL(pay_amou,0)
+		]]>
+	</update>
+	
+	<select id="selectOrderStockNoticeUserList" resultType="java.util.HashMap">
+		/*common.schedule.selectOrderStockNoticeUserList*/
+		SELECT	B.orde_user_id
+		FROM	mracpt A WITH(NOLOCK)
+		,		mrordm B WITH(NOLOCK)
+		WHERE	A.deli_stat_flag = '60'
+		<![CDATA[
+		AND		A.deli_degr_date < GETDATE() - 4
+		AND		A.orde_iden_numb = B.orde_iden_numb
+		AND		B.orde_type_clas <> '90'
+		AND		RTRIM(LTRIM(A.DELI_INVO_IDEN)) <> ''
+		]]>
+		GROUP BY B.orde_user_id
+	</select>
+	
+	<update id="updateOrderCntOfMcgoodVendor">
+		/*common.schedule.updateOrderCntOfMcgoodVendor*/
+		update	mcgoodvendor
+		set		order_cnt = order_cnt + b.orderCnt
+		from	mcgoodvendor as a WITH(NOLOCK)
+		,(
+				select	good_iden_numb
+				,		vendorid
+				,		COUNT(1) as orderCnt
+				from	mrpurt WITH(NOLOCK)
+				where	clin_date between convert(date,GETDATE()) and convert(date,GETDATE()+1)
+				<![CDATA[
+				and		purc_stat_flag < '90'
+				]]>
+				group by good_iden_numb, vendorid
+		) as b
+		where	a.good_iden_numb = b.good_iden_numb
+		and		a.vendorid = b.vendorid
+	</update>
+	
+	<select id="selectFailBidList" resultType="java.util.HashMap">
+		/*common.schedule.selectFileBidList*/
+		select	aa.bidid
+		,		aa.newgoodid
+		from 
+		(
+				select	a.bidid
+				,		isnull(a.newgoodid,0) as newgoodid
+				,		(select COUNT(1) from mcbidauction b WITH(NOLOCK) where b.bidid = a.bidid and b.vendorbidstate > '10') as bidcnt
+				from	mcbid a WITH(NOLOCK)
+				where	a.bidstate = '10'
+				<![CDATA[
+				and		a.bidenddate < GETDATE()
+				]]>
+		) aa
+		where	aa.bidcnt = 0
+	</select>
+	
+	<update id="updateMcbidStatus">
+		/*common.schedule.updateMcbidStatus*/
+		update	mcbid
+		set		bidstate = #{bidstate}
+		where	bidid = #{bidid}
+	</update>
+	
+	<update id="updateMcnewgoodRequestStatus">
+		/*common.schedule.updateMcnewgoodRequestStatus*/
+		update	mcnewgoodrequest
+		set		state = #{state}
+		where	newgoodid = #{newgoodid}
+	</update>
+	
+	<select id="selectEndBidList" resultType="java.util.HashMap">
+		/*common.schedule.selectEndBidList*/
+		select	a.bidid
+		,		isnull(a.newgoodid,0) as newgoodid
+		from	mcbid a WITH(NOLOCK)
+		,		mcbidauction b WITH(NOLOCK)
+		where	a.bidid = b.bidid
+		and		a.bidstate = '10'
+		and		b.vendorbidstate = '15'
+		<![CDATA[
+		and		a.bidenddate < GETDATE()
+		]]>
+		group by a.bidid, isnull(a.newgoodid,0)
+	</select>
+	
+	<select id="selectPaymentList" resultType="java.util.HashMap">
+		/*common.schedule.selectPaymentList*/
+		select	YEAR(a.clos_sale_date) as clos_sale_date
+		,		a.sale_sequ_numb
+		,		isnull(a.pay_amou,0) as pay_amou
+		,		a.sap_jour_numb
+		from	mssalm a WITH(NOLOCK)
+		<![CDATA[
+		where	(a.sap_jour_numb is not null and a.sap_jour_numb <> '')
+		]]>
+		and		(a.pay_amou_numb is null or a.pay_amou_numb = '')
+	</select>
+	
+	<select id="selectGivePayList" resultType="java.util.HashMap">
+		/*common.schedule.selectGivePayList*/
+		select	YEAR(a.clos_buyi_date) as clos_buyi_date
+		,		a.buyi_sequ_numb
+		,		isnull(a.pay_amou,0) as pay_amou
+		,		a.sap_jour_numb
+		from	msbuym a WITH(NOLOCK)
+		<![CDATA[
+		where	(a.sap_jour_numb is not null and a.sap_jour_numb <> '')
+		]]>
+		and		(a.pay_amou_numb is null or a.pay_amou_numb = '')
+	</select>
+	
+	<select id="selectLastMonthSaleList" resultType="java.util.HashMap">
+		/*common.schedule.selectLastMonthSaleList*/
+		SELECT	AA.clientid
+		,		dbo.FNS_BorgNameByBorgID(AA.CLIENTID) AS clientnm
+		,		AA.BRANCHID
+		,		dbo.FNS_BorgNameByBorgID(AA.BRANCHID) AS BRANCHNM
+		,		isnull(SUM(AA.sale_requ_amou),0) AS sale_requ_amou
+		FROM
+		(
+				select	A.CLIENTID
+				,		A.BRANCHID
+				,		A.sale_requ_amou
+				from	mssalm a WITH(NOLOCK)
+				where	a.clos_sale_date between CONVERT(DATE,CONVERT(varchar(8), DATEADD(M,-1,GETDATE()),120)+'01')
+							AND DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE()),0))
+				<![CDATA[
+				AND		(a.sap_jour_numb is not null and a.sap_jour_numb <> '')
+				]]>
+		) AA
+		GROUP BY AA.clientid, AA.BRANCHID
+	</select>
+	
+	<select id="selectOrderAmountSum" resultType="double">
+		/*common.schedule.selectOrderAmountSum*/
+		select	isnull(sum(b.orde_requ_quan*b.orde_requ_pric),0) as sale_requ_amou
+		from	mrordm a WITH(NOLOCK)
+		,		mrordt b WITH(NOLOCK)
+		where	a.orde_iden_numb = b.orde_iden_numb
+		<![CDATA[
+		and		b.orde_stat_flag not in ('99','09')
+		and		a.regi_date_time > CONVERT(DATE,CONVERT(varchar(8), DATEADD(M,0,GETDATE()),120)+'01')
+		]]>
+		and		a.branchid = #{branchId}
+	</select>
+	
+	<select id="selectEmailSendList" resultType="kr.co.bitcube.common.dto.MailInfoDto">
+		/*common.schedule.selectEmailSendList*/
+		SELECT	mailSeq
+		,		mailSubject
+		,		mailContents
+		,		receiveMailAddr as receiveMailAddrs
+		,		sendFlag
+		,		errMsg
+		,		sendDate
+		,		createDate
+		FROM	mailInfo WITH(NOLOCK)
+		WHERE	sendFlag = '0'
+	</select>
+	
+	<update id="updateEmailSend" parameterType="kr.co.bitcube.common.dto.MailInfoDto">
+		/*common.schedule.updateEmailSend*/
+		UPDATE	mailInfo
+		SET		sendFlag = #{sendFlag}
+		,		errMsg = #{errMsg}
+		<if test='sendFlag != null and sendFlag == "1"'>
+		,		sendDate = GETDATE()
+		</if>
+		WHERE	mailSeq = #{mailSeq}
+	</update>
+	
+	<select id="selectMeterialPaymentDay45List" resultType="java.util.HashMap">
+		/*common.schedule.selectMeterialPaymentDay45List*/
+		SELECT	A.saleTotaAmou AS saleTotaAmou
+		,		A.payAmou AS payAmou
+		,		REPLACE(CONVERT(VARCHAR, CAST(A.payment AS MONEY),1),'.00','') AS payment
+		,		A.branchid AS branchId
+		,		B.BRANCHNM AS branchNm
+		,		B.WORKID AS workId
+		,		G.WORKNM AS workNm
+		,		A.closSaleDate AS closSaleDate
+		,		E.USERID AS userId
+		,		E.USERNM AS userNm
+		,		REPLACE(E.MOBILE,'-','') AS mobile
+		,		F.ROLEID AS roleId
+		,		F.ROLENM AS roleNm
+		FROM(
+				SELECT	A.branchid AS branchId
+				,		SUM(ISNULL(A.sale_tota_amou,0)) AS saleTotaAmou
+				,		SUM(ISNULL(A.pay_amou,0)) AS payAmou
+				,		SUM(ISNULL(A.sale_tota_amou,0)) - SUM(ISNULL(A.pay_amou,0)) AS payment
+				,		MAX(A.clos_sale_date) AS closSaleDate
+				FROM MSSALM A WITH(NOLOCK)
+				WHERE 1=1
+				AND A.transfer_status = '1'
+				AND (clos_sale_date IS NOT NULL OR clos_sale_date !='')
+				<![CDATA[
+				AND ISNULL(A.sale_tota_amou,0) > ISNULL(A.pay_amou,0)
+				AND A.clos_sale_date < DATEADD(DAY,-45,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 23:59:59'))
+				]]>
+				GROUP BY A.branchid
+		)A
+		LEFT OUTER JOIN SMPBRANCHS B
+			ON A.branchid = B.BRANCHID
+		LEFT OUTER JOIN SMPCODES C
+			ON B.CONTRACTSPECIAL = C.CODEVAL1
+			AND C.CODETYPECD = 'CONTRACT_SPECIAL'
+			AND (C.CODEVAL1 = '10' OR C.CODEVAL1 = '20')
+		LEFT OUTER JOIN SMPBORGS_USERS_ROLES D
+			ON B.BRANCHID = D.BORGID
+		LEFT OUTER JOIN SMPUSERS E
+			ON D.USERID = E.USERID
+		LEFT OUTER JOIN SMPROLES F
+			ON D.ROLEID = F.ROLEID
+		LEFT OUTER JOIN SMPWORKINFO G
+			ON B.WORKID = G.WORKID
+		WHERE 1=1
+		AND F.ROLEID = '13131'
+		AND A.closSaleDate BETWEEN DATEADD(DAY,-45,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 00:00:00')) AND DATEADD(DAY,-45,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 23:59:59'))
+	
+	</select>
+	
+	<select id="selectMeterialPaymentDay15List" resultType="java.util.HashMap">
+		/*common.schedule.selectMeterialPaymentDay15List*/
+		SELECT	A.saleTotaAmou AS saleTotaAmou
+		,		A.payAmou AS payAmou
+		,		REPLACE(CONVERT(VARCHAR, CAST(A.payment AS MONEY),1),'.00','') AS payment
+		,		A.branchid AS branchId
+		,		B.BRANCHNM AS branchNm
+		,		B.WORKID AS workId
+		,		G.WORKNM AS workNm
+		,		A.closSaleDate AS closSaleDate
+		,		E.USERID AS userId
+		,		E.USERNM AS userNm
+		,		REPLACE(E.MOBILE,'-','') AS mobile
+		,		F.ROLEID AS roleId
+		,		F.ROLENM AS roleNm
+		FROM(
+				SELECT	A.branchid AS branchId
+				,		SUM(ISNULL(A.sale_tota_amou,0)) AS saleTotaAmou
+				,		SUM(ISNULL(A.pay_amou,0)) AS payAmou
+				,		SUM(ISNULL(A.sale_tota_amou,0)) - SUM(ISNULL(A.pay_amou,0)) AS payment
+				,		MAX(A.clos_sale_date) AS closSaleDate
+				FROM MSSALM A WITH(NOLOCK)
+				WHERE 1=1
+				AND A.transfer_status = '1'
+				AND (clos_sale_date IS NOT NULL OR clos_sale_date !='')
+				<![CDATA[
+				AND ISNULL(A.sale_tota_amou,0) > ISNULL(A.pay_amou,0)
+				AND A.clos_sale_date < DATEADD(DAY,-15,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 23:59:59'))
+				]]>
+				GROUP BY A.branchid
+		)A
+		LEFT OUTER JOIN SMPBRANCHS B
+			ON A.branchid = B.BRANCHID
+		LEFT OUTER JOIN SMPCODES C
+			ON B.CONTRACTSPECIAL = C.CODEVAL1
+			AND C.CODETYPECD = 'CONTRACT_SPECIAL'
+			AND (C.CODEVAL1 = '30' OR C.CODEVAL1 = '40' OR C.CODEVAL1 = '50')
+		LEFT OUTER JOIN SMPBORGS_USERS_ROLES D
+			ON B.BRANCHID = D.BORGID
+		LEFT OUTER JOIN SMPUSERS E
+			ON D.USERID = E.USERID
+		LEFT OUTER JOIN SMPROLES F
+			ON D.ROLEID = F.ROLEID
+		LEFT OUTER JOIN SMPWORKINFO G
+			ON B.WORKID = G.WORKID
+		WHERE 1=1
+		AND F.ROLEID = '13131'
+		AND A.closSaleDate BETWEEN DATEADD(DAY,-15,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 00:00:00')) AND DATEADD(DAY,-15,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 23:59:59'))
+	
+	</select>
+	
+	<select id="selectOrderLimitNoticeGuideDay61List" resultType="java.util.HashMap">
+		/*common.schedule.selectMeterialPaymentDay61List*/
+		SELECT	A.saleTotaAmou AS saleTotaAmou
+		,		A.payAmou AS payAmou
+		,		REPLACE(CONVERT(VARCHAR, CAST(A.payment AS MONEY),1),'.00','') AS payment
+		,		A.branchid AS branchId
+		,		B.BRANCHNM AS branchNm
+		,		B.WORKID AS workId
+		,		G.WORKNM AS workNm
+		,		A.closSaleDate AS closSaleDate
+		,		E.USERID AS userId
+		,		E.USERNM AS userNm
+		,		REPLACE(E.MOBILE,'-','') AS mobile
+		,		F.ROLEID AS roleId
+		,		F.ROLENM AS roleNm
+		FROM(
+				SELECT	A.branchid AS branchId
+				,		SUM(ISNULL(A.sale_tota_amou,0)) AS saleTotaAmou
+				,		SUM(ISNULL(A.pay_amou,0)) AS payAmou
+				,		SUM(ISNULL(A.sale_tota_amou,0)) - SUM(ISNULL(A.pay_amou,0)) AS payment
+				,		MAX(A.clos_sale_date) AS closSaleDate
+				FROM MSSALM A WITH(NOLOCK)
+				WHERE 1=1
+				AND A.transfer_status = '1'
+				AND (clos_sale_date IS NOT NULL OR clos_sale_date !='')
+				<![CDATA[
+				AND ISNULL(A.sale_tota_amou,0) > ISNULL(A.pay_amou,0)
+				AND A.clos_sale_date < DATEADD(DAY,-61,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 23:59:59'))
+				]]>
+				GROUP BY A.branchid
+		)A
+		LEFT OUTER JOIN SMPBRANCHS B
+			ON A.branchid = B.BRANCHID
+		LEFT OUTER JOIN SMPCODES C
+			ON B.CONTRACTSPECIAL = C.CODEVAL1
+			AND C.CODETYPECD = 'CONTRACT_SPECIAL'
+			AND (C.CODEVAL1 = '10' OR C.CODEVAL1 = '20')
+		LEFT OUTER JOIN SMPBORGS_USERS_ROLES D
+			ON B.BRANCHID = D.BORGID
+		LEFT OUTER JOIN SMPUSERS E
+			ON D.USERID = E.USERID
+		LEFT OUTER JOIN SMPROLES F
+			ON D.ROLEID = F.ROLEID
+		LEFT OUTER JOIN SMPWORKINFO G
+			ON B.WORKID = G.WORKID
+		WHERE 1=1
+		AND F.ROLEID = '13131'
+		AND A.closSaleDate BETWEEN DATEADD(DAY,-61,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 00:00:00')) AND DATEADD(DAY,-61,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 23:59:59'))
+	
+	</select>
+	
+		<select id="selectOrderLimitNoticeGuideDay31List" resultType="java.util.HashMap">
+		/*common.schedule.selectMeterialPaymentDay31List*/
+		SELECT	A.saleTotaAmou AS saleTotaAmou
+		,		A.payAmou AS payAmou
+		,		REPLACE(CONVERT(VARCHAR, CAST(A.payment AS MONEY),1),'.00','') AS payment
+		,		A.branchid AS branchId
+		,		B.BRANCHNM AS branchNm
+		,		B.WORKID AS workId
+		,		G.WORKNM AS workNm
+		,		A.closSaleDate AS closSaleDate
+		,		E.USERID AS userId
+		,		E.USERNM AS userNm
+		,		REPLACE(E.MOBILE,'-','') AS mobile
+		,		F.ROLEID AS roleId
+		,		F.ROLENM AS roleNm
+		FROM(
+				SELECT	A.branchid AS branchId
+				,		SUM(ISNULL(A.sale_tota_amou,0)) AS saleTotaAmou
+				,		SUM(ISNULL(A.pay_amou,0)) AS payAmou
+				,		SUM(ISNULL(A.sale_tota_amou,0)) - SUM(ISNULL(A.pay_amou,0)) AS payment
+				,		MAX(A.clos_sale_date) AS closSaleDate
+				FROM MSSALM A WITH(NOLOCK)
+				WHERE 1=1
+				AND A.transfer_status = '1'
+				AND (clos_sale_date IS NOT NULL OR clos_sale_date !='')
+				<![CDATA[
+				AND ISNULL(A.sale_tota_amou,0) > ISNULL(A.pay_amou,0)
+				AND A.clos_sale_date < DATEADD(DAY,-31,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 23:59:59'))
+				]]>
+				GROUP BY A.branchid
+		)A
+		LEFT OUTER JOIN SMPBRANCHS B
+			ON A.branchid = B.BRANCHID
+		LEFT OUTER JOIN SMPCODES C
+			ON B.CONTRACTSPECIAL = C.CODEVAL1
+			AND C.CODETYPECD = 'CONTRACT_SPECIAL'
+			AND (C.CODEVAL1 = '30' OR C.CODEVAL1 = '40' OR C.CODEVAL1 = '50')
+		LEFT OUTER JOIN SMPBORGS_USERS_ROLES D
+			ON B.BRANCHID = D.BORGID
+		LEFT OUTER JOIN SMPUSERS E
+			ON D.USERID = E.USERID
+		LEFT OUTER JOIN SMPROLES F
+			ON D.ROLEID = F.ROLEID
+		LEFT OUTER JOIN SMPWORKINFO G
+			ON B.WORKID = G.WORKID
+		WHERE 1=1
+		AND F.ROLEID = '13131'
+		AND A.closSaleDate BETWEEN DATEADD(DAY,-31,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 00:00:00')) AND DATEADD(DAY,-31,CONVERT(DATETIME, CONVERT(VARCHAR(10),GETDATE(), 120)+' 23:59:59'))
+	</select>
+	
+	<select id="selectAttemptedReceiveSaleList" resultType="java.util.HashMap">
+		/*common.schedule.selectAttemptedReceiveSaleList*/
+		SELECT	DISTINCT D.MOBILE
+		,		A.SALE_SEQU_NUMB
+		,		A.CLIENTID
+		,		D.USERNM
+		,		D.MOBILE
+		,		E.ROLEID
+		,		B.ISLIMIT
+		,		F.BRANCHNM
+		,		G.WORKNM
+		FROM MSSALM A WITH(NOLOCK)
+		LEFT OUTER JOIN(
+			SELECT	BORGID as BORGID
+			,		CLIENTID as CLIENTID
+			,		GROUPID as GROUPID
+			,		BORGNM as BORGNM
+			,		ISNULL(ISLIMIT,'0') as ISLIMIT
+			,		ISUSE as ISUSE
+			FROM SMPBORGS WITH(NOLOCK)
+		) B
+			ON A.CLIENTID = B.CLIENTID
+		LEFT OUTER JOIN SMPBORGS_USERS C WITH(NOLOCK)
+			ON B.BORGID = C.BORGID
+		INNER JOIN SMPUSERS D WITH(NOLOCK)
+			ON C.USERID = D.USERID
+		LEFT OUTER JOIN SMPBORGS_USERS_ROLES E WITH(NOLOCK)
+			ON B.BORGID = E.BORGID
+			AND D.USERID = E.USERID
+		INNER JOIN SMPBRANCHS F WITH(NOLOCK)
+			ON A.BRANCHID = F.BRANCHID
+		INNER JOIN SMPWORKINFO G WITH(NOLOCK)
+			ON F.WORKID = G.WORKID
+		WHERE 1=1
+		<![CDATA[
+		AND (A.SAP_JOUR_NUMB IS NOT NULL OR A.SAP_JOUR_NUMB <> '')
+		AND	A.expiration_date < GETDATE()
+		AND	A.sale_tota_amou > ISNULL(A.pay_amou,0)
+		AND E.ROLEID = '13131'
+		AND	B.GROUPID <> '304451'
+		]]>
+		AND	A.TRAN_STAT_FLAG = '0'
+		AND B.ISLIMIT = '0'
+		AND B.ISUSE = '1'
+		AND F.ISORDERLIMIT = '0'
+	</select>
+	
+	<select id="selectOrder6MonthNothingList" resultType="java.util.HashMap">
+		/*common.schedule.selectOrder6MonthNothingList*/
+		SELECT	A.branchid AS branchId 
+		,		A.regi_date_time AS regiDateTime
+		FROM (
+			SELECT	branchid AS branchid
+			,		MAX(regi_date_time) AS regi_date_time
+			FROM MRORDM WITH(NOLOCK)
+			GROUP BY branchid
+		)A
+		WHERE 1=1
+		<![CDATA[
+		AND regi_date_time > CONVERT(DATETIME, '2014-01-01')
+		AND regi_date_time <= DATEADD(DAY, -180, CONVERT(DATETIME, CONVERT(VARCHAR(10), GETDATE(), 120)))
+		]]>
+		ORDER BY regi_date_time DESC
+	</select>
+	
+	<update id="branchOrderLimit">
+		/*common.schedule.branchOrderLimit*/
+		UPDATE SMPBRANCHS SET
+			ISORDERLIMIT = '1'
+		WHERE BRANCHID = #{branchId}
+	</update>
+	
+	<select id="selectAdmPowerList" resultType="java.util.HashMap">
+		/*common.schedule.selectAdmPowerList*/
+		SELECT	A.ROLECD AS ROLECD
+		,		B.USERID AS USERID
+		,		C.USERNM AS USERNM
+		,		C.MOBILE AS MOBILE
+		FROM SMPROLES A WITH(NOLOCK)
+		INNER JOIN SMPBORGS_USERS_ROLES B WITH(NOLOCK)
+			ON A.ROLEID = B.ROLEID
+		INNER JOIN SMPUSERS C WITH(NOLOCK)
+			ON B.USERID = C.USERID
+		WHERE 	A.ROLECD = 'MRO_ADMIN002'
+		AND		C.ISUSE = '1'
+	</select>
+	
+	<select id="selectMainInfoTypeCnt" resultType="int">
+		/* common.schedule.selectMainInfoTypeCnt */
+		SELECT 	COUNT(1) 
+		FROM 	SMP_ADM_MAIN_INFO A WITH(NOLOCK) 
+		WHERE 	A.INFO_YYYYMMDD = CONVERT(VARCHAR(8),GETDATE(),112)
+		AND		A.INFO_TYPE = #{info_type}
+	</select>
+	
+	<update id="updateMainSellInfo">
+		/* common.schedule.updateMainSellInfo */
+		UPDATE	SMP_ADM_MAIN_INFO
+		SET		CREATEDATE = GETDATE()
+		,		INFO_01 = ISNULL((
+								SELECT	SUM(
+												(CASE	WHEN E.orde_iden_numb IS NOT NULL THEN E.sale_prod_quan
+														WHEN D.orde_iden_numb IS NOT NULL THEN D.deli_prod_quan
+														WHEN C.orde_iden_numb IS NOT NULL THEN C.purc_requ_quan
+														ELSE B.orde_requ_quan
+												END) *
+												(CASE	WHEN E.orde_iden_numb IS NOT NULL THEN E.sale_prod_pris
+														WHEN C.orde_iden_numb IS NOT NULL THEN C.orde_requ_pric
+														ELSE B.orde_requ_pric
+												END)
+										)
+								FROM	mrordm A WITH(NOLOCK) 
+								INNER JOIN mrordt B WITH(NOLOCK) 
+									ON	A.orde_iden_numb = B.orde_iden_numb 
+								LEFT OUTER JOIN mrpurt C WITH(NOLOCK) 
+									ON	B.orde_iden_numb = C.orde_iden_numb 
+									AND B.orde_sequ_numb = C.orde_sequ_numb 
+								LEFT OUTER JOIN mracpt D WITH(NOLOCK) 
+									ON	C.orde_iden_numb = D.orde_iden_numb 
+									AND C.orde_sequ_numb = D.orde_sequ_numb 
+									AND C.purc_iden_numb = D.purc_iden_numb
+								LEFT OUTER JOIN mrordtlist E WITH(NOLOCK)
+									ON  D.orde_iden_numb = E.orde_iden_numb
+									AND D.orde_sequ_numb = E.orde_sequ_numb
+									AND D.purc_iden_numb = E.purc_iden_numb
+									AND D.deli_iden_numb = E.deli_iden_numb
+								LEFT OUTER JOIN MSSALM F WITH(NOLOCK)
+									ON	E.SALE_SEQU_NUMB = F.SALE_SEQU_NUMB
+								WHERE 1 = 1 
+								AND		(
+											CASE 
+												WHEN D.orde_iden_numb IS NOT NULL
+													THEN D.deli_stat_flag 
+												WHEN C.orde_iden_numb IS NOT NULL 
+													THEN C.purc_stat_flag 
+												ELSE B.orde_stat_flag END
+										) IN ('05', '10', '40', '50', '60', '69', '70', '80') 
+								AND		A.REGI_DATE_TIME BETWEEN CONVERT(DATETIME, CONVERT(VARCHAR(8),GETDATE(),120)+'01') AND DATEADD(MONTH, 1, CONVERT(DATETIME, CONVERT(VARCHAR(8),GETDATE(),120)+'01'))
+								AND		CONVERT(VARCHAR(6),(CASE WHEN F.CLOS_SALE_DATE IS NOT NULL THEN F.CLOS_SALE_DATE ELSE GETDATE() END),112) = CONVERT(VARCHAR(6),GETDATE(),112)
+						),0)
+		,		INFO_02 = ISNULL((
+								SELECT	SUM(A.SALE_PROD_AMOU) AS INFO_02
+								FROM	MRORDTLIST A WITH(NOLOCK)
+								LEFT OUTER JOIN MSSALM B WITH(NOLOCK)
+									ON	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+								WHERE	A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(8),GETDATE(),120)+'01') AND DATEADD(MONTH,+1,CONVERT(DATETIME,CONVERT(VARCHAR(8),GETDATE(),120)+'01'))
+								AND		CONVERT(VARCHAR(6),(CASE WHEN B.CLOS_SALE_DATE IS NOT NULL THEN B.CLOS_SALE_DATE ELSE GETDATE() END),112) = CONVERT(VARCHAR(6),GETDATE(),112)
+						),0)
+		,		INFO_03 = ISNULL((
+								SELECT	SUM(A.SALE_REQU_AMOU) AS INFO_03
+								FROM	MSSALM A WITH(NOLOCK)
+								WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+								AND		A.SAP_JOUR_NUMB IS NOT NULL
+						),0)
+		,		INFO_04 = ISNULL((
+								SELECT	(
+												SELECT	SUM(A.SALE_REQU_AMOU)
+												FROM	MSSALM A WITH(NOLOCK)
+												WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+												AND		A.SAP_JOUR_NUMB IS NOT NULL
+										) - (
+												SELECT	SUM(A.BUYI_REQU_AMOU)
+												FROM	MSBUYM A WITH(NOLOCK)
+												WHERE	A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+												AND		A.SAP_JOUR_NUMB IS NOT NULL
+										)
+						),0)
+		,		INFO_05 = ISNULL((
+								SELECT	CONVERT(DECIMAL(15,2),ROUND(
+										((
+												SELECT	SUM(A.SALE_REQU_AMOU)
+												FROM	MSSALM A WITH(NOLOCK)
+												WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+												AND		A.SAP_JOUR_NUMB IS NOT NULL
+										) - (
+												SELECT	SUM(A.BUYI_REQU_AMOU)
+												FROM	MSBUYM A WITH(NOLOCK)
+												WHERE	A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+												AND		A.SAP_JOUR_NUMB IS NOT NULL
+										))*100/	(
+												SELECT	SUM(A.SALE_REQU_AMOU)
+												FROM	MSSALM A WITH(NOLOCK)
+												WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+												AND		A.SAP_JOUR_NUMB IS NOT NULL
+										),2))
+						),0)
+		WHERE	INFO_YYYYMMDD = CONVERT(VARCHAR(8),GETDATE(),112)
+		AND		INFO_TYPE = '1'
+	</update>
+	<insert id="insertMainSellInfo">
+		/* common.schedule.insertMainSellInfo */
+		INSERT INTO SMP_ADM_MAIN_INFO (
+				INFO_YYYYMMDD
+		,		INFO_TYPE
+		,		CREATEDATE
+		,		INFO_01
+		,		INFO_02
+		,		INFO_03
+		,		INFO_04
+		,		INFO_05
+		) VALUES (
+				CONVERT(VARCHAR(8),GETDATE(),112)
+		,		'1'
+		,		GETDATE()
+		,		ISNULL((
+						SELECT	SUM(
+										(CASE	WHEN E.orde_iden_numb IS NOT NULL THEN E.sale_prod_quan
+												WHEN D.orde_iden_numb IS NOT NULL THEN D.deli_prod_quan
+												WHEN C.orde_iden_numb IS NOT NULL THEN C.purc_requ_quan
+												ELSE B.orde_requ_quan
+										END) *
+										(CASE	WHEN E.orde_iden_numb IS NOT NULL THEN E.sale_prod_pris
+												WHEN C.orde_iden_numb IS NOT NULL THEN C.orde_requ_pric
+												ELSE B.orde_requ_pric
+										END)
+								)
+						FROM	mrordm A WITH(NOLOCK) 
+						INNER JOIN mrordt B WITH(NOLOCK) 
+							ON	A.orde_iden_numb = B.orde_iden_numb 
+						LEFT OUTER JOIN mrpurt C WITH(NOLOCK) 
+							ON	B.orde_iden_numb = C.orde_iden_numb 
+							AND B.orde_sequ_numb = C.orde_sequ_numb 
+						LEFT OUTER JOIN mracpt D WITH(NOLOCK) 
+							ON	C.orde_iden_numb = D.orde_iden_numb 
+							AND C.orde_sequ_numb = D.orde_sequ_numb 
+							AND C.purc_iden_numb = D.purc_iden_numb
+						LEFT OUTER JOIN mrordtlist E WITH(NOLOCK)
+							ON  D.orde_iden_numb = E.orde_iden_numb
+							AND D.orde_sequ_numb = E.orde_sequ_numb
+							AND D.purc_iden_numb = E.purc_iden_numb
+							AND D.deli_iden_numb = E.deli_iden_numb
+						LEFT OUTER JOIN MSSALM F WITH(NOLOCK)
+							ON	E.SALE_SEQU_NUMB = F.SALE_SEQU_NUMB
+						WHERE 1 = 1 
+						AND		(
+									CASE 
+										WHEN D.orde_iden_numb IS NOT NULL
+											THEN D.deli_stat_flag 
+										WHEN C.orde_iden_numb IS NOT NULL 
+											THEN C.purc_stat_flag 
+										ELSE B.orde_stat_flag END
+								) IN ('05', '10', '40', '50', '60', '69', '70', '80') 
+						AND		A.REGI_DATE_TIME BETWEEN CONVERT(DATETIME, CONVERT(VARCHAR(8),GETDATE(),120)+'01') AND DATEADD(MONTH, 1, CONVERT(DATETIME, CONVERT(VARCHAR(8),GETDATE(),120)+'01'))
+						AND		CONVERT(VARCHAR(6),(CASE WHEN F.CLOS_SALE_DATE IS NOT NULL THEN F.CLOS_SALE_DATE ELSE GETDATE() END),112) = CONVERT(VARCHAR(6),GETDATE(),112)
+				),0)
+		,		ISNULL((
+						SELECT	SUM(A.SALE_PROD_AMOU) AS INFO_02
+						FROM	MRORDTLIST A WITH(NOLOCK)
+						LEFT OUTER JOIN MSSALM B WITH(NOLOCK)
+							ON	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+						WHERE	A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(8),GETDATE(),120)+'01') AND DATEADD(MONTH,+1,CONVERT(DATETIME,CONVERT(VARCHAR(8),GETDATE(),120)+'01'))
+						AND		CONVERT(VARCHAR(6),(CASE WHEN B.CLOS_SALE_DATE IS NOT NULL THEN B.CLOS_SALE_DATE ELSE GETDATE() END),112) = CONVERT(VARCHAR(6),GETDATE(),112)
+				),0)
+		,		ISNULL((
+						SELECT	SUM(A.SALE_REQU_AMOU) AS INFO_03
+						FROM	MSSALM A WITH(NOLOCK)
+						WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+						AND		A.SAP_JOUR_NUMB IS NOT NULL
+				),0)
+		,		ISNULL((
+						SELECT	(
+										SELECT	SUM(A.SALE_REQU_AMOU)
+										FROM	MSSALM A WITH(NOLOCK)
+										WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+										AND		A.SAP_JOUR_NUMB IS NOT NULL
+								) - (
+										SELECT	SUM(A.BUYI_REQU_AMOU)
+										FROM	MSBUYM A WITH(NOLOCK)
+										WHERE	A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+										AND		A.SAP_JOUR_NUMB IS NOT NULL
+								)
+				),0)
+		,		ISNULL((
+						SELECT	CONVERT(DECIMAL(15,2),ROUND(
+								((
+										SELECT	SUM(A.SALE_REQU_AMOU)
+										FROM	MSSALM A WITH(NOLOCK)
+										WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+										AND		A.SAP_JOUR_NUMB IS NOT NULL
+								) - (
+										SELECT	SUM(A.BUYI_REQU_AMOU)
+										FROM	MSBUYM A WITH(NOLOCK)
+										WHERE	A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+										AND		A.SAP_JOUR_NUMB IS NOT NULL
+								))*100/	(
+										SELECT	SUM(A.SALE_REQU_AMOU)
+										FROM	MSSALM A WITH(NOLOCK)
+										WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)) AND DATEADD(YEAR,+1,CONVERT(DATETIME,CONVERT(VARCHAR(4),GETDATE(),120)))
+										AND		A.SAP_JOUR_NUMB IS NOT NULL
+								),2))
+				),0)
+		)
+	</insert>
+	
+	<update id="updateMainSaleInfo1">
+		/* common.schedule.updateMainSaleInfo1 */
+		UPDATE	SMP_ADM_MAIN_INFO
+		SET		CREATEDATE = GETDATE()
+		,		INFO_01 = ISNULL((
+						(
+								SELECT	SUM(A.SALE_TOTA_AMOU)
+								FROM	MSSALM A WITH(NOLOCK)
+								<![CDATA[
+								WHERE	A.CLOS_SALE_DATE < CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01')
+								]]>
+								AND		A.TRANSFER_STATUS = '1'
+						) - (
+								SELECT	SUM(A.RECE_PAY_AMOU)
+								FROM	MPTREC A WITH(NOLOCK)
+								<![CDATA[
+								WHERE	A.ALRAM_DATE < CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01')
+								]]>
+								AND		EXISTS(SELECT 1 FROM MSSALM Z WITH(NOLOCK) WHERE Z.SALE_SEQU_NUMB = A.SALE_SEQU_NUMB AND Z.TRANSFER_STATUS = '1')
+						)
+				),0)
+		,		INFO_02 = ISNULL((
+					SELECT	ISNULL(SUM(A.RECE_PAY_AMOU), 0)
+					FROM	MPTREC A WITH(NOLOCK)
+					INNER JOIN MSSALM B WITH(NOLOCK)
+						ON	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+						AND	B.TRANSFER_STATUS = '1'
+					WHERE	A.ALRAM_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE()
+				),0)
+		,		INFO_03 = ISNULL((
+						(
+								SELECT	SUM(A.SALE_TOTA_AMOU)
+								FROM	MSSALM A WITH(NOLOCK)
+								<![CDATA[
+								WHERE	A.CLOS_SALE_DATE < GETDATE()
+								]]>
+								AND		A.TRANSFER_STATUS = '1'
+						) - (
+								SELECT	SUM(A.RECE_PAY_AMOU)
+								FROM	MPTREC A WITH(NOLOCK)
+								<![CDATA[
+								WHERE	A.ALRAM_DATE < GETDATE()
+								]]>
+								AND		EXISTS(SELECT 1 FROM MSSALM Z WITH(NOLOCK) WHERE Z.SALE_SEQU_NUMB = A.SALE_SEQU_NUMB AND Z.TRANSFER_STATUS = '1')
+						)
+				),0)
+		,		INFO_04 = ISNULL((
+								<![CDATA[
+								SELECT	(CASE WHEN AA.SALE_TOTA_AMOU=0 THEN 0 ELSE CONVERT(DECIMAL(10,1),ROUND((AA.PAY_AMOU*100)/AA.SALE_TOTA_AMOU,1)) END) AS RTN_RATE
+								FROM	(
+										SELECT	ISNULL((
+														SELECT	SUM(A.SALE_TOTA_AMOU) AS SALE_TOTA_AMOU
+														FROM	MSSALM A WITH(NOLOCK)
+														WHERE	A.TRANSFER_STATUS = '1'
+														AND		A.SAP_JOUR_NUMB IS NOT NULL
+														AND		A.EXPIRATION_DATE BETWEEN GETDATE() -30 AND GETDATE()
+												),0) AS SALE_TOTA_AMOU
+										,		ISNULL((
+														SELECT	SUM(ISNULL(B.RECE_PAY_AMOU,0)) AS PAY_AMOU
+														FROM	MSSALM A WITH(NOLOCK)
+														INNER JOIN MPTREC B WITH(NOLOCK)
+															ON	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+														WHERE	A.TRANSFER_STATUS = '1'
+														AND		A.SAP_JOUR_NUMB IS NOT NULL
+														AND		A.EXPIRATION_DATE >= B.ALRAM_DATE
+														AND		A.EXPIRATION_DATE BETWEEN GETDATE() -30 AND GETDATE()
+														AND		B.ALRAM_DATE <= GETDATE()
+												),0) AS PAY_AMOU
+								) AA
+								]]>
+				),0)
+		,		INFO_05 = ISNULL((
+						SELECT	COUNT(1)
+						FROM	SMPBORGS A WITH(NOLOCK)
+						WHERE	A.SVCTYPECD = 'BUY'
+						AND		A.BORGTYPECD = 'CLT'
+						AND		A.ISLIMIT = '1'
+				),0)
+		WHERE	INFO_YYYYMMDD = CONVERT(VARCHAR(8),GETDATE(),112)
+		AND		INFO_TYPE = '2'
+	</update>
+	<insert id="insertMainSaleInfo1">
+		/* common.schedule.insertMainSaleInfo1 */
+		INSERT INTO SMP_ADM_MAIN_INFO (
+				INFO_YYYYMMDD
+		,		INFO_TYPE
+		,		CREATEDATE
+		,		INFO_01
+		,		INFO_02
+		,		INFO_03
+		,		INFO_04
+		,		INFO_05
+		) VALUES (
+				CONVERT(VARCHAR(8),GETDATE(),112)
+		,		'2'
+		,		GETDATE()
+		,		ISNULL((
+						(
+								SELECT	SUM(A.SALE_TOTA_AMOU)
+								FROM	MSSALM A WITH(NOLOCK)
+								<![CDATA[
+								WHERE	A.CLOS_SALE_DATE < CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01')
+								]]>
+								AND		A.TRANSFER_STATUS = '1'
+						) - (
+								SELECT	SUM(A.RECE_PAY_AMOU)
+								FROM	MPTREC A WITH(NOLOCK)
+								<![CDATA[
+								WHERE	A.ALRAM_DATE < CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01')
+								]]>
+								AND		EXISTS(SELECT 1 FROM MSSALM Z WITH(NOLOCK) WHERE Z.SALE_SEQU_NUMB = A.SALE_SEQU_NUMB AND Z.TRANSFER_STATUS = '1')
+						)
+				),0)
+		,		ISNULL((
+					SELECT	ISNULL(SUM(A.RECE_PAY_AMOU), 0)
+					FROM	MPTREC A WITH(NOLOCK)
+					INNER JOIN MSSALM B WITH(NOLOCK)
+						ON	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+						AND	B.TRANSFER_STATUS = '1'
+					WHERE	A.ALRAM_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE()
+				),0)
+		,		ISNULL((
+						(
+								SELECT	SUM(A.SALE_TOTA_AMOU)
+								FROM	MSSALM A WITH(NOLOCK)
+								<![CDATA[
+								WHERE	A.CLOS_SALE_DATE < GETDATE()
+								]]>
+								AND		A.TRANSFER_STATUS = '1'
+						) - (
+								SELECT	SUM(A.RECE_PAY_AMOU)
+								FROM	MPTREC A WITH(NOLOCK)
+								<![CDATA[
+								WHERE	A.ALRAM_DATE < GETDATE()
+								]]>
+								AND		EXISTS(SELECT 1 FROM MSSALM Z WITH(NOLOCK) WHERE Z.SALE_SEQU_NUMB = A.SALE_SEQU_NUMB AND Z.TRANSFER_STATUS = '1')
+						)
+				),0)
+		,		ISNULL((
+						<![CDATA[
+						SELECT	(CASE WHEN AA.SALE_TOTA_AMOU=0 THEN 0 ELSE CONVERT(DECIMAL(10,1),ROUND((AA.PAY_AMOU*100)/AA.SALE_TOTA_AMOU,1)) END) AS RTN_RATE
+						FROM	(
+								SELECT	ISNULL((
+												SELECT	SUM(A.SALE_TOTA_AMOU) AS SALE_TOTA_AMOU
+												FROM	MSSALM A WITH(NOLOCK)
+												WHERE	A.TRANSFER_STATUS = '1'
+												AND		A.SAP_JOUR_NUMB IS NOT NULL
+												AND		A.EXPIRATION_DATE BETWEEN GETDATE() -30 AND GETDATE()
+										),0) AS SALE_TOTA_AMOU
+								,		ISNULL((
+												SELECT	SUM(ISNULL(B.RECE_PAY_AMOU,0)) AS PAY_AMOU
+												FROM	MSSALM A WITH(NOLOCK)
+												INNER JOIN MPTREC B WITH(NOLOCK)
+													ON	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+												WHERE	A.TRANSFER_STATUS = '1'
+												AND		A.SAP_JOUR_NUMB IS NOT NULL
+												AND		A.EXPIRATION_DATE >= B.ALRAM_DATE
+												AND		A.EXPIRATION_DATE BETWEEN GETDATE() -30 AND GETDATE()
+												AND		B.ALRAM_DATE <= GETDATE()
+										),0) AS PAY_AMOU
+						) AA
+						]]>
+				),0)
+		,		ISNULL((
+						SELECT	COUNT(1)
+						FROM	SMPBORGS A WITH(NOLOCK)
+						WHERE	A.SVCTYPECD = 'BUY'
+						AND		A.BORGTYPECD = 'CLT'
+						AND		A.ISLIMIT = '1'
+				),0)
+		)
+	</insert>
+	
+	<sql id="selectMainSaleInfo2Sql">
+		<![CDATA[
+		WITH TMP_TABLE(
+				BOND_TYPE
+		,		SALE_AMOU
+		,		SALE_CNT
+		) AS (
+				SELECT	'0' AS BOND_TYPE
+				,		SUM(AA.SALE_AMOU) AS SALE_AMOU
+				,		AA.BRANCHID AS SALE_CNT
+				FROM	(
+						SELECT	(ISNULL(A.SALE_TOTA_AMOU,0) - 
+									ISNULL(
+										(SELECT	SUM(B.RECE_PAY_AMOU)
+										FROM	MPTREC B WITH(NOLOCK)
+										WHERE	B.SALE_SEQU_NUMB = A.SALE_SEQU_NUMB
+										AND		B.ALRAM_DATE IS NOT NULL
+										),0)
+								) AS SALE_AMOU
+						,		A.BRANCHID
+						FROM	MSSALM A WITH(NOLOCK)
+						WHERE	A.TRANSFER_STATUS = '1'
+						AND		A.CLOS_SALE_DATE IS NOT NULL
+						AND		A.EXPIRATION_DATE > GETDATE()
+				) AA
+				WHERE	ROUND(AA.SALE_AMOU,0) != 0
+				GROUP BY AA.BRANCHID
+				HAVING	ROUND(SUM(AA.SALE_AMOU),-1) != 0
+				UNION ALL
+				SELECT	'1' AS BOND_TYPE
+				,		SUM(AA.SALE_AMOU) AS SALE_AMOU
+				,		AA.BRANCHID AS SALE_CNT
+				FROM	(
+						SELECT	(ISNULL(A.SALE_TOTA_AMOU,0) - 
+									ISNULL(
+										(SELECT	SUM(B.RECE_PAY_AMOU)
+										FROM	MPTREC B WITH(NOLOCK)
+										WHERE	B.SALE_SEQU_NUMB = A.SALE_SEQU_NUMB
+										AND		B.ALRAM_DATE IS NOT NULL
+										),0)
+								) AS SALE_AMOU
+						,		A.BRANCHID
+						FROM	MSSALM A WITH(NOLOCK)
+						WHERE	A.TRANSFER_STATUS = '1'
+						AND		A.CLOS_SALE_DATE IS NOT NULL
+						AND		A.EXPIRATION_DATE BETWEEN GETDATE() - 120 AND GETDATE()
+				) AA
+				WHERE	ROUND(AA.SALE_AMOU,0) != 0
+				GROUP BY AA.BRANCHID
+				HAVING	ROUND(SUM(AA.SALE_AMOU),-1) != 0
+				UNION ALL
+				SELECT	'2' AS BOND_TYPE
+				,		SUM(AA.SALE_AMOU) AS SALE_AMOU
+				,		AA.BRANCHID AS SALE_CNT
+				FROM	(
+						SELECT	(ISNULL(A.SALE_TOTA_AMOU,0) - 
+									ISNULL(
+										(SELECT	SUM(B.RECE_PAY_AMOU)
+										FROM	MPTREC B WITH(NOLOCK)
+										WHERE	B.SALE_SEQU_NUMB = A.SALE_SEQU_NUMB
+										AND		B.ALRAM_DATE IS NOT NULL
+										),0)
+								) AS SALE_AMOU
+						,		A.BRANCHID
+						FROM	MSSALM A WITH(NOLOCK)
+						WHERE	A.TRANSFER_STATUS = '1'
+						AND		A.CLOS_SALE_DATE IS NOT NULL
+						AND		A.EXPIRATION_DATE < GETDATE() - 120
+				) AA
+				WHERE	ROUND(AA.SALE_AMOU,0) != 0
+				GROUP BY AA.BRANCHID
+				HAVING	ROUND(SUM(AA.SALE_AMOU),-1) != 0
+		)
+		]]>
+	</sql>
+	<update id="updateMainSaleInfo2">
+		/* common.schedule.updateMainSaleInfo2 */
+		<include refid="selectMainSaleInfo2Sql"/>
+		UPDATE	SMP_ADM_MAIN_INFO
+		SET		CREATEDATE = GETDATE()
+		,		INFO_01 = ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '0'),0)
+		,		INFO_02 = ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '1'),0)
+		,		INFO_03 = ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '2'),0)
+		,		INFO_04 = ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '0'),0)*100/ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE),1)
+		,		INFO_05 = ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '1'),0)*100/ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE),1)
+		,		INFO_06 = ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '2'),0)*100/ISNULL((SELECT SUM(SALE_AMOU) FROM TMP_TABLE),1)
+		,		INFO_07 = (SELECT COUNT(1) FROM TMP_TABLE WHERE BOND_TYPE = '0')
+		,		INFO_08 = (SELECT COUNT(1) FROM TMP_TABLE WHERE BOND_TYPE = '1')
+		,		INFO_09 = (SELECT COUNT(1) FROM TMP_TABLE WHERE BOND_TYPE = '2')
+		WHERE	INFO_YYYYMMDD = CONVERT(VARCHAR(8),GETDATE(),112)
+		AND		INFO_TYPE = '3'
+	</update>
+	<insert id="insertMainSaleInfo2">
+		/* common.schedule.insertMainSaleInfo2 */
+		<include refid="selectMainSaleInfo2Sql"/>
+		INSERT INTO SMP_ADM_MAIN_INFO (
+				INFO_YYYYMMDD
+		,		INFO_TYPE
+		,		CREATEDATE
+		,		INFO_01
+		,		INFO_02
+		,		INFO_03
+		,		INFO_04
+		,		INFO_05
+		,		INFO_06
+		,		INFO_07
+		,		INFO_08
+		,		INFO_09
+		)
+		SELECT	CONVERT(VARCHAR(8),GETDATE(),112)
+		,		'3'
+		,		GETDATE()
+		,		AA.NOMAL_AMOU
+		,		AA.MANAGE_AMOU
+		,		AA.LONG_AMOU
+		,		(AA.NOMAL_AMOU*100)/SUM_AMOU AS NOMAL_RATE
+		,		(AA.MANAGE_AMOU*100)/SUM_AMOU AS MANAGE_RATE
+		,		(AA.LONG_AMOU*100)/SUM_AMOU AS LONG_RATE
+		,		AA.NOMAL_CNT
+		,		AA.MANAGE_CNT
+		,		AA.LONG_CNT
+		FROM	(
+				SELECT	(SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '0') AS NOMAL_AMOU
+				,		(SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '1') AS MANAGE_AMOU
+				,		(SELECT SUM(SALE_AMOU) FROM TMP_TABLE WHERE BOND_TYPE = '2') AS LONG_AMOU
+				,		(SELECT SUM(SALE_AMOU) FROM TMP_TABLE) AS SUM_AMOU
+				,		(SELECT COUNT(1) FROM TMP_TABLE WHERE BOND_TYPE = '0') AS NOMAL_CNT
+				,		(SELECT COUNT(1) FROM TMP_TABLE WHERE BOND_TYPE = '1') AS MANAGE_CNT
+				,		(SELECT COUNT(1) FROM TMP_TABLE WHERE BOND_TYPE = '2') AS LONG_CNT
+		) AA 
+	</insert>
+	
+	<sql id="selectMainBorgInfoSql">
+		WITH TMP_TABLE(
+				BUY_NEW
+		,		BUY_END
+		,		BUY_NEW_END
+		,		BUY_SUM
+		,		VEN_NEW
+		,		VEN_END
+		,		VEN_NEW_END
+		,		VEN_SUM
+		) AS (
+				SELECT	SUM(AA.BUY_NEW) AS BUY_NEW
+				,		SUM(AA.BUY_END) AS BUY_END
+				,		SUM(AA.BUY_NEW)-SUM(AA.BUY_END) AS BUY_NEW_END
+				,		SUM(AA.BUY_SUM) AS BUY_SUM
+				,		SUM(AA.VEN_NEW) AS VEN_NEW
+				,		SUM(AA.VEN_END) AS VEN_END
+				,		SUM(AA.VEN_NEW)-SUM(AA.VEN_END) AS VEN_NEW_END
+				,		SUM(AA.VEN_SUM) AS VEN_SUM
+				FROM
+				(
+						SELECT	(CASE WHEN A.CREATEDATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE() AND A.SVCTYPECD='BUY' AND A.ISUSE='1' THEN 1 ELSE 0 END) AS BUY_NEW
+						,		(CASE WHEN A.UPDATEDATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE() AND A.SVCTYPECD='BUY' AND A.ISUSE='0' THEN 1 ELSE 0 END) AS BUY_END
+						,		(CASE WHEN A.SVCTYPECD='BUY' AND A.ISUSE='1' THEN 1 ELSE 0 END) AS BUY_SUM
+						,		(CASE WHEN A.CREATEDATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE() AND A.SVCTYPECD='VEN' AND A.ISUSE='1' THEN 1 ELSE 0 END) AS VEN_NEW
+						,		(CASE WHEN A.UPDATEDATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE() AND A.SVCTYPECD='VEN' AND A.ISUSE='0' THEN 1 ELSE 0 END) AS VEN_END
+						,		(CASE WHEN A.SVCTYPECD='VEN' AND A.ISUSE='1' THEN 1 ELSE 0 END) AS VEN_SUM
+						FROM	SMPBORGS A WITH(NOLOCK)
+						WHERE	A.SVCTYPECD IN ('BUY','VEN')
+						AND		A.BORGTYPECD = 'BCH'
+				) AA
+		)
+	</sql>
+	<update id="updateMainBorgInfo">
+		/* common.schedule.updateMainBorgInfo */
+		<include refid="selectMainBorgInfoSql"/>
+		UPDATE	SMP_ADM_MAIN_INFO
+		SET		CREATEDATE = GETDATE()
+		,		INFO_01 = (SELECT BUY_NEW FROM TMP_TABLE)
+		,		INFO_02 = (SELECT BUY_END FROM TMP_TABLE)
+		,		INFO_03 = (SELECT BUY_NEW_END FROM TMP_TABLE)
+		,		INFO_04 = (SELECT BUY_SUM FROM TMP_TABLE)
+		,		INFO_05 = (SELECT VEN_NEW FROM TMP_TABLE)
+		,		INFO_06 = (SELECT VEN_END FROM TMP_TABLE)
+		,		INFO_07 = (SELECT VEN_NEW_END FROM TMP_TABLE)
+		,		INFO_08 = (SELECT VEN_SUM FROM TMP_TABLE)
+		WHERE	INFO_YYYYMMDD = CONVERT(VARCHAR(8),GETDATE(),112)
+		AND		INFO_TYPE = '4'
+	</update>
+	<insert id="insertMainBorgInfo">
+		/* common.schedule.insertMainBorgInfo */
+		<include refid="selectMainBorgInfoSql"/>
+		INSERT INTO SMP_ADM_MAIN_INFO (
+				INFO_YYYYMMDD
+		,		INFO_TYPE
+		,		CREATEDATE
+		,		INFO_01
+		,		INFO_02
+		,		INFO_03
+		,		INFO_04
+		,		INFO_05
+		,		INFO_06
+		,		INFO_07
+		,		INFO_08
+		)
+		SELECT	CONVERT(VARCHAR(8),GETDATE(),112)
+		,		'4'
+		,		GETDATE()
+		,		BUY_NEW
+		,		BUY_END
+		,		BUY_NEW_END
+		,		BUY_SUM
+		,		VEN_NEW
+		,		VEN_END
+		,		VEN_NEW_END
+		,		VEN_SUM
+		FROM 	TMP_TABLE
+	</insert>
+	
+	<sql id="selectMainProductInfoSql">
+		WITH TMP_TABLE(
+				NEW_CNT
+		,		END_CNT
+		,		NEW_END_CNT
+		,		NEW_END_SUM
+		,		NEW_20
+		,		END_20
+		,		NEW_END_20
+		,		NEW_END_20_SUM
+		,		NEW_10
+		,		END_10
+		,		NEW_END_10
+		,		NEW_END_10_SUM
+		) AS (
+				SELECT	SUM(NEW_10)+SUM(NEW_20) AS NEW_CNT
+				,		SUM(END_10)+SUM(END_20) AS END_CNT
+				,		SUM(NEW_10)+SUM(NEW_20)-(SUM(END_10)+SUM(END_20)) AS NEW_END_CNT
+				,		SUM(NEW_END_10_SUM)+SUM(NEW_END_20_SUM) AS NEW_END_SUM
+				,		SUM(NEW_20) AS NEW_20
+				,		SUM(END_20) AS END_20
+				,		SUM(NEW_20)-SUM(END_20) AS NEW_END_20
+				,		SUM(NEW_END_20_SUM) AS NEW_END_20_SUM
+				,		SUM(NEW_10) AS NEW_10
+				,		SUM(END_10) AS END_10
+				,		SUM(NEW_10)-SUM(END_10) AS NEW_END_10
+				,		SUM(NEW_END_10_SUM) AS NEW_END_10_SUM
+				FROM	(
+						SELECT	(CASE WHEN ISNULL(A.GOOD_TYPE,'10')='10' AND B.REGIST_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE() AND B.ISUSE='1' THEN 1 ELSE 0 END) AS NEW_10
+						,		(CASE WHEN ISNULL(A.GOOD_TYPE,'10')='10' AND B.UPDATE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE() AND B.ISUSE!='1' THEN 1 ELSE 0 END) AS END_10
+						,		(CASE WHEN ISNULL(A.GOOD_TYPE,'10')='10' AND B.ISUSE='1' THEN 1 ELSE 0 END) AS NEW_END_10_SUM
+						,		(CASE WHEN ISNULL(A.GOOD_TYPE,'10')='20' AND B.REGIST_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE() AND B.ISUSE='1' THEN 1 ELSE 0 END) AS NEW_20
+						,		(CASE WHEN ISNULL(A.GOOD_TYPE,'10')='20' AND B.UPDATE_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(7),GETDATE(),120)+'-01') AND GETDATE() AND B.ISUSE!='1' THEN 1 ELSE 0 END) AS END_20
+						,		(CASE WHEN ISNULL(A.GOOD_TYPE,'10')='20' AND B.ISUSE='1' THEN 1 ELSE 0 END) AS NEW_END_20_SUM
+						FROM	MCGOOD A WITH(NOLOCK)
+						INNER JOIN MCGOODVENDOR B WITH(NOLOCK)
+							ON	A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+						WHERE	ISNULL(A.REPRE_GOOD,'N') IN ('Y','N')
+				) AA
+		)
+	</sql>
+	<update id="updateMainProductInfo">
+		/* common.schedule.updateMainProductInfo */
+		<include refid="selectMainProductInfoSql"/>
+		UPDATE	SMP_ADM_MAIN_INFO
+		SET		CREATEDATE = GETDATE()
+		,		INFO_01 = (SELECT NEW_CNT FROM TMP_TABLE)
+		,		INFO_02 = (SELECT END_CNT FROM TMP_TABLE)
+		,		INFO_03 = (SELECT NEW_END_CNT FROM TMP_TABLE)
+		,		INFO_04 = (SELECT NEW_END_SUM FROM TMP_TABLE)
+		,		INFO_05 = (SELECT NEW_20 FROM TMP_TABLE)
+		,		INFO_06 = (SELECT END_20 FROM TMP_TABLE)
+		,		INFO_07 = (SELECT NEW_END_20 FROM TMP_TABLE)
+		,		INFO_08 = (SELECT NEW_END_20_SUM FROM TMP_TABLE)
+		,		INFO_09 = (SELECT NEW_10 FROM TMP_TABLE)
+		,		INFO_10 = (SELECT END_10 FROM TMP_TABLE)
+		,		INFO_11 = (SELECT NEW_END_10 FROM TMP_TABLE)
+		,		INFO_12 = (SELECT NEW_END_10_SUM FROM TMP_TABLE)
+		WHERE	INFO_YYYYMMDD = CONVERT(VARCHAR(8),GETDATE(),112)
+		AND		INFO_TYPE = '5'
+	</update>
+	<insert id="insertMainProductInfo">
+		/* common.schedule.insertMainProductInfo */
+		<include refid="selectMainProductInfoSql"/>
+		INSERT INTO SMP_ADM_MAIN_INFO (
+				INFO_YYYYMMDD
+		,		INFO_TYPE
+		,		CREATEDATE
+		,		INFO_01
+		,		INFO_02
+		,		INFO_03
+		,		INFO_04
+		,		INFO_05
+		,		INFO_06
+		,		INFO_07
+		,		INFO_08
+		,		INFO_09
+		,		INFO_10
+		,		INFO_11
+		,		INFO_12
+		)
+		SELECT	CONVERT(VARCHAR(8),GETDATE(),112)
+		,		'5'
+		,		GETDATE()
+		,		NEW_CNT
+		,		END_CNT
+		,		NEW_END_CNT
+		,		NEW_END_SUM
+		,		NEW_20
+		,		END_20
+		,		NEW_END_20
+		,		NEW_END_20_SUM
+		,		NEW_10
+		,		END_10
+		,		NEW_END_10
+		,		NEW_END_10_SUM
+		FROM 	TMP_TABLE
+	</insert>
+	
+	<select id="selectCartClosedPdt" resultType="java.util.HashMap">
+		/*common.schedule.selectCartClosedPdt*/
+        -- 단일상품 , 옵션 대표 상품의 종료 상태 조회
+        SELECT
+            A.BRANCHID
+        ,	A.USERID
+        ,	A.GOOD_IDEN_NUMB
+        ,	A.VENDORID
+        FROM MRCARTPROD A WITH(NOLOCK)
+        WHERE NOT EXISTS(
+            SELECT 1 
+            FROM MCGOOD Z WITH(NOLOCK) 
+            INNER JOIN MCGOODVENDOR Z2 WITH(NOLOCK) 
+                ON Z.GOOD_IDEN_NUMB = Z2.GOOD_IDEN_NUMB 
+                AND Z2. ISUSE = '1'
+            INNER JOIN SMPBORGS Z3 WITH(NOLOCK)
+                ON Z2.VENDORID = Z3.BORGID
+                AND Z3.ISUSE = '1'
+            WHERE Z.REPRE_GOOD IN ('Y','N') 
+            AND ISNULL(A.REPRE_GOOD_IDEN_NUMB,A.GOOD_IDEN_NUMB) = Z2.GOOD_IDEN_NUMB
+            AND A.VENDORID = Z2.VENDORID
+		)
+		
+        UNION 
+
+        --종료된 상품의 서브 추가상품 조회
+        SELECT
+            B.BRANCHID
+        ,	B.USERID
+        ,	B.GOOD_IDEN_NUMB
+        ,	B.VENDORID
+        FROM MRCARTPROD A WITH(NOLOCK)
+        INNER JOIN MRCARTPROD B WITH(NOLOCK)
+            ON	A.GOOD_IDEN_NUMB = B.ADD_REPRE_GOOD_IDEN_NUMB
+            AND	A.BRANCHID = B.BRANCHID
+            AND	A.USERID = B.USERID
+        WHERE NOT EXISTS(
+            SELECT 1 
+            FROM MCGOOD Z WITH(NOLOCK) 
+            INNER JOIN MCGOODVENDOR Z2 WITH(NOLOCK) 
+                ON Z.GOOD_IDEN_NUMB = Z2.GOOD_IDEN_NUMB 
+                AND Z2. ISUSE = '1'
+            INNER JOIN SMPBORGS Z3 WITH(NOLOCK)
+                ON Z2.VENDORID = Z3.BORGID
+                AND Z3.ISUSE = '1'
+            WHERE Z.REPRE_GOOD IN ('Y','N') 
+            AND A.GOOD_IDEN_NUMB = Z2.GOOD_IDEN_NUMB
+            AND A.VENDORID = Z2.VENDORID
+        )
+
+        UNION
+
+        -- 종료된 서브 추가상품의 마스터 추가상품 조회
+        SELECT
+            B.BRANCHID
+        ,	B.USERID
+        ,	B.GOOD_IDEN_NUMB
+        ,	B.VENDORID
+        FROM MRCARTPROD A WITH(NOLOCK)
+        INNER JOIN MRCARTPROD B WITH(NOLOCK)
+            ON	A.ADD_REPRE_GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+            AND	A.BRANCHID = B.BRANCHID
+            AND	A.USERID = B.USERID
+        WHERE NOT EXISTS(
+            SELECT 1 
+            FROM MCGOOD Z  WITH(NOLOCK)
+            INNER JOIN MCGOODVENDOR Z2  WITH(NOLOCK)
+                ON Z.GOOD_IDEN_NUMB = Z2.GOOD_IDEN_NUMB 
+                AND Z2. ISUSE = '1'
+            INNER JOIN SMPBORGS Z3 WITH(NOLOCK)
+                ON Z2.VENDORID = Z3.BORGID
+                AND Z3.ISUSE = '1'
+            WHERE Z.REPRE_GOOD IN ('Y','N') 
+            AND A.GOOD_IDEN_NUMB = Z2.GOOD_IDEN_NUMB
+            AND A.VENDORID = Z2.VENDORID
+        )
+	</select>
+	<delete id="delCartClosedPdt">
+		/* order.orderRequest.delCartClosedPdt */
+		DELETE FROM MRCARTPROD 
+		<foreach collection="delTargetList" item="item" open=" WHERE 1=1 AND " separator="OR" >
+		(
+            BRANCHID = #{item.BRANCHID} 
+            AND USERID = #{item.USERID} 
+            AND GOOD_IDEN_NUMB = #{item.GOOD_IDEN_NUMB} 
+            AND VENDORID = #{item.VENDORID}
+		)
+		</foreach>
+	</delete>
+	
+	<!-- 납품예정일 안내 SMS 발송 리스트 조회 -->
+	<select id="selectDeliScheDateSmsList" resultType="java.util.HashMap">
+		/* common.schedule.selectDeliScheDateSmsList */
+		SELECT	MAX(A1.GOOD_NAME) AS GOOD_NAME
+		,		COUNT(1) AS CNT
+		,		D.MOBILE
+		FROM	MRPURT A WITH(NOLOCK)
+		INNER JOIN MRORDT A1 WITH(NOLOCK)
+			ON	A.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB
+			AND	A.ORDE_SEQU_NUMB = A1.ORDE_SEQU_NUMB
+		INNER JOIN SMPBORGS B WITH(NOLOCK)
+			ON	A.VENDORID = B.BORGID
+			AND	B.ISUSE = '1'
+		INNER JOIN SMPBORGS_USERS C WITH(NOLOCK)
+			ON	B.BORGID = C.BORGID
+			AND	C.ISDEFAULT = '1'
+		INNER JOIN SMPUSERS D WITH(NOLOCK)
+			ON	C.USERID = D.USERID
+			AND	D.ISUSE = '1'
+			AND	D.ISLOGIN = '1'
+		LEFT OUTER JOIN SMPRECEIVEINFO E WITH(NOLOCK)
+			ON	D.USERID = E.USERID
+			AND	E.ISSMS = '1'
+		WHERE	A.PURC_STAT_FLAG = '50'
+		<![CDATA[
+		AND		A.PURC_REQU_QUAN  <> ISNULL(A.DELI_PROD_QUAN,0)
+		]]> 
+		AND		CONVERT(VARCHAR(10),A.DELI_SCHE_DATE+1,120) = CONVERT(VARCHAR(10),GETDATE(),120)
+		AND		B.BORGID NOT IN ('304450','304525','304524','304526','304562')
+		GROUP BY D.MOBILE
+	</select>
+	
+	
+	<select id="selectGoodDescInsert" resultType="java.util.HashMap">
+		/* common.schedule.selectGoodDescInsert */
+		SELECT	A.GOOD_IDEN_NUMB
+		,		A.VENDORID
+		,		A.GOOD_DESC
+		FROM	MCGOODVENDOR_MIG_20160130 A
+		WHERE	A.GOOD_DESC IS NOT NULL
+		AND		A.GOOD_DESC != ''
+		AND		A.ISUSE = '1'
+	</select>
+	
+	<update id="updateGoodDescInsert">
+		/* common.schedule.updateGoodDescInsert */
+		UPDATE	MCGOODVENDOR
+		SET		GOOD_DESC = #{GOOD_DESC}
+		WHERE	GOOD_IDEN_NUMB = #{GOOD_IDEN_NUMB}
+		AND		VENDORID = #{VENDORID}
+		AND		(GOOD_DESC IS NULL OR GOOD_DESC = '')
+	</update>
+	
+	<!-- 공급사 배치 대상 리스트 조회 -->
+	<select id="selectVenDefaultDataCreateList" resultType="String">
+		/* common.schedule.selectVenDefaultDataCreateList */
+		SELECT
+			VENDORID 
+		FROM
+			SMPVENDORS WITH(NOLOCK)
+		INNER JOIN SMPBORGS WITH(NOLOCK) ON SMPVENDORS.VENDORID = SMPBORGS.BORGID
+		WHERE
+			SMPBORGS.ISUSE = '1'
+	</select>
+	
+	<!-- 공급사 배치 정보 저장 -->
+	<insert id="insertSmpVenMainInfo">
+		/* common.schedule.insertSmpVenMainInfo */
+		INSERT INTO SMP_VEN_MAIN_INFO (
+			INFO_YYYYMMDD, INFO_TYPE, VENDORID, CREATEDATE, INFO_01,
+			INFO_02,       INFO_03,   INFO_04,  INFO_05,    INFO_06,
+			INFO_07,       INFO_08,   INFO_09,  INFO_10,    INFO_11,
+			INFO_12,       INFO_13,   INFO_14,  INFO_15
+		)
+		VALUES (
+			CONVERT(VARCHAR(8), GETDATE(),112), #{infoType}, #{vendorId}, GETDATE(), #{info01},
+			#{info02},                          #{info03},   #{info04},   #{info05}, #{info06},
+			#{info07},                          #{info08},   #{info09},   #{info10}, #{info11},
+			#{info12},                          #{info13},   #{info14},   #{info15}
+		)
+	</insert>
+	
+	<!-- 공급사 공급현황 정보 조회 -->
+	<resultMap id="selectVenDefaultDataCreateType1Map" type="java.util.Map">
+ 		<result property="supply01" column="SUPPLY_01" javaType="string"/>
+		<result property="supply02" column="SUPPLY_02" javaType="string"/>
+		<result property="supply03" column="SUPPLY_03" javaType="string"/>
+		<result property="supply04" column="SUPPLY_04" javaType="string"/>
+		<result property="supply11" column="SUPPLY_11" javaType="string"/>
+		<result property="supply12" column="SUPPLY_12" javaType="string"/>
+		<result property="supply13" column="SUPPLY_13" javaType="string"/>
+		<result property="supply14" column="SUPPLY_14" javaType="string"/>
+ 	</resultMap>
+	<select id="selectVenDefaultDataCreateType1" resultMap="selectVenDefaultDataCreateType1Map">
+		/* common.schedule.selectVenDefaultDataCreateType1 */
+		SELECT	MAX(CASE WHEN AAA.YEAR_TYPE='1' AND AAA.MONTH_TYPE='1' THEN AAA.SALE_AMOUT ELSE 0 END) AS SUPPLY_01
+    	,		MAX(CASE WHEN AAA.YEAR_TYPE='1' AND AAA.MONTH_TYPE='2' THEN AAA.SALE_AMOUT ELSE 0 END) AS SUPPLY_02
+    	,		MAX(CASE WHEN AAA.YEAR_TYPE='1' AND AAA.MONTH_TYPE='3' THEN AAA.SALE_AMOUT ELSE 0 END) AS SUPPLY_03
+    	,		(
+						SELECT	ISNULL(SUM(A.DELI_PROD_QUAN * B.SALE_UNIT_PRIC),0) 
+						FROM	MRACPT A WITH(NOLOCK) 
+						INNER JOIN MRPURT B WITH(NOLOCK) 
+							ON	A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB 
+							AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB 
+							AND	A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+						WHERE	A.DELI_DEGR_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(5), GETDATE(), 120) + '01-01') AND DATEADD(YEAR,1,CONVERT(DATETIME,CONVERT(VARCHAR(5), GETDATE(), 120) + '01-01 23:59:59'))-1
+						AND		A.DELI_STAT_FLAG != 93
+						AND		B.VENDORID = #{borgId}
+				) AS SUPPLY_04
+		,		MAX(CASE WHEN AAA.YEAR_TYPE='2' AND AAA.MONTH_TYPE='1' THEN AAA.SALE_AMOUT ELSE 0 END) AS SUPPLY_11
+		,		MAX(CASE WHEN AAA.YEAR_TYPE='2' AND AAA.MONTH_TYPE='2' THEN AAA.SALE_AMOUT ELSE 0 END) AS SUPPLY_12
+		,		MAX(CASE WHEN AAA.YEAR_TYPE='2' AND AAA.MONTH_TYPE='3' THEN AAA.SALE_AMOUT ELSE 0 END) AS SUPPLY_13
+		,		(
+						SELECT	ISNULL(SUM(A.DELI_PROD_QUAN * B.SALE_UNIT_PRIC),0) 
+						FROM	MRACPT A WITH(NOLOCK) 
+						INNER JOIN MRPURT B WITH(NOLOCK) 
+							ON	A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB 
+							AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB 
+							AND	A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+						WHERE	A.DELI_DEGR_DATE BETWEEN DATEADD(YEAR,-1,CONVERT(DATETIME,CONVERT(VARCHAR(5), GETDATE(), 120) + '01-01')) AND CONVERT(DATETIME,CONVERT(VARCHAR(5), GETDATE(), 120) + '01-01 23:59:59')-1
+						AND		A.DELI_STAT_FLAG != 93
+						AND		B.VENDORID = #{borgId}
+				) AS SUPPLY_14
+		FROM	(
+				SELECT	AA.YEAR_TYPE, AA.MONTH_TYPE, SUM(AA.SALE_AMOUT) AS SALE_AMOUT
+				FROM	(
+						SELECT	'1' AS YEAR_TYPE
+						,		(CASE	WHEN A.DELI_DEGR_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,-2, GETDATE()),120)+'01') AND CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,-1, GETDATE()),120)+'01 23:59:59')-1 THEN '1'
+										WHEN A.DELI_DEGR_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,-1, GETDATE()),120)+'01') AND CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH, 0, GETDATE()),120)+'01 23:59:59')-1 THEN '2'
+										ELSE '3'
+								END) AS MONTH_TYPE
+						,		(A.DELI_PROD_QUAN * B.SALE_UNIT_PRIC) AS SALE_AMOUT
+						FROM	MRACPT A WITH(NOLOCK)
+						INNER JOIN MRPURT B	WITH(NOLOCK) 
+							ON	A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB 
+							AND	A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB 
+							AND	A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+						WHERE	A.DELI_DEGR_DATE BETWEEN CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,-2, GETDATE()),120)+'01') AND CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,1, GETDATE()),120)+'01 23:59:59')-1
+						AND		A.DELI_STAT_FLAG != 93
+						AND		B.VENDORID = #{borgId}
+				) AA
+				GROUP BY AA.YEAR_TYPE, AA.MONTH_TYPE
+				UNION ALL
+				SELECT	AA.YEAR_TYPE
+				,		AA.MONTH_TYPE
+				,		SUM(AA.SALE_AMOUT) AS SALE_AMOUT
+				FROM	(
+						SELECT	'2' AS YEAR_TYPE
+						,		(CASE	WHEN A.DELI_DEGR_DATE BETWEEN DATEADD(YEAR,-1,CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,-2, GETDATE()),120)+'01')) AND DATEADD(YEAR,-1,CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,-1, GETDATE()),120)+'01 23:59:59')-1) THEN '1'
+										WHEN A.DELI_DEGR_DATE BETWEEN DATEADD(YEAR,-1,CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,-1, GETDATE()),120)+'01')) AND DATEADD(YEAR,-1,CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH, 0, GETDATE()),120)+'01 23:59:59')-1) THEN '2'
+										ELSE '3'
+								END) AS MONTH_TYPE
+						,		(A.DELI_PROD_QUAN * B.SALE_UNIT_PRIC) AS SALE_AMOUT
+						FROM	MRACPT A WITH(NOLOCK)
+						INNER JOIN MRPURT B	WITH(NOLOCK) 
+							ON	A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB 
+							AND	A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB 
+							AND	A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+						WHERE	A.DELI_DEGR_DATE BETWEEN DATEADD(YEAR,-1,CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,-2, GETDATE()),120)+'01')) AND DATEADD(YEAR,-1,CONVERT(DATETIME,CONVERT(VARCHAR(8),DATEADD(MONTH,1, GETDATE()),120)+'01 23:59:59')-1)
+						AND		A.DELI_STAT_FLAG != 93
+						AND		B.VENDORID = #{borgId}
+				) AA
+				GROUP BY AA.YEAR_TYPE, AA.MONTH_TYPE
+		) AAA
+	</select>
+	
+	<!-- 공급사 상품현황 정보 조회 -->
+	<resultMap id="selectVenDefaultDataCreateType2Map" type="java.util.Map">
+ 		<result property="goodClasCode" column="GOOD_CLAS_CODE" javaType="string"/>
+ 		<result property="sumIsReg"     column="SUM_IS_REG"     javaType="string"/>
+ 		<result property="sumIsMod"     column="SUM_IS_MOD"     javaType="string"/>
+ 		<result property="sumIsUse"     column="SUM_IS_USE"     javaType="string"/>
+ 		<result property="totSum"       column="TOT_SUM"        javaType="string"/>
+ 		<result property="cnt"          column="CNT"            javaType="string"/>
+ 	</resultMap>
+	<select id="selectVenDefaultDataCreateType2" resultMap="selectVenDefaultDataCreateType2Map">
+		/* common.schedule.selectVenDefaultDataCreateType2 */
+		SELECT
+			AA.GOOD_CLAS_CODE,
+			SUM(IS_REG) AS SUM_IS_REG,
+			SUM(IS_MOD) AS SUM_IS_MOD,
+			SUM(IS_USE) AS SUM_IS_USE,
+			SUM(IS_REG) + SUM(IS_MOD) + SUM(IS_USE) AS TOT_SUM,
+			SUM(CNT) AS CNT
+		FROM
+		(
+			SELECT
+				ISNULL(B.GOOD_TYPE, '10') AS GOOD_CLAS_CODE,
+				CASE
+					WHEN
+						A.REGIST_DATE BETWEEN DATEADD(MONTH, DATEDIFF(MONTH, 1, GETDATE()), 0) AND DATEADD(Month, 1, DATEADD(MONTH, DATEDIFF(MONTH, 1, GETDATE()), 0))
+					THEN
+						1
+					ELSE
+						0
+				END AS IS_REG,
+				CASE
+					WHEN
+						(
+							SELECT
+								COUNT(1)
+							FROM
+								MCPRICECHGHIST WITH(NOLOCK) 
+							WHERE
+								GOOD_IDEN_NUMB = A.GOOD_IDEN_NUMB
+							AND
+								VENDORID       = A.VENDORID
+							AND
+								INSERT_DATE BETWEEN DATEADD(MONTH, DATEDIFF(MONTH, 1, GETDATE()), 0) AND DATEADD(Month, 1, DATEADD(MONTH, DATEDIFF(MONTH, 1, GETDATE()), 0))
+						) > 0
+					THEN
+						1
+					ELSE
+						0
+				END AS IS_MOD,
+				CASE
+					WHEN
+						A.ISUSE = '0'
+					THEN
+						1
+					ELSE
+						0
+				END AS IS_USE,
+				1   AS CNT
+			FROM
+				MCGOODVENDOR A WITH(NOLOCK) 
+			INNER JOIN MCGOOD B  WITH(NOLOCK) ON A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+			WHERE
+				A.VENDORID = #{vendorId}
+		) AA
+		GROUP BY
+			AA.GOOD_CLAS_CODE
+		ORDER BY
+			AA.GOOD_CLAS_CODE DESC
+	</select>
+</mapper>

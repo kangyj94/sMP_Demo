@@ -1,0 +1,141 @@
+@charset "utf-8";
+@import url(https://fonts.googleapis.com/earlyaccess/nanumgothic.css);
+
+* {
+	margin:0;
+	padding:0;
+}
+
+html {
+    height:100%;
+}
+
+body   
+{
+  font-size: 0.75em;
+	line-height: 1.5em;
+	font-family:'Nanum Gothic';
+	color:#575757;
+	width:1500px;
+	height:100%;
+/* 	margin:0; */
+	padding:0;
+	margin:0 auto;
+    }
+
+button {font-family:'Nanum Gothic';}    
+
+body.mainBg,body.subBg {width:100%}    
+
+    
+table {
+	border-collapse:collapse;
+	border-spacing:0;
+}
+
+h1 {
+	font-size:2em;
+	padding:0;
+	margin:0;
+}
+h2 {
+	font-size:1.4em;
+	padding:0;
+	margin:0;
+}
+h3 {
+	font-size:1.2em;
+	padding:0;
+	margin:0;
+}
+h4
+{
+	font-size:1em;
+	padding:0;
+	margin:0;
+}
+h5
+{
+	font-size:1em;
+	padding:0;
+	margin:0;
+}
+h6 {
+	font-size:1em;
+	padding:0;
+	margin:0;
+}
+
+hr {
+	display:none;
+	padding:0;
+	margin:0;
+}
+
+ul, li, dl, dt, dd {
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+
+address 
+{
+   font-style:normal;
+}
+
+/* IE scroolbar color */
+/**html body {
+	scrollbar-face-color: #FFFFFF;
+	scrollbar-shadow-color: #dddddd; 
+	scrollbar-highlight-color: #dddddd;
+	scrollbar-3dlight-color: #FFFFFF; 
+	scrollbar-darkshadow-color: #FFFFFF;
+	scrollbar-track-color: #FFFFFF; 
+	scrollbar-arrow-color: #dddddd
+} 
+
+/* IE PGN24 */
+
+.pointer {
+	cursor:pointer;
+}
+
+img
+{
+padding:0;
+margin:0;
+border:0 none;
+vertical-align:middle;
+}
+
+strong {letter-spacing:-1px;}
+caption, .skip, .dn {width:0;height:0;overflow:hidden;visibility:hidden;font-size:0;line-height:0;display:block;display:none;}
+
+select {padding:3px; border:1px solid #ddd; background:#fff !important; font-size:12px; color:#333; font-family:'malgun gothic';}
+textarea {border:1px solid #ddd; background:#fff !important; color:#555; font-family:'Nanum Gothic';}
+input[type="text"],
+input[type="password"],
+input[type="tel"] {vertical-align:middle;line-height:1; height:12px; padding:3px 3px 4px 3px; border:1px solid #ddd; border-radius:0 !important; -webkit-appearance:none !important; background:#fff; font-family:'Nanum Gothic'; font-size:12px; color:#4d4d4d; outline:none;}
+input:disabled, input:readonly {background:#eee;}
+
+/* 기본링크 */
+a:link, a:visited {
+	color:#575757;
+	text-decoration: none;
+}
+a:hover, a:active {
+	color:#000;
+	text-decoration:underline;
+}
+
+
+/* 감춰진 메뉴링크 */
+
+a:link.DPmenu, a:visited.DPmenu {
+	color:#fff;
+	text-decoration: none;
+}
+a:hover.DPmenu, a:active.DPmenu {
+	color:#fff;
+	text-decoration:underline;
+}

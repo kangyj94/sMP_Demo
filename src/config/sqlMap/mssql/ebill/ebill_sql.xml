@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="ebill">
+	<select id="selectEbillBranchListCnt" resultType="int">
+		/* ebill.selectEbillBranchListCnt */
+		SELECT	COUNT(*)
+		FROM(
+			SELECT  AA.*
+			,		BB.BUSINESSNUM
+			,		DBO.FNS_BORGNAMEBYBORGID(AA.BRANCHID)  AS BORGNM
+			FROM(
+				SELECT	A.SALE_SEQU_NUMB
+				,		A.CLIENTID
+				,		CASE 
+							WHEN A.BRANCHID = '0' 
+								THEN 
+								(	SELECT	A1.BORGID 
+									FROM	SMPBORGS A1 WITH(NOLOCK)  
+									,		SMPBRANCHS B1  WITH(NOLOCK) 
+									WHERE A1.BORGID = B1.BRANCHID 
+									AND A1.CLIENTID = A.CLIENTID 
+									AND A1.ISKEY = '1'
+								) 
+							ELSE A.BRANCHID 
+						END AS BRANCHID
+				,		CONVERT(VARCHAR(10), CONVERT(DATETIME, A.CLOS_SALE_DATE), 120) AS CLOS_DATE
+				,		A.SALE_REQU_AMOU
+				,		A.SALE_REQU_VTAX
+				,		B.PUBCODE
+				,		A.SALE_SEQU_NAME
+				FROM 	MSSALM	A WITH(NOLOCK) 
+				LEFT OUTER JOIN(
+					SELECT 	A.RESSEQ
+					,		MAX(A.PUBDATE) AS PUBDATE  
+					,		MAX(A.PUBCODE) AS PUBCODE 
+					FROM 	SALEEBILL A WITH(NOLOCK) 
+					, 		EB_HISTORY B WITH(NOLOCK) 
+					WHERE 	A.PUBCODE = B.PUBCODE
+					AND		A.RESSEQ LIKE '3700%'
+					AND		A.LOADSTATUS = '1'
+					AND 	B.STATUS != '14'
+					GROUP BY A.RESSEQ
+				) B
+					ON A.SAP_JOUR_NUMB = B.RESSEQ
+			)AA
+			,		SMPBRANCHS BB
+			WHERE AA.BRANCHID = BB.BRANCHID
+			AND CLOS_DATE IS NOT NULL
+			/*
+			AND NOT EXISTS(
+				SELECT	1
+				FROM SMPCODES A WITH(NOLOCK)
+				INNER JOIN SMPBRANCHS B WITH(NOLOCK)
+					ON A.CODEVAL1 = B.BRANCHCD
+				WHERE A.CODETYPECD = 'NOTSEND_SALEBILL' 
+				AND A.ISUSE = '1'
+				AND B.BRANCHID = AA.BRANCHID
+			)
+			*/
+			<if test="srcStatDate != null and srcStatDate != '' and srcEndDate != null and srcEndDate != ''">
+			AND CLOS_DATE BETWEEN CONVERT(DATETIME,#{srcStatDate} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcEndDate} + '01 23:59')))
+			</if>		
+			<if test="clientId != null and clientId != '' and svcTypeCd == 'BUY'">
+			AND CLIENTID = #{clientId}
+			</if>
+			<if test="srcBranchId != null and srcBranchId != '' and svcTypeCd == 'BUY'">
+			AND AA.BRANCHID = #{srcBranchId}
+			</if>
+		)XX
+		WHERE 1=1
+		<if test="srcBorgNm != null and srcBorgNm != '' and svcTypeCd == 'ADM'">
+		AND	BORGNM LIKE '%'	+ #{srcBorgNm} + '%'
+		</if>
+		<if test="srcBusinessNum != null and srcBusinessNum != '' ">
+		AND	BUSINESSNUM LIKE '%' + #{srcBusinessNum} + '%'
+		</if>
+	</select>
+	
+	<select id="selectEbillBranchList" resultType="kr.co.bitcube.ebill.dto.EbillDto">
+		/* ebill.selectEbillBranchList */
+	SELECT	*
+	FROM(
+		SELECT  AA.*
+		,		BB.BUSINESSNUM
+		,		DBO.FNS_BORGNAMEBYBORGID(AA.BRANCHID)  AS BORGNM
+		FROM(
+				SELECT	A.SALE_SEQU_NUMB
+				,		A.CLIENTID
+				,		CASE 
+							WHEN A.BRANCHID = '0' 
+								THEN 
+								(	SELECT	A1.BORGID 
+									FROM	SMPBORGS A1 WITH(NOLOCK)  
+									,		SMPBRANCHS B1  WITH(NOLOCK) 
+									WHERE A1.BORGID = B1.BRANCHID 
+									AND A1.CLIENTID = A.CLIENTID 
+									AND A1.ISKEY = '1'
+								) 
+							ELSE A.BRANCHID 
+						END AS BRANCHID  
+				
+				,		CONVERT(VARCHAR(10), CONVERT(DATETIME, A.CLOS_SALE_DATE), 120) AS CLOS_DATE
+				,		A.SALE_REQU_AMOU
+				,		A.SALE_REQU_VTAX
+				,		B.PUBCODE
+				,		A.SALE_SEQU_NAME
+				,		A.SALE_TOTA_AMOU
+				,		A.SAP_JOUR_NUMB
+				FROM 	MSSALM	A WITH(NOLOCK) 
+				LEFT OUTER JOIN(
+						SELECT 	A.RESSEQ
+						,		MAX(A.PUBDATE) AS PUBDATE  
+						,		MAX(A.PUBCODE) AS PUBCODE 
+						FROM 	SALEEBILL A WITH(NOLOCK) 
+						, 		EB_HISTORY B WITH(NOLOCK) 
+						WHERE 	A.PUBCODE = B.PUBCODE
+						AND		A.RESSEQ LIKE '3700%'
+						AND		A.LOADSTATUS = '1'
+						AND 	B.STATUS != '14'
+						GROUP BY A.RESSEQ
+				) B
+					ON A.SAP_JOUR_NUMB = B.RESSEQ
+			)AA
+			,		SMPBRANCHS BB
+			WHERE 	AA.BRANCHID = BB.BRANCHID
+			AND		CLOS_DATE IS NOT NULL
+			/*
+			AND NOT EXISTS(
+				SELECT   1
+				FROM SMPCODES A WITH(NOLOCK)
+				INNER JOIN SMPBRANCHS B WITH(NOLOCK)
+					ON A.CODEVAL1 = B.BRANCHCD
+				WHERE A.CODETYPECD = 'NOTSEND_SALEBILL' 
+				AND A.ISUSE = '1'
+				AND B.BRANCHID = AA.BRANCHID
+			) 
+			*/
+			<if test="srcStatDate != null and srcStatDate != '' and srcEndDate != null and srcEndDate != ''">
+			AND CLOS_DATE BETWEEN CONVERT(DATETIME,#{srcStatDate} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcEndDate} + '01 23:59')))
+			</if>
+			<if test="clientId != null and clientId != '' and svcTypeCd == 'BUY'">
+			AND CLIENTID = #{clientId}
+			</if>
+			<if test="srcBranchId != null and srcBranchId != '' and svcTypeCd == 'BUY'">
+			AND AA.BRANCHID = #{srcBranchId}
+			</if>
+		)XX
+		WHERE 1=1
+		<if test="srcBorgNm != null and srcBorgNm != '' and svcTypeCd == 'ADM'">
+		AND	BORGNM LIKE '%'	+ #{srcBorgNm} + '%'
+		</if>
+		<if test="srcBusinessNum != null and srcBusinessNum != '' ">
+		AND		BUSINESSNUM LIKE '%' + #{srcBusinessNum} + '%'
+		</if>
+		<if test="orderString != null and orderString != ''">
+		ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectEbillVendorListCnt" resultType="int">
+		/* ebill.selectEbillVendorListCnt*/
+			SELECT  COUNT(1)
+			FROM   (SELECT	A.BUYI_SEQU_NUMB
+					,		DBO.FNS_BORGNAMEBYBORGID(A.VENDORID)  AS BORGNM
+					,		A.VENDORID
+					,		CONVERT(VARCHAR(10), CONVERT(DATETIME, A.CLOS_BUYI_DATE), 120) AS CLOS_DATE
+					,		C.BUSINESSNUM
+ 					,		A.BUYI_REQU_AMOU
+					,		A.BUYI_REQU_VTAX
+					,		B.PUBCODE
+					,		A.SAP_JOUR_NUMB
+					FROM 	MSBUYM	A WITH(NOLOCK) 
+							LEFT OUTER JOIN 
+						   (SELECT 	A.RESSEQ
+							,		MAX(A.PUBDATE) AS PUBDATE  
+							,		MAX(A.PUBCODE) AS PUBCODE 
+							FROM 	SALEEBILL A WITH(NOLOCK) 
+							, 		EB_HISTORY B WITH(NOLOCK) 
+							WHERE 	A.PUBCODE = B.PUBCODE
+							AND		A.RESSEQ LIKE '3500%'
+							AND		A.LOADSTATUS = '1'
+							AND 	B.STATUS != '14'
+							GROUP BY A.RESSEQ) B
+							ON A.SAP_JOUR_NUMB = B.RESSEQ 
+					,		SMPVENDORS C
+					WHERE  	A.VENDORID = C.VENDORID)AA
+			WHERE	CLOS_DATE IS NOT NULL
+		<if test="srcStatDate != null and srcStatDate != '' and srcEndDate != null and srcEndDate != ''">
+			AND		CLOS_DATE BETWEEN CONVERT(DATETIME,#{srcStatDate} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcEndDate} + '01 23:59')))
+		</if>		
+		<if test="srcBorgNm != null and srcBorgNm != '' and svcTypeCd == 'ADM'">
+			AND		BORGNM LIKE '%'	+ #{srcBorgNm} + '%'
+		</if>	
+		<if test="vendorId != null and vendorId != '' and vendorId neq '0'.toString()  and svcTypeCd == 'VEN'">
+			AND		VENDORID = #{vendorId} 			
+		</if>
+	</select>
+	
+	<select id="selectEbillVendorList" resultType="kr.co.bitcube.ebill.dto.EbillDto">
+		/* ebill.selectEbillVendorList*/
+			SELECT  AA.*
+			FROM   (SELECT	A.BUYI_SEQU_NUMB
+					,		DBO.FNS_BORGNAMEBYBORGID(A.VENDORID)  AS BORGNM
+					,		A.VENDORID
+					,		CONVERT(VARCHAR(10), CONVERT(DATETIME, A.CLOS_BUYI_DATE), 120) AS CLOS_DATE
+					,		C.BUSINESSNUM
+ 					,		A.BUYI_REQU_AMOU
+					,		A.BUYI_REQU_VTAX
+					,		A.BUYI_TOTA_AMOU
+					,		B.PUBCODE
+					,		A.SAP_JOUR_NUMB
+					FROM 	MSBUYM	A WITH(NOLOCK) 
+							LEFT OUTER JOIN
+						   (SELECT 	A.RESSEQ
+							,		MAX(A.PUBDATE) AS PUBDATE  
+							,		MAX(A.PUBCODE) AS PUBCODE 
+							FROM 	SALEEBILL A WITH(NOLOCK) 
+							, 		EB_HISTORY B WITH(NOLOCK) 
+							WHERE 	A.PUBCODE = B.PUBCODE
+							AND		A.RESSEQ LIKE '3500%'
+							AND		A.LOADSTATUS = '1'
+							AND 	B.STATUS != '14'
+							GROUP BY A.RESSEQ) B
+							ON A.SAP_JOUR_NUMB = B.RESSEQ
+					,		SMPVENDORS C
+					WHERE  	A.VENDORID = C.VENDORID)AA
+			WHERE	CLOS_DATE IS NOT NULL
+		<if test="srcStatDate != null and srcStatDate != '' and srcEndDate != null and srcEndDate != ''">
+			AND		CLOS_DATE BETWEEN CONVERT(DATETIME,#{srcStatDate} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcEndDate} + '01 23:59')))
+		</if>		
+		<if test="srcBorgNm != null and srcBorgNm != '' and svcTypeCd == 'ADM'">
+			AND		BORGNM LIKE '%'	+ #{srcBorgNm} + '%'
+		</if>	
+		<if test="vendorId != null and vendorId != '' and vendorId neq '0'.toString()  and svcTypeCd == 'VEN'">
+			AND		VENDORID = #{vendorId} 			
+		</if>		
+		<if test="orderString != null and orderString != ''">
+				ORDER BY ${orderString}
+		</if>
+	</select>
+</mapper>

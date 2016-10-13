@@ -1,0 +1,14 @@
+daumeditor-7.3.16
+
+/daumeditor 폴더에 관련 모듈 존재.
+
+추가 JSP 생성 페이지
+/jsp/common/imageUpload.jsp	//이미지 받는 페이지
+/jsp/common/fileUpload.jsp	//파일 받는 페이지
+
+--java 생성 파일
+/kr.co.bitcube.common.ctl.UploadCtl.java
+/kr.co.bitcube.common.dto.UploadDto.java
+
+
+

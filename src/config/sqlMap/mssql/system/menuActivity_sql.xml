@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="system.menuActivity">
+	<select id="selectSvcMenuList" resultType="kr.co.bitcube.system.dto.MenuDto">
+		/* system.menuActivity.selectSvcMenuList */
+		SELECT  
+				<![CDATA[
+				'<font color=blue>' + CODENM1 + '</font>' AS menuLevelName
+		,       CODEVAL1 AS MENUID
+		,       '<font color=blue>' + CODEVAL1 + '</font>' AS MENUCD
+		,       '<font color=blue>' + CODENM1 + '</font>' AS MENUNM
+				]]>
+		,       CODENM1 AS PARMENUNM
+		,       0 AS TOPMENUID
+		,       0 AS PARMENUID
+		,       -1 AS MENULEVEL
+		,       0 AS DISORDER
+		,       CODEVAL1 AS SVCTYPECD
+		,       1 AS ISFIXED
+		,       1 AS ISUSE
+		,       '' AS FWDPATH
+		,		'' AS SCOPENM
+		FROM    SMPCODES WITH(NOLOCK)
+		WHERE   CODETYPECD = 'SVCTYPECD'
+		AND     ISUSE = 1
+		<if test="srcSvcTypeCd != null and srcSvcTypeCd != ''">
+			AND	CODEVAL1 = #{srcSvcTypeCd}
+		</if>
+		ORDER BY DISORDER
+	</select>
+	
+	<select id="selectMenuList" resultType="kr.co.bitcube.system.dto.MenuDto">
+		/* system.menuActivity.selectMenuList */
+		<![CDATA[
+		WITH MENU_TABLE AS(
+			SELECT
+				(
+					CASE
+						WHEN A.MENULEVEL = '0' THEN '대메뉴'
+						WHEN A.MENULEVEL = '1' THEN '중메뉴'
+						WHEN A.MENULEVEL = '2' THEN '소메뉴'
+						WHEN A.MENULEVEL = '3' THEN '상세메뉴'
+						ELSE '기타메뉴'
+					END
+				) AS menuLevelName,
+				A.MENUID,    A.MENUCD,    A.MENUNM,   A.TOPMENUID, A.FWDPATH,
+				A.PARMENUID, A.MENULEVEL, A.DISORDER, A.SVCTYPECD, A.ISFIXED,
+				A.ISUSE,     
+				A.MENUNM                       AS PARMENUNM,
+				dbo.FNS_SCOPE_STRING(A.MENUID) AS SCOPENM,
+				CONVERT(VARCHAR, DBO.LPAD(CONVERT(VARCHAR,A.DISORDER),5,'0')) AS SortKey
+			FROM
+				SMPMENUS A WITH(NOLOCK)
+			WHERE
+				A.MENULEVEL = '0'
+			AND
+				A.SVCTYPECD = #{srcSvcTypeCd}
+
+			UNION ALL
+
+			SELECT
+				(
+					CASE
+						WHEN B.MENULEVEL = '0' THEN '대메뉴'
+						WHEN B.MENULEVEL = '1' THEN '중메뉴'
+						WHEN B.MENULEVEL = '2' THEN '소메뉴'
+						WHEN B.MENULEVEL = '3' THEN '상세메뉴'
+						ELSE '기타메뉴'
+					END
+				) AS menuLevelName,
+				B.MENUID,    B.MENUCD,    B.MENUNM,   B.TOPMENUID, B.FWDPATH,
+				B.PARMENUID, B.MENULEVEL, B.DISORDER, B.SVCTYPECD, B.ISFIXED,
+				B.ISUSE,     
+				B.MENUNM AS PARMENUNM,
+				dbo.FNS_SCOPE_STRING(B.MENUID) AS SCOPENM,
+				CONVERT(VARCHAR, C.SortKey+CONVERT(VARCHAR,B.DISORDER)) AS SortKey
+			FROM
+				SMPMENUS B WITH(NOLOCK)
+			INNER JOIN MENU_TABLE C ON B.PARMENUID = C.MENUID
+			AND
+				C.SVCTYPECD = #{srcSvcTypeCd}
+		)
+		SELECT
+			*
+		FROM
+			MENU_TABLE
+		ORDER BY
+			SortKey
+		]]>
+	</select>
+	
+	<select id="selectMenuCdCnt" resultType="int">
+		/* system.menuActivity.selectMenuCdCnt */
+		SELECT COUNT(1) FROM SMPMENUS WITH(NOLOCK)
+		WHERE UPPER(MENUCD) = UPPER(#{menuCd})
+	</select>
+	
+	<insert id="insertMenu">
+		/* system.menuActivity.insertMenu */
+		INSERT INTO SMPMENUS (MENUID, MENUCD, MENUNM, TOPMENUID, PARMENUID, MENULEVEL, DISORDER, SVCTYPECD, ISFIXED, ISUSE, FWDPATH)
+		<if test="parMenuId != null and parMenuId == '0'.toString()">
+		VALUES(#{menuId}, #{menuCd}, #{menuNm}, 0, 0, 0, #{disOrder}, #{svcTypeCd}, #{isFixed}, #{isUse}, #{fwdPath})
+		</if>
+		<if test="parMenuId != null and parMenuId != '0'.toString()">
+		SELECT	#{menuId}, #{menuCd}, #{menuNm}
+		,		(CASE 	WHEN A.MENULEVEL=0 THEN A.MENUID
+						ELSE A.TOPMENUID
+				END)
+		, 		A.MENUID, A.MENULEVEL+1, #{disOrder}, #{svcTypeCd}, #{isFixed}, #{isUse}, #{fwdPath}
+		FROM	SMPMENUS A WITH(NOLOCK)
+		WHERE	A.MENUID = #{parMenuId}
+		</if>
+	</insert>
+	
+	<update id="updateMenu">
+		/* system.menuActivity.updateMenu */
+		UPDATE 	SMPMENUS 
+		SET 	MENUNM = #{menuNm}
+		, 		DISORDER = #{disOrder}
+		, 		ISFIXED = #{isFixed}
+		,		ISUSE = #{isUse}
+		, 		FWDPATH = #{fwdPath}
+		WHERE 	MENUID = #{menuId}
+	</update>
+	
+	<select id="selectActivityCnt" resultType="int">
+		/* system.menuActivity.selectActivityCnt */
+		SELECT COUNT(1) FROM SMPMENUS_ACTIVITIES WITH(NOLOCK)
+		WHERE MENUID = #{menuId}
+	</select>
+	
+	<select id="selectScopeCnt" resultType="int">
+		/* system.menuActivity.selectScopeCnt */
+		SELECT COUNT(1) FROM SMPSCOPES_ACTIVITIES WITH(NOLOCK)
+		WHERE MENUID = #{menuId}
+	</select>
+	
+	<update id="deleteMenu">
+		/* system.menuActivity.deleteMenu */
+		DELETE SMPMENUS WHERE MENUID = #{menuId}
+	</update>
+	
+	<select id="selectActivityList" resultType="kr.co.bitcube.common.dto.ActivitiesDto">
+		/* system.menuActivity.selectActivityList */
+		SELECT	A.ACTIVITYID
+		,		A.ACTIVITYCD
+		,		A.ACTIVITYNM
+		,		A.ISUSE
+		,		dbo.FNS_SCOPE_STRING(B.MENUID) AS SCOPENM
+		FROM	SMPACTIVITIES A WITH(NOLOCK)
+		,		SMPMENUS_ACTIVITIES B WITH(NOLOCK)
+		WHERE	A.ACTIVITYID = B.ACTIVITYID
+		AND		B.MENUID = #{srcMenuId}
+	</select>
+	
+	<sql id="selectUnActivityListSql">
+		FROM	SMPACTIVITIES AA WITH(NOLOCK)
+		WHERE	NOT EXISTS(
+							SELECT  A.ACTIVITYID
+						    FROM  SMPACTIVITIES A WITH(NOLOCK)
+						    ,    SMPMENUS_ACTIVITIES B WITH(NOLOCK)
+						    WHERE  A.ACTIVITYID = B.ACTIVITYID
+						    AND    A.ACTIVITYID = AA.ACTIVITYID
+						    AND    B.MENUID = #{srcMenuId})
+		<if test="searchString != null and searchString != ''">
+			<if test="searchField != null and searchField == 'activityCd'.toString()"> AND AA.ACTIVITYCD </if>
+			<if test="searchField != null and searchField == 'activityNm'.toString()"> AND AA.ACTIVITYNM </if>
+			<![CDATA[ ${soptSignString} ]]>
+		</if>
+	</sql>
+	<select id="selectUnActivityListCnt" resultType="int">
+		/* system.menuActivity.selectUnActivityListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectUnActivityListSql"/>
+	</select>
+	<select id="selectUnActivityList" resultType="kr.co.bitcube.common.dto.ActivitiesDto">
+		/* system.menuActivity.selectUnActivityList */
+		SELECT	DISTINCT
+				AA.ACTIVITYID
+		,		AA.ACTIVITYCD
+		,		AA.ACTIVITYNM
+		,		AA.ISUSE
+		,(		SELECT  MAX(CC.MENUNM) + CONVERT(VARCHAR, CASE WHEN COUNT(1)>1 THEN ' 외 ' + (CONVERT(VARCHAR, COUNT(1)-1)) +'건' ELSE '' END ) 
+				FROM    SMPMENUS_ACTIVITIES BB WITH(NOLOCK)
+				,       SMPMENUS CC WITH(NOLOCK)
+				WHERE   BB.ACTIVITYID = AA.ACTIVITYID
+				AND     BB.MENUID = CC.MENUID
+		) AS SCOPENM
+		<include refid="selectUnActivityListSql"/>
+		ORDER BY AA.ACTIVITYCD
+	</select>
+	
+	<insert id="insertMenuActivity">
+		/* system.menuActivity.insertMenuActivity */
+		INSERT INTO SMPMENUS_ACTIVITIES(MENUID, ACTIVITYID, MENUCD, ACTIVITYCD)
+		VALUES (
+				#{srcMenuId}
+		,		#{srcActivityId}
+		,		(SELECT MENUCD FROM SMPMENUS WITH(NOLOCK) WHERE MENUID = #{srcMenuId})
+		,		(SELECT ACTIVITYCD FROM SMPACTIVITIES WITH(NOLOCK) WHERE ACTIVITYID = #{srcActivityId})
+		)
+	</insert>
+	
+	<delete id="deleteMenuActivity">
+		/* system.menuActivity.deleteMenuActivity */
+		DELETE SMPMENUS_ACTIVITIES WHERE MENUID = #{srcMenuId} AND ACTIVITYID = #{srcActivityId}
+	</delete>
+	
+	<delete id="deleteMenuActivityScope">
+		/* system.menuActivity.deleteMenuActivityScope */
+		DELETE SMPSCOPES_ACTIVITIES WHERE MENUID = #{srcMenuId} AND ACTIVITYID = #{srcActivityId}
+	</delete>
+	
+	<select id="selectActivityCntByCd" resultType="int">
+		/* system.menuActivity.selectActivityCntByCd */
+		SELECT COUNT(1) FROM SMPACTIVITIES WITH(NOLOCK) WHERE ACTIVITYCD = #{activityCd}
+	</select>
+	
+	<insert id="insertActivity">
+		/* system.menuActivity.insertActivity */
+		INSERT INTO SMPACTIVITIES(ACTIVITYID, ACTIVITYCD, ACTIVITYNM, ISUSE)
+		VALUES(#{activityId}, #{activityCd}, #{activityNm}, #{isUse})
+	</insert>
+	
+	<update id="updateActivity">
+		/* system.menuActivity.updateActivity */
+		UPDATE SMPACTIVITIES SET ACTIVITYNM = #{activityNm}, ISUSE = #{isUse}
+		WHERE ACTIVITYID = #{activityId}
+	</update>
+	
+	<delete id="deleteActivity">
+		/* system.menuActivity.deleteActivity */
+		DELETE SMPACTIVITIES WHERE ACTIVITYID = #{activityId}
+	</delete>
+	
+	<select id="selectMenuPath" resultType="java.util.HashMap">
+		/* system.menuActivity.selectMenuPath */
+		SELECT MENUID, FWDPATH FROM SMPMENUS  WITH(NOLOCK) WHERE MENUCD = #{menuCd}
+	</select>
+	
+</mapper>

@@ -1,0 +1,1369 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="kr.co.bitcube.common.utils.Constances" %>
+<%@ page import="kr.co.bitcube.common.utils.CommonUtils" %>
+<%@ page import="kr.co.bitcube.common.dto.ActivitiesDto" %>
+<%@ page import="kr.co.bitcube.common.dto.LoginUserDto" %>
+<%@ page import="java.util.List"%>
+
+<%
+	LoginUserDto loginUserDto = (LoginUserDto)(request.getSession()).getAttribute(Constances.SESSION_NAME);
+%>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<%@ include file="/WEB-INF/jsp/system/systemInclude.jsp" %>
+<link rel="stylesheet" type="text/css" href="/css/jquery.jqChart.css" /> 
+<script src="/jq/js/excanvas.js" type="text/javascript"></script> 
+<script src="/jq/js/jquery.jqChart.min.js" type="text/javascript"></script> 
+<script src="/jq/js/jquery.jqRangeSlider.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+var jq = jQuery;
+$(document).ready(function() {
+	fnInitChart();
+	$("#excelButton12").click(function(){ exportExcel12(); });
+	$("#excelButton8").click(function(){ exportExcel8(); });
+	$("#excelButton14").click(function(){ exportExcel14(); });
+	$("#excelButton11_1").click(function(){ exportExcel11_1(); });
+	$("#excelButton4").click(function() { exportExcel4(); });
+	$("#excelButton5").click(function() { exportExcel5(); });
+	$("#excelButton6").click(function() { exportExcel6(); });
+	$("#excelButton7").click(function() { exportExcel7(); });
+});
+</script>
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+	jq("#list13").jqGrid({
+		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminBoardListJQGrid.sys',
+		datatype: 'json',
+		mtype: 'POST',
+		colNames:['번호','제목','등록일','board_Borg_Type','board_Type'],
+		colModel:[
+			{name:'board_No',index:'board_No', width:50,align:"center",search:false,sortable:true,editable:false},  //번호 
+			{name:'title',index:'title', width:200,align:"left",search:false,sortable:true,editable:false},  //제목
+			{name:'regi_Date_Time',index:'regi_Date_Time', width:65,align:"center",search:false,sortable:true,editable:false},// 등록일
+			{name:'board_Borg_Type',index:'board_Borg_Type', width:80,align:"center",search:false,sortable:false,editable:false ,hidden:true},// board_borg_type
+			{name:'board_Type',index:'board_Type', width:80,align:"center",search:false,sortable:false,editable:false ,hidden:true}// board_Type
+		],
+		postData: {},
+		height:110 ,width: 330, rowNum: 0,
+		sortname: 'board_No', sortorder: 'desc',
+		caption:"공지사항",
+		viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+		loadComplete: function() {},
+		onSelectRow: function (rowid, iRow, iCol, e) {},    
+		ondblClickRow: function (rowid, iRow, iCol, e) {},
+		onCellSelect: function(rowid, iCol, cellcontent, target){
+			viewRow();
+		},
+		afterInsertRow:function(rowid, aData) {
+			jq("#list13").setCell(rowid,'board_No','',{color:'#0000ff'});
+			jq("#list13").setCell(rowid,'board_No','',{cursor: 'pointer'});  
+		},
+		loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+		jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+	}); 
+});
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list2").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminNewProductRequestListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['요청번호','상품명','요청업체명','요청일자','구분'],
+        colModel:[
+            { name:'reqid',index:'reqid',width:50,align:"center",search:false,sortable:true,editable:false,editrules:{required:true} }, //요청번호
+            { name:'reqgoodname',index:'reqgoodname',width:170,align:"left",search:false,sortable:true,editable:false }, //상품명
+            { name:'reqbordname',index:'reqbordname',width:100,align:"left",search:false,sortable:true,editable:false }, // 요청업체명
+            { name:'reqinsertdate',index:'reqinsertdate', width:60,align:"center",search:false,sortable:true,editable:false,hidden:true }, // 요청일자
+            { name:'reqdiv',index:'reqdiv', width:60,align:"center",search:false,sortable:true,editable:false,hidden:true } //요청자iD
+        ],
+        postData: {},
+        height:110 ,width: 330,rowNum: 0,
+        sortname: 'reqinsertdate', sortorder: 'asc',
+        caption:"고객사/공급사상품등록요청",
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect: function(rowid, iCol, cellcontent, target){
+            var cm = $("#list2").jqGrid('getGridParam','colModel');
+            if(cm[iCol]!=undefined && (cm[iCol].index == 'reqid' || cm[iCol].index == 'reqgoodname')) {
+                var selrowContent = jq("#list2").jqGrid('getRowData',rowid);
+                if(selrowContent.reqdiv=='VEN') {
+                    fnReqProductDetail(rowid,'VEN');
+                } else {
+                    fnReqProductDetail(rowid,'BUY');
+                }
+            }
+        },
+        afterInsertRow:function(rowid, aData) {
+            jq("#list2").setCell(rowid,'reqid','',{color:'#0000ff'});
+            jq("#list2").setCell(rowid,'reqid','',{cursor:'pointer'});
+            jq("#list2").setCell(rowid,'reqgoodname','',{color:'#0000ff'});
+            jq("#list2").setCell(rowid,'reqgoodname','',{cursor:'pointer'});
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list3").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminNewProductBidListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['입찰번호','입찰명','요청업체명','종료일시', 'bidstate'],
+        colModel:[
+            {name:'bidid',index:'bidid', width:50,align:"center",search:false,sortable:true,
+                editable:false, editrules:{required:true}
+            },  //입찰번호 
+            {name:'bidname',index:'bidname', width:170,align:"left",search:false,sortable:true,
+                editable:false
+            },  //입찰명
+            {name:'borgNm',index:'borgNm', width:100,align:"center",search:false,sortable:true,
+                editable:false
+            },  // 요청업체명
+            {name:'bidenddate',index:'bidenddate', width:60,align:"center",search:false,sortable:true,
+                editable:false 
+            },   // 종료일자
+            {name:'bidstate',index:'bidstate', width:60,align:"center",search:false,sortable:true,
+                editable:false, hidden:true 
+            }   // 종료일자
+        ],
+        postData: {},
+        height:110 ,width: 330, rowNum: 0,
+        sortname: 'bidid', sortorder: 'desc',
+        caption:"진행중 또는 낙찰대기 입찰",
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {
+            var cm = $("#list3").jqGrid('getGridParam','colModel');
+            if(cm[iCol]!=undefined && cm[iCol].index == 'bidid') {
+                editRow(rowid);
+            }
+        },
+        afterInsertRow:function(rowid, aData) {
+            jq("#list3").setCell(rowid,'bidid','',{color:'#0000ff'});
+            jq("#list3").setCell(rowid,'bidid','',{cursor:'pointer'});  
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list4").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminVolumeOrderListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['주문번호','상품명','수량','고객사','공급사','상품ID','공급사ID'],
+        colModel:[
+            {name:'orde_iden_numb',index:'orde_iden_numb', width:100,align:"center",search:false,sortable:true,
+                editable:false, editrules:{required:true}
+            },  //주문번호 
+            {name:'good_name',index:'good_name', width:100,align:"left",search:false,sortable:true,
+                editable:false
+            },  //상품명
+            {name:'orde_requ_quan',index:'orde_requ_quan', width:60,align:"right",search:false,sortable:true,
+                editable:false,sorttype:'integer',formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" } 
+            }, //수량
+            {name:'client_name',index:'client_name', width:80,align:"center",search:false,sortable:true,
+                editable:false 
+            },  // 고객사
+            {name:'vendornm',index:'vendornm', width:80,align:"center",search:false,sortable:true,
+                editable:false 
+            },  // 공급사
+            {name:'good_iden_numb',index:'good_iden_numb', width:80,align:"center",search:false,sortable:true,
+                editable:false, hidden:true
+            },  // 상품ID
+            {name:'vendorid',index:'vendorid', width:80,align:"center",search:false,sortable:true,
+                editable:false , hidden:true
+            }   // 공급사ID
+        ],
+        postData: {},
+        height:100 ,width: 380, rowNum: 0,
+        sortname: 'orde_iden_numb', sortorder: 'desc',
+        caption:"물량배분주문/주문취소",
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {
+            var cm = jq("#list4").jqGrid("getGridParam", "colModel");
+            var colName = cm[iCol];
+            if(colName != undefined && colName['index']=="orde_iden_numb") {
+                fnOrderDetailView(cellcontent, 13604);
+            }
+            var selrowContent = jq("#list4").jqGrid('getRowData',rowid);
+            if(colName != undefined && colName['index']=="good_name") {
+                fnProductDetailView(13604, selrowContent.good_iden_numb, selrowContent.vendorid);
+            }
+        },
+        afterInsertRow:function(rowid, aData) {
+            jq("#list4").setCell(rowid,'orde_iden_numb','',{color:'#0000ff'});
+            jq("#list4").setCell(rowid,'orde_iden_numb','',{cursor: 'pointer'});  
+            jq("#list4").setCell(rowid,'good_name','',{color:'#0000ff'});
+            jq("#list4").setCell(rowid,'good_name','',{cursor: 'pointer'});  
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+
+function exportExcel4() {
+	var colLabels = ['주문번호','상품명','수량','고객사','공급사'];	//출력컬럼명
+	var colIds = ['orde_iden_numb','good_name','orde_requ_quan','client_name','vendornm'];	//출력컬럼ID
+	var numColIds = [];	//숫자표현ID
+	var figureColIds = [];
+	var sheetTitle = "물량배분주문/주문취소";	//sheet 타이틀
+	var excelFileName = "adminVolumeOrderList";	//file명
+	fnExportExcel(jq("#list4"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>",figureColIds);	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
+}
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list5").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminOrderReceivedListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['주문번호','상품명','수량','고객사','공급사','상품ID','공급사ID'],
+        colModel:[
+            {name:'orde_iden_numb',index:'orde_iden_numb', width:100,align:"center",search:false,sortable:true,
+                editable:false, editrules:{required:true}
+            },  //주문번호 
+            {name:'good_name',index:'good_name', width:100,align:"left",search:false,sortable:true,
+                editable:false
+            },  //상품명
+            {name:'purc_requ_quan',index:'purc_requ_quan', width:60,align:"right",search:false,sortable:true,
+                editable:false,sorttype:'integer',formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" } 
+            }, //수량
+            {name:'branchnm',index:'branchnm', width:80,align:"center",search:false,sortable:true,
+                editable:false 
+            },  // 고객사
+            {name:'vendornm',index:'vendornm', width:80,align:"center",search:false,sortable:true,
+                editable:false 
+            },  // 공급사
+            {name:'good_iden_numb',index:'good_iden_numb',hidden:true}, // 상품ID
+            {name:'vendorid',index:'vendorid', hidden:true} // 공급사ID
+        ],
+        postData: {},
+        height:100 ,width: 380, rowNum: 0,
+        sortname: 'orde_iden_numb', sortorder: 'desc',
+        caption:"1일이상 미처리된 발주접수 대상",
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {
+            var selrowContent = jq("#list5").jqGrid('getRowData',rowid);
+            var cm = jq("#list5").jqGrid("getGridParam", "colModel");
+            var colName = cm[iCol];
+            if(colName != undefined &&colName['index']=="orde_iden_numb") { 
+                fnOrderDetailView(cellcontent, 12769,selrowContent.purc_iden_numb);
+            }
+            if(colName != undefined &&colName['index']=="good_name") { 
+                fnProductDetailView(12769, selrowContent.good_iden_numb, selrowContent.vendorid);
+            }
+        },
+        afterInsertRow:function(rowid, aData) {
+            jq("#list5").setCell(rowid,'orde_iden_numb','',{color:'#0000ff'});
+            jq("#list5").setCell(rowid,'orde_iden_numb','',{cursor: 'pointer'});  
+            jq("#list5").setCell(rowid,'good_name','',{color:'#0000ff'});
+            jq("#list5").setCell(rowid,'good_name','',{cursor: 'pointer'});  
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+
+function exportExcel5() {
+	var colLabels = ['주문번호','상품명','수량','고객사','공급사'];	//출력컬럼명
+	var colIds = ['orde_iden_numb','good_name','purc_requ_quan','branchnm','vendornm'];	//출력컬럼ID
+	var numColIds = [];	//숫자표현ID
+	var figureColIds = [];
+	var sheetTitle = "1일이상 미처리된 발주대상 접수";	//sheet 타이틀
+	var excelFileName = "adminOrderReceivedList";	//file명
+	fnExportExcel(jq("#list5"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>",figureColIds);	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
+}
+
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list6").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminLastShipmentTargetListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['주문번호','상품명','수량','고객사','공급사','상품ID','공급사ID'],
+        colModel:[
+            {name:'orde_iden_numb',index:'orde_iden_numb', width:100,align:"center",search:false,sortable:true,
+                editable:false, editrules:{required:true}
+            },  //주문번호 
+            {name:'good_name',index:'good_name', width:100,align:"left",search:false,sortable:true,
+                editable:false
+            },  //상품명
+            {name:'purc_requ_quan',index:'purc_requ_quan', width:60,align:"right",search:false,sortable:true,
+                editable:false,sorttype:'integer',formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" } 
+            }, //수량
+            {name:'branchnm',index:'branchnm', width:80,align:"center",search:false,sortable:true,
+                editable:false 
+            },  // 고객사
+            {name:'vendornm',index:'vendornm', width:80,align:"center",search:false,sortable:true,
+                editable:false 
+            },  // 공급사
+            {name:'good_iden_numb',index:'good_iden_numb', width:80,align:"center",search:false,sortable:true,
+                editable:false ,hidden:true
+            },  // 상품ID
+            {name:'vendorid',index:'vendorid', width:80,align:"center",search:false,sortable:true,
+                editable:false ,hidden:true
+            }   // 공급사ID
+        ],
+        postData: {},
+        height:100 ,width: 380, rowNum: 0,
+        sortname: 'orde_iden_numb', sortorder: 'desc',
+        caption:"1개월 지난 출하대상",
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {
+            var selrowContent = jq("#list6").jqGrid('getRowData',rowid);
+            var cm = jq("#list6").jqGrid("getGridParam", "colModel");
+            var colName = cm[iCol];
+            if(colName != undefined &&colName['index']=="orde_iden_numb") { 
+                fnOrderDetailView(cellcontent, 12770,selrowContent.purc_iden_numb);
+            }
+            var selrowContent = jq("#list6").jqGrid('getRowData',rowid);
+            if(colName != undefined &&colName['index']=="good_name") { 
+                fnProductDetailView(12770, selrowContent.good_iden_numb, selrowContent.vendorId);
+            }
+        },
+        afterInsertRow:function(rowid, aData) {
+            jq("#list6").setCell(rowid,'orde_iden_numb','',{color:'#0000ff'});
+            jq("#list6").setCell(rowid,'orde_iden_numb','',{cursor: 'pointer'});  
+            jq("#list6").setCell(rowid,'good_name','',{color:'#0000ff'});
+            jq("#list6").setCell(rowid,'good_name','',{cursor: 'pointer'});  
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+
+function exportExcel6() {
+	var colLabels = ['주문번호','상품명','수량','고객사','공급사'];	//출력컬럼명
+	var colIds = ['orde_iden_numb','good_name','purc_requ_quan','branchnm','vendornm'];	//출력컬럼ID
+	var numColIds = [];	//숫자표현ID
+	var figureColIds = [];
+	var sheetTitle = "1개월 지난 출하대상";	//sheet 타이틀
+	var excelFileName = "adminLastShipmentTargetList";	//file명
+	fnExportExcel(jq("#list6"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>",figureColIds);	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
+}
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list7").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminTakeoverTargetListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['주문번호','상품명','수량','고객사','공급사','상품ID','공급사ID'],
+        colModel:[
+            {name:'orde_iden_numb',index:'orde_iden_numb', width:100,align:"center",search:false,sortable:true,
+                editable:false, editrules:{required:true}
+            },  //주문번호 
+            {name:'good_name',index:'good_name', width:100,align:"left",search:false,sortable:true,
+                editable:false
+            },  //상품명
+            {name:'deli_prod_quan',index:'deli_prod_quan', width:60,align:"right",search:false,sortable:true,
+                editable:false,sorttype:'integer',formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" } 
+            }, //수량
+            {name:'branchnm',index:'branchnm', width:80,align:"center",search:false,sortable:true,
+                editable:false 
+            },  // 고객사
+            {name:'vendornm',index:'vendornm', width:80,align:"center",search:false,sortable:true,
+                editable:false 
+            },  // 공급사
+            {name:'good_iden_numb',index:'good_iden_numb', width:80,align:"center",search:false,sortable:true,
+                editable:false ,hidden:true
+            },  // 상품ID
+            {name:'vendorid',index:'vendorid', width:80,align:"center",search:false,sortable:true,
+                editable:false ,hidden:true
+            }   // 공급사ID
+        ],
+        postData: {},
+        height:110 ,width: 380, rowNum: 0,
+        sortname: 'orde_iden_numb', sortorder: 'desc',
+        caption:"3일이상 미처리된 인수대상",
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {
+            var selrowContent = jq("#list7").jqGrid('getRowData',rowid);
+            var cm = jq("#list7").jqGrid("getGridParam", "colModel");
+            var colName = cm[iCol];
+            if(colName != undefined &&colName['index']=="orde_iden_numb") { 
+                fnOrderDetailView(cellcontent, 12773,selrowContent.purc_iden_numb);
+            }
+            var selrowContent = jq("#list6").jqGrid('getRowData',rowid);
+            if(colName != undefined &&colName['index']=="good_name") { 
+                fnProductDetailView(12773, selrowContent.good_iden_numb, selrowContent.vendorId);
+            }
+        },
+        afterInsertRow:function(rowid, aData) {
+            jq("#list7").setCell(rowid,'orde_iden_numb','',{color:'#0000ff'});
+            jq("#list7").setCell(rowid,'orde_iden_numb','',{cursor: 'pointer'});  
+            jq("#list7").setCell(rowid,'good_name','',{color:'#0000ff'});
+            jq("#list7").setCell(rowid,'good_name','',{cursor: 'pointer'});  
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+
+function exportExcel7() {
+	var colLabels = ['주문번호','상품명','수량','고객사','공급사'];	//출력컬럼명
+	var colIds = ['orde_iden_numb','good_name','deli_prod_quan','branchnm','vendornm'];	//출력컬럼ID
+	var numColIds = [];	//숫자표현ID
+	var figureColIds = [];
+	var sheetTitle = "3일이상 미처리된 관리대상";	//sheet 타이틀
+	var excelFileName = "adminTakeoverTargetList";	//file명
+	fnExportExcel(jq("#list7"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>",figureColIds);	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
+}
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list8").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminManagementOrganListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['사업장코드','사업장명'],
+        colModel:[
+            {name:'branchCd',index:'branchCd', width:80,align:"left",search:false,sortable:true,
+                editable:false, hidden:true
+            },  //조직코드
+            {name:'branchNm',index:'branchNm', width:205,align:"left",search:false,sortable:true,
+                editable:false
+            }
+        ],
+        postData: {},
+        gridview:true,
+        height:105 ,width: 230, rowNum: 0,
+        sortname: 'branchCd', sortorder: 'desc',
+        caption:"채권담당 사업장",
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {
+        },
+        onCellSelect:function(rowid,iCol,cellcontent,target) {},
+        afterInsertRow:function(rowid, aData) {},
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});	
+function exportExcel8() {
+	var colLabels = ['사업장명'];	//출력컬럼명
+	var colIds = ['branchNm'];	//출력컬럼ID
+	var numColIds = [];	//숫자표현ID
+	var figureColIds = [];
+	var sheetTitle = "채권담당 사업장";	//sheet 타이틀
+	var excelFileName = "bondManageList";	//file명
+	
+	fnExportExcel(jq("#list8"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>",figureColIds);	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
+}
+
+
+jq(function() {
+    jq("#list14").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminWorkManagementOrganListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['공사명','사업장명'],
+        colModel:[
+            {name:'workNm',index:'workNm', width:120,align:"left",search:false,sortable:true,
+                editable:false
+            },
+            {name:'branchNm',index:'branchNm', width:170,align:"left",search:false,sortable:true,
+                editable:false
+            }
+        ],
+        postData: {},
+        height:105 ,width: 320, rowNum: 0,
+        sortname: 'workNm', sortorder: 'desc',
+        caption:"공사유형별 사업장",
+        gridview:true,
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {
+        },
+        onCellSelect:function(rowid,iCol,cellcontent,target) {},
+        afterInsertRow:function(rowid, aData) {},
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+function exportExcel14() {
+	var colLabels = ['공사명','사업장명'];	//출력컬럼명
+	var colIds = ['workNm','branchNm'];	//출력컬럼ID
+	var numColIds = [];	//숫자표현ID
+	var figureColIds = [];
+	var sheetTitle = "공사유형별 사업장";	//sheet 타이틀
+	var excelFileName = "workManageList";	//file명
+	
+	fnExportExcel(jq("#list14"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>",figureColIds);	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
+}
+
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list9").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminLastmonthPerformanceListJQGrid.sys',
+        datatype: 'json', 
+        mtype: 'POST',
+        colNames:['전체 매출','관리업체 매출'],
+        colModel:[
+            {name:'SALE_TOT_AMOU',index:'SALE_TOT_AMOU', width:160,align:"center",search:false,sortable:false,
+                formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"",editable:false }},
+            {name:'SALE_MNG_AMOU',index:'SALE_MNG_AMOU', width:160,align:"center",search:false,sortable:false,
+                formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"",editable:false }}
+        ],
+        postData: {},
+        height:23 ,width: 330, rowNum: 1,
+        caption:"전월실적",
+        gridview:true,
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {
+        },
+        afterInsertRow:function(rowid, aData) {
+            
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+	jq("#list10").jqGrid({
+		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminForecastPerformanceListJQGrid.sys',
+		datatype: 'json', 
+		mtype: 'POST',
+		colNames:['전체 매출','관리업체 매출'],
+		colModel:[
+			{name:'ALL_ORDE_PRIC',index:'ALL_ORDE_PRIC', width:160,align:"center",search:false,sortable:false,
+				formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"",editable:false }},
+			{name:'MANAGE_ORDE_PRIC',index:'MANAGE_ORDE_PRIC', width:160,align:"center",search:false,sortable:false,
+					formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"",editable:false }}
+		],
+		postData: {},
+		height:23 ,width: 330, rowNum: 1,
+		caption:"당월예상실적", 
+		gridview:true,
+		viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+		loadComplete: function() {},
+		onSelectRow: function (rowid, iRow, iCol, e) {},    
+		ondblClickRow: function (rowid, iRow, iCol, e) {},
+		onCellSelect:function(rowid,iCol,cellcontent,target) {},
+		afterInsertRow:function(rowid, aData) {},
+		loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+		jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+	}); 
+});
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list11").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminAccruedReceivableListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['90일이상(건수/금액)','120일이상(건수/금액)'],
+        colModel:[
+            {name:'OVER_90',index:'OVER_90', width:265,align:"center",search:false,sortable:false,
+                editable:false
+            },  //90일이상(건수/금액)
+            {name:'OVER_120',index:'OVER_120', width:265,align:"center",search:false,sortable:false,
+                editable:false
+            }
+            /* jameskang
+            {name:'OVER_90',index:'OVER_90', width:120,align:"center",search:false,sortable:false,
+                editable:false
+            },  //90일이상(건수/금액)
+            {name:'OVER_120',index:'OVER_120', width:120,align:"center",search:false,sortable:false,
+                editable:false
+            }
+            */
+        ],
+        postData: {},
+        height:23 ,width: 560, rowNum: 1,
+        /* jameskang
+		height:23 ,width: 255, rowNum: 1,
+		*/
+        sortname: '', sortorder: '',
+        caption:"미수관리채권",
+        gridview:true,
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {},
+        afterInsertRow:function(rowid, aData) {
+            
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+/* jameskang
+jq(function() {
+    jq("#list11-1").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminDebtReceivableListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['업체명','채무액','세금계산서일자','vendorId','buyi_sequ_numb'],
+        colModel:[
+            {name:'vendorNm',index:'vendorNm', width:110,align:"left",search:false,sortable:false,editable:false},  //업체명
+            {name:'debtPrice',index:'debtPrice', width:80,align:"right",search:false,sortable:false,
+            	editable:false,sorttype:'integer',formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" }
+            },	//채무액
+            {name:'clos_buyi_date',index:'clos_buyi_date', width:70,align:"center",search:false,sortable:false,editable:false},	//세금계산서일자
+            {name:'vendorId',index:'vendorId', hidden:true},	//vendorId
+            {name:'buyi_sequ_numb',index:'buyi_sequ_numb', hidden:true}	//buyi_sequ_numb
+        ],
+        postData: {},
+        height:50 ,width: 300, rowNum: 0,
+        sortname: '', sortorder: '',
+        caption:"(-)미수관리채무",
+        gridview:true,
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {},
+        afterInsertRow:function(rowid, aData) {},
+        loadError : function(xhr, st, str){ $("#list11-1").html(xhr.responseText); },
+        jsonReader : {root: "list",repeatitems: false,cell: "cell"}
+    }); 
+});
+*/
+/**
+ * list Excel Export
+ */
+function exportExcel11_1() {
+	var colLabels = ['업체명','채무액','세금계산서일자'];	//출력컬럼명
+	var colIds = ['vendorNm','debtPrice','clos_buyi_date'];	//출력컬럼ID
+	var numColIds = ['debtPrice'];	//숫자표현ID
+	var sheetTitle = "(-)미수관리채무";	//sheet 타이틀
+	var excelFileName = "minusDebtInfoList";	//file명
+	
+	fnExportExcel(jq("#list11-1"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>");	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
+}
+</script>
+
+<!-- 그리드 초기화 스크립트 -->
+<script type="text/javascript">
+jq(function() {
+    jq("#list12").jqGrid({
+        url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/common/adminBondsManagementCompListJQGrid.sys',
+        datatype: 'json',
+        mtype: 'POST',
+        colNames:['SAP_JOUR_NUMB','CLIENTID','사업장명','채권담당자','미수금액','초과일수'],
+        colModel:[
+            {name:'SAP_JOUR_NUMB',index:'SAP_JOUR_NUMB', hidden:true},  //SAP_JOUR_NUMB
+            {name:'CLIENTID', index:'CLIENTID',hidden:true },
+            {name:'CLIENTNM',index:'CLIENTNM', width:220,align:"left",search:false,sortable:false,editable:false},  //사업장명
+            {name:'managerNm',index:'managerNm', width:100,align:"center",search:false,sortable:false,editable:false},  //채권담당자
+            {name:'SALE_TOTA_AMOU',index:'SALE_TOTA_AMOU', width:105,align:"right",search:false,sortable:false,
+                editable:false,sorttype:'integer',formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" } 
+            }, //미수금액
+            {name:'SALE_OVER_DAY',index:'SALE_OVER_DAY', width:60,align:"right",search:false,sortable:false,
+                editable:false,sorttype:'integer',formatter:'integer',formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" } 
+            } //미수금액
+        ],
+        postData: {},
+        height:80 ,width: 560, 
+        rowNum: 0,
+        sortname: 'SALE_OVER_DAY', sortorder: 'desc',
+        caption:"채권관리업체",
+        gridview:true,
+        viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
+        loadComplete: function() {},
+        onSelectRow: function (rowid, iRow, iCol, e) {},    
+        ondblClickRow: function (rowid, iRow, iCol, e) {},
+        onCellSelect:function(rowid,iCol,cellcontent,target) {
+            var selrowContent = jq("#list12").jqGrid('getRowData',rowid);
+            //onBondsView(selrowContent.CLIENTID);
+        },
+        afterInsertRow:function(rowid, aData) {
+            jq("#list12").setCell(rowid,'CLIENTNM','',{color:'#0000ff'});
+            jq("#list12").setCell(rowid,'CLIENTNM','',{cursor: 'pointer'});  
+        },
+        loadError : function(xhr, st, str){ $("#list").html(xhr.responseText); },
+        jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
+    }); 
+});
+
+/**
+ * list Excel Export
+ */
+function exportExcel12() {
+	var colLabels = ['업체명','채권담당자','미수금액','초과일수'];	//출력컬럼명
+	var colIds = ['CLIENTNM','managerNm','SALE_TOTA_AMOU','SALE_OVER_DAY'];	//출력컬럼ID
+	var numColIds = ['SALE_TOTA_AMOU','SALE_OVER_DAY'];	//숫자표현ID
+	var sheetTitle = "채권관리업체";	//sheet 타이틀
+	var excelFileName = "AdjustManageList";	//file명
+	
+	fnExportExcel(jq("#list12"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>");	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
+}
+</script>
+
+<!-- 그리드 이벤트 스크립트 -->
+<script type="text/javascript">
+function viewRow() {
+    var row = jq("#list13").jqGrid('getGridParam','selrow'); // 선택된 로우 조회
+    if( row != null ){
+        var selrowContent = jq("#list13").jqGrid('getRowData',row);        // 선택된 로우의 데이터 객체 조회
+        var popurl = "/board/noticeDetail.sys?board_No=" + selrowContent.board_No;
+        var popproperty = "dialogWidth:720px;dialogHeight=500px;scroll=auto;status=no;resizable=no;";
+//         window.showModalDialog(popurl,self,popproperty);
+        window.open(popurl, 'okplazaPop', 'width=720, height=500, scrollbars=yes, status=no, resizable=no');
+    } else { jq( "#dialogSelectRow" ).dialog(); }
+}
+
+//고객사/공급사상품등록요청 상세
+function fnReqProductDetail(pRowid, pBorg) {
+    var selrowContent = jq("#list2").jqGrid('getRowData',pRowid);
+    var reqid = selrowContent.reqid;
+    var popurl = ""; 
+    var popproperty = "";
+    if(pBorg == 'VEN') {
+    	popurl = "/productManage/venProductRegist.sys?_menuId=12759&req_good_id="+reqid; 
+        popproperty = "dialogWidth:1050px;dialogHeight=800px;Scroll=auto;status=no;resizable=no;";
+//         window.open(popurl, 'okplazaPop', 'width=1050, height=800, scroll=yes, status=no, resizable=no');
+    } else {
+    	popurl = "/product/newProductRequestDetail.sys?_menuId=12759&newgoodid="+reqid;
+        popproperty = "dialogWidth:900px;dialogHeight=520px;scroll=yes;status=no;resizable=yes;";
+//         window.open(popurl, 'okplazaPop', 'width=900, height=520, scroll=yes, status=no, resizable=no');
+    }
+    window.showModalDialog(popurl,self,popproperty);
+    
+}
+
+function editRow(rowid) {
+    var selrowContent = jq("#list3").jqGrid('getRowData',rowid);
+    var bidid = selrowContent.bidid;
+    var bidstate = selrowContent.bidstate;
+    var popurl = "/product/venProductTendorRegist.sys?_menuId=12761&bidid="+bidid+"&bidstate="+bidstate;
+    var popproperty = "dialogWidth:930px;dialogHeight=700px;scroll=yes;status=no;resizable=no;";
+//     window.showModalDialog(popurl,self,popproperty);
+    window.open(popurl, 'okplazaPop', 'width=930, height=700, scrollbars=yes, status=no, resizable=no');
+}
+
+//채권별 상세
+function onBondsView(clientId){
+    if( clientId != "" ){
+        var popurl = "/adjust/adjustBondsOccurrence.sys?clientId=" + clientId + "&_menuId=12814&selectType='detail'";
+        var popproperty = "dialogWidth:1180px;dialogHeight=800px;scroll=yes;status=no;resizable=no;";
+//         window.showModalDialog(popurl,self,popproperty);
+        window.open(popurl, 'okplazaPop', 'width=1180, height=800, scrollbars=yes, status=no, resizable=no');
+    } else { jq( "#dialogSelectRow" ).dialog(); }   
+}
+</script>
+
+<!-- ************************************************************************************ -->
+<!--                            차트 관련 스크립트                                                                                                             -->
+<!-- ************************************************************************************ -->
+<script type="text/javascript">
+
+function fnInitChart(){
+    $.post(
+        "<%=Constances.SYSTEM_CONTEXT_PATH %>/common/adminPerformanceChartJQGrid.sys"
+        , new Object()
+        , function(arg) {
+            
+            var loadData = eval('(' + arg + ')').list;
+            var categoryArr = Array();
+            var saleMngAmouArr = Array();
+//             var purcMngAmouArr = Array();
+            var saleTotAmouArr = Array();
+            var purcTotAmouArr = Array();
+            
+            for(var ii = 0 ; ii < loadData.length ; ii++ ){
+                categoryArr.push(loadData[ii]['CLOS_MONTH'] + ' 월');
+
+                saleTotAmouArr.push(loadData[ii]['SALE_TOT_AMOU']/1000);
+                purcTotAmouArr.push(loadData[ii]['PURC_TOT_AMOU']/1000);
+                saleMngAmouArr.push(loadData[ii]['SALE_MNG_AMOU']/1000);
+//              purcMngAmouArr.push(loadData[ii]['PURC_MNG_AMOU']/1000);
+//              saleTotAmouArr.push(21265465421*((ii+1)*0.54562)/1000);
+//              purcTotAmouArr.push(19548532151*((ii+1)*0.51234)/1000);
+//              saleMngAmouArr.push(9845621545*((ii+1)*0.45115)/1000);
+//              purcMngAmouArr.push(8944754231*((ii+1)*0.35541)/1000);
+            }
+            
+            $('#jqChart').jqChart({                
+//              title: { text: '실적 Chart' },                
+                animation: { duration: 1 },   
+                axes : [
+                        {
+                            type : 'category',
+                            location : 'bottom',
+                            categories : categoryArr,
+                            title:{text:'기간(월)', fillStyle:'green'}
+                        }
+                        , {
+                            type : 'linear',
+                            location : 'left',
+                            title:{text:'금액(단위:천원)', fillStyle:'green'},
+                            labels: {
+                                position: 'inside',
+                                hAlign: 'top'
+                            },majorTickMarks: {
+                                visible: false
+                            }
+                        }
+                    ],
+                background : {type: 'linearGradient',x0: 0,y0: 0,x1: 0,y1: 1,colorStops: [{ offset: 0, color: '#d2e6c9' },{ offset: 1, color: 'white'}]},   
+                series: [{type: 'column',data:saleTotAmouArr, title:'총매출'},
+                         {type: 'column',data:purcTotAmouArr, title:'총매입'},
+                         {type: 'line'  ,data:saleMngAmouArr, title:'관리매출'}
+//                       {type: 'line'  ,data:purcMngAmouArr, title:'관리매입'}
+                        ]
+            });                
+     });
+}
+</script>
+<script type="text/javascript">
+//메인페이지 경영정보 변경
+function managementPage(){
+	location.href="/system/systemDefault.sys?managementFlag=0";
+}
+</script>
+</head>
+<body>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" align="left">
+	<tr>
+		<td bgcolor="#FFFFFF">
+			<!-- 타이틀 -->
+			<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+				<tr valign="top">
+					<td width="20" valign="middle"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/bullet_ptitle1.gif" width="14" height="15"/></td>
+					<td height="29" class='ptitle'>Home</td>
+					<td class="ptitle" align="right">
+						<a href="javascript:managementPage();">
+							<b>경영정보</b>
+						</a>
+						<b>/</b>
+						<a>
+							<b>운영정보</b>
+						</a>
+					</td>
+					<td width="10%"></td>
+				</tr>
+			</table>
+			<!-- 그리드영역 부분 시작 -->
+			<table width="1180" border="0" align="left" cellpadding="0" cellspacing="0">
+				<tr>
+					<td bgcolor="#FFFFFF">
+						<table border="0" cellspacing="0" cellpadding="0">
+							<tr>
+								<td width="301" valign="top">
+									<!-- 왼쪽영역 시작 -->
+									<table width="100%" border="0" cellspacing="0" cellpadding="0">
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_top.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tr.gif" width="10" height="12"/></td>
+										</tr>
+										<tr>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_left.gif');"></td>
+											<td>
+												<!-- 서브타이틀 시작-->
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr valign="top">
+														<td width="24"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_ptitle4.gif" width="18" height="18"/></td>
+														<td height="20">
+															<table border="0">
+																<tr valign="top">
+																	<td width="300" class='ptitle' style="vertical-align: top;">관리조직</td>
+																	<td width="300" align="left">
+																		<a href="#"><img id="excelButton8" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/icon/Table.gif" width="15" height="15" style='border:0;' /></a>
+																	</td>
+																	<td width="300" align="right">
+																		<a href="#"><img id="excelButton14" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/icon/Table.gif" width="15" height="15" style='border:0;' /></a>
+																	</td>
+																</tr>
+															</table>
+														</td>
+													</tr>
+												</table>
+												<!-- 서브타이틀 끝-->
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list8"></table>
+															</div>
+														</td>
+														<td>&nbsp;</td>
+														<td>
+															<div id="jqgrid">
+																<table id="list14"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+											</td>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_right.gif');"></td>
+											<td>&nbsp;</td>
+										</tr>
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bottom.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_br.gif" width="10" height="12"/></td>
+										</tr>
+									</table>
+									<!-- 수탁출고 끝 -->
+									<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" width='100%' class="space" />
+									<!-- 회계정보 시작 -->
+									<table width="100%" border="0" cellspacing="0" cellpadding="0">
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_top.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tr.gif" width="10" height="12"/></td>
+										</tr>
+										<tr>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_left.gif');"></td>
+											<td>
+											<!-- 서브타이틀 시작-->
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr valign="top">
+														<td width="24"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_ptitle4.gif" width="18" height="18"/></td>
+														<td height="20" class='ptitle' style="vertical-align: top;">회계정보</td>
+													</tr>
+												</table>
+												<!-- 서브타이틀 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="3px"/>
+												<!-- 전월실적 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">미수관리채권</td>
+														<!-- jameskang
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">채무관리업체</td>
+														<td align="right">
+															<a href="#"><img id="excelButton11_1" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/icon/Table.gif" width="15" height="15" style='border:0;' /></a>
+														</td>
+														-->
+													</tr>
+												</table>
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td valign="top">
+															<div id="jqgrid">
+																<table id="list11"></table>
+															</div>
+														</td>
+														<!-- jameskang
+														<td valign="top">
+															<div id="jqgrid">
+																<table id="list11-1"></table>
+															</div>
+														</td>
+														-->
+													</tr>
+												</table>
+												<!-- 전월실적 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" width='100%' class="space" />
+												<!-- 당월출하실적 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">채권관리업체</td>
+														<td align="right">
+															<a href="#"><img id="excelButton12" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/icon/Table.gif" width="15" height="15" style='border:0;' /></a>
+														</td>
+													</tr>
+												</table>
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list12"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+											</td>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_right.gif');"></td>
+											<td>&nbsp;</td>
+										</tr>
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bottom.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_br.gif" width="10" height="12"/></td>
+										</tr>
+									</table>
+									<!-- 회계정보 끝 -->
+									<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" width='100%' class="space" />
+									<!-- 실적차트 시작-->
+									<table width="100%" border="0" cellpadding="0" cellspacing="0">
+										<tr>
+											<td width="10" valign="middle" style="padding-left: 5px">
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+											</td>
+											<td class="stitle">지난 6개월 실적 Chart</td>
+										</tr>
+									</table>
+									<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+										<tr>
+											<td>
+												<div id="jqChart" style="width: 570px; height: 200px;"></div> 
+												<!-- jameskang
+												<div id="jqChart" style="width: 580px; height: 175px;"></div> 
+												-->
+											</td>
+										</tr>
+									</table>
+									<!-- 실적차트 끝-->
+									<!-- 왼쪽영역 끝 --> 
+								</td>
+								<td width="5"></td>
+								<td width="301" valign="top">
+									<!-- 가운데영역 시작-->
+									<!-- 주문관리 시작 -->
+									<table width="100%" border="0" cellspacing="0" cellpadding="0">
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_top.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tr.gif" width="10" height="12"/></td>
+										</tr>
+										<tr>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_left.gif');"></td>
+											<td>
+												<!-- 서브타이틀 시작-->
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr valign="top">
+														<td width="24"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_ptitle4.gif" width="18" height="18"/></td>
+														<td height="20" class='ptitle' style="vertical-align: top;">관리업체 주문관리</td>
+													</tr>
+												</table>
+												<!-- 서브타이틀 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="5px"/>
+												<!-- 물량배분주문/주문취소 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">물량배분주문/주문취소</td>
+														<td align="right">
+															<a href="#"><img id="excelButton4" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/icon/Table.gif" width="15" height="15" style='border:0;' /></a>
+														</td>
+													</tr>
+												</table>
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list4"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+												<!-- 물량배분주문/주문취소 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="10px"/>
+												<!-- 1일이상 미처리된 발주접수 대상 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">1일이상 미처리된 발주접수 대상</td>
+														<td align="right">
+															<a href="#"><img id="excelButton5" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/icon/Table.gif" width="15" height="15" style='border:0;' /></a>
+														</td>
+													</tr>
+												</table>
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list5"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+												<!-- 1일이상 미처리된 발주접수 대상 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="10px"/>
+												<!-- 납품요청일이 지난 출하대상 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">1개월 지난 출하대상</td>
+														<td align="right">
+															<a href="#"><img id="excelButton6" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/icon/Table.gif" width="15" height="15" style='border:0;' /></a>
+														</td>
+													</tr>
+												</table>
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list6"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+												<!-- 납품요청일이 지난 출하대상 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="10px"/>
+												<!-- 1일이상 미처리된 인수대상 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">3일이상 미처리된 인수대상</td>
+														<td align="right">
+															<a href="#"><img id="excelButton7" src="<%=Constances.SYSTEM_IMAGE_URL%>/img/system/icon/Table.gif" width="15" height="15" style='border:0;' /></a>
+														</td>
+													</tr>
+												</table>
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list7"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+												<!-- 1일이상 미처리된 인수대상 끝-->
+											</td>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_right.gif');"></td>
+											<td>&nbsp;</td>
+										</tr>
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bottom.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_br.gif" width="10" height="12"/></td>
+										</tr>
+									</table>
+									<!-- 주문관리 끝 -->
+									<!-- 가운데영역 끝 --> 
+								</td>
+								<td width="5"></td>
+								<td width="350" valign="top">
+									<!-- 오른쪽영역 시작 -->
+									<!-- 실적정보 시작 -->
+									<table width="100%" border="0" cellspacing="0" cellpadding="0">
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tl.gif" width="10" height="12" /></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_top.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tr.gif" width="10" height="12" /></td>
+										</tr>
+										<tr>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_left.gif');"></td>
+											<td>
+												<!-- 서브타이틀 시작-->
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr valign="top">
+														<td width="24"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_ptitle4.gif" width="18" height="18"/></td>
+														<td height="20" class='ptitle' style="vertical-align: top;">매출정보</td>
+													</tr>
+												</table>
+												<!-- 서브타이틀 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="5px"/>
+												<!-- 전월실적 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">전월실적</td>
+													</tr>
+												</table>
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list9"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+												<!-- 전월실적 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="10px"/>
+												<!-- 당월출하실적 시작-->
+												<!-- 
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">당월예상실적</td>
+													</tr>
+												</table>
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list10"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+												 -->
+											</td>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_right.gif');"></td>
+										</tr>
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bottom.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_br.gif" width="10" height="12"/></td>
+										</tr>
+									</table>
+									<!-- 실적정보 끝 -->
+									<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="10px"/>
+									<!-- 기타 시작 -->
+									<table width="100%" border="0" cellspacing="0" cellpadding="0">
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_top.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_tr.gif" width="10" height="12"/></td>
+										</tr>
+										<tr>
+											<td width="10" style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_left.gif');"></td>
+											<td>
+												<!-- 서브타이틀 시작-->
+												<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+													<tr valign="top">
+														<td width="24"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_ptitle4.gif" width="18" height="18"/></td>
+														<td height="20" class='ptitle' style="vertical-align: top;">기타</td>
+													</tr>
+												</table>
+												<!-- 서브타이틀 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="5px"/>
+												<!-- 공지사항 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">공지사항</td>
+													</tr>
+												</table>
+												<table width="100%" border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list13"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+												<!-- 공지사항 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="10px"/>
+												<!-- 고객사상품등록요청 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">고객사/공급사상품등록요청</td>
+													</tr>
+												</table>
+												<table width="100%" border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list2"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+												<!-- 고객사상품등록요청 끝-->
+												<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/blank.gif" height="10px"/>
+												<!-- 진행중 또는 낙찰대기 입찰 시작-->
+												<table width="100%" border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td width="10" valign="middle" style="padding-left: 5px">
+															<img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/bullet_stitle_blue.gif" style="vertical-align: middle;"/>
+														</td>
+														<td class="stitle">진행중 또는 낙찰대기 입찰</td>
+													</tr>
+												</table>
+												<table width="100%" border="0" cellspacing="0" cellpadding="0">
+													<tr>
+														<td>
+															<div id="jqgrid">
+																<table id="list3"></table>
+															</div>
+														</td>
+													</tr>
+												</table>
+													<!-- 진행중 또는 낙찰대기 입찰 끝-->
+												</td>
+												<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_right.gif');"></td>
+											</tr>
+										<tr>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bl.gif" width="10" height="12"/></td>
+											<td style="background-image: url('<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_bottom.gif');"></td>
+											<td width="10"><img src="<%=Constances.SYSTEM_IMAGE_URL%>/img/FR/tbl_box_br.gif" width="10" height="12"/></td>
+										</tr>
+									</table>
+									<!-- 기타 끝 -->
+									<!-- 오른쪽영역 끝 --> 
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<!-- 그리드영역 부분 끝 -->
+			<div id="dialog" title="Feature not supported" style="display:none;">
+				<p>That feature is not supported.</p>
+			</div>
+		</td>
+	</tr>
+</table>
+</body>
+</html>

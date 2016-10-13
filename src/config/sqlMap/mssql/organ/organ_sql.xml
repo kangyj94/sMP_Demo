@@ -1,0 +1,3424 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+<mapper namespace="organ">
+	<select id="selectOneBranchs" resultType="kr.co.bitcube.organ.dto.SmpBranchsDto">
+		/*organ.selectOneBranchs*/
+		SELECT	(SELECT BORGNM FROM SMPBORGS WHERE BORGID = (SELECT PARBORGID FROM SMPBORGS WHERE BORGID  = #{branchId})) CLIENTNM
+		,		BRANCHID
+		,		BRANCHNM
+		,		BRANCHCD
+		,		AREATYPE
+		,		BRANCHGRAD
+		,		BUSINESSNUM
+		,		REGISTNUM
+		,		BRANCHBUSITYPE
+		,		BRANCHBUSICLAS
+		,		PRESSENTNM
+		,		PHONENUM
+		,		E_MAIL
+		,		HOMEPAGE
+		,		POSTADDRNUM
+		,		ADDRES
+		,		ADDRESDESC
+		,		FAXNUM
+		,		LOGINAUTHTYPE
+		,		ORDERAUTHTYPE
+		,		REFERECEDESC
+		,		PAYBILLTYPE
+		,		PAYBILLDAY
+		,		ACCOUNTMANAGENM
+		,		ACCOUNTTELNUM
+		,		BANKCD
+		,		RECIPIENT
+		,		ACCOUNTNUM
+		,		BUSINESSATTACHFILESEQ
+		,		APPRAISALATTACHFILESEQ
+		,		ETCFIRSTSEQ
+		,		ETCSECONDSEQ
+		,		ETCTHIRDSEQ
+		,		CONTRACTSPECIAL
+		,		PREPAY
+		,		WORKID
+		FROM	SMPBRANCHS WITH(NOLOCK)
+		WHERE	BRANCHID = #{branchId}
+	</select>
+	
+	<select id="selectOneReqBranchs" resultType="kr.co.bitcube.organ.dto.SmpBranchsDto">
+		/*organ.selectOneReqBranchs*/
+		SELECT	BRANCHID
+		,		GROUPID
+		,		CLIENTID
+		,		CLIENTNM
+		,		CLIENTCD
+		,		REGISTERCD
+		,		AREATYPE
+		,		BRANCHGRAD
+		,		BUSINESSNUM
+		,		REGISTNUM
+		,		BRANCHBUSITYPE
+		,		BRANCHBUSICLAS
+		,		PRESSENTNM
+		,		PHONENUM
+		,		E_MAIL
+		,		HOMEPAGE
+		,		POSTADDRNUM
+		,		ADDRES
+		,		ADDRESDESC
+		,		FAXNUM
+		,		LOGINAUTHTYPE
+		,		ORDERAUTHTYPE
+		,		REFERECEDESC
+		,		PAYBILLTYPE
+		,		PAYBILLDAY
+		,		ACCOUNTMANAGENM
+		,		ACCOUNTTELNUM
+		,		BANKCD
+		,		RECIPIENT
+		,		ACCOUNTNUM
+		,		BUSINESSATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'NAME') AS BUSINESSATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'PATH') AS BUSINESSATTACHFILEPATH
+		,		APPRAISALATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'NAME') AS APPRAISALATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'PATH') AS APPRAISALATTACHFILEPATH
+		,		ETCFIRSTSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTSEQ, 'NAME') AS ETCFIRSTNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTSEQ, 'PATH') AS ETCFIRSTPATH
+		,		ETCSECONDSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDSEQ, 'NAME') AS ETCSECONDNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDSEQ, 'PATH') AS ETCSECONDPATH
+		,		ETCTHIRDSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDSEQ, 'NAME') AS ETCTHIRDNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDSEQ, 'PATH') AS ETCTHIRDPATH
+		,		CONVERT(VARCHAR, REGISTERDATE, 23) AS REGISTERDATE
+		,		(SELECT AA.USERNM FROM SMPUSERS AA  WITH(NOLOCK) WHERE A.CONFIRMORID = AA.USERID) AS CONFIRMORID
+		,		CONVERT(VARCHAR, CONFIRDATE, 23) AS CONFIRDATE
+		,		CHECKSTAFFID
+		,		CONVERT(VARCHAR, CHECKDATE, 23) AS CHECKDATE
+		,		APPUSERID
+		,		APPDATE
+		,		A.WORKID
+		,		C.USERID
+		,		A.CONTRACTSPECIAL
+		,		A.SHARP_MAIL
+		FROM REQSMPBRANCHS A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPWORKINFO B WITH(NOLOCK) 
+			ON A.WORKID = B.WORKID
+		LEFT OUTER JOIN SMPUSERS C WITH(NOLOCK) 
+			ON A.ACCMANAGEUSERID = C.USERID
+		WHERE BRANCHID = #{branchId}
+	</select>
+
+	<select id="selectOneReqVendors" resultType="kr.co.bitcube.organ.dto.SmpVendorsDto">
+		/*organ.selectOneReqVendors*/
+		SELECT	VENDORID
+		,		VENDORNM
+		,		VENDORCD
+		,		REGISTERCD
+		,		AREATYPE
+		,		BUSINESSNUM
+		,		REGISTNUM
+		,		VENDORBUSITYPE
+		,		VENDORBUSICLAS
+		,		PRESSENTNM
+		,		PHONENUM
+		,		E_MAIL
+		,		HOMEPAGE
+		,		POSTADDRNUM
+		,		ADDRES
+		,		ADDRESDESC
+		,		FAXNUM
+		,		LOGINAUTHTYPE
+		,		REFERECEDESC
+		,		PAYBILLTYPE
+		,		PAYBILLDAY
+		,		ACCOUNTMANAGENM
+		,		ACCOUNTTELNUM
+		,		BANKCD
+		,		RECIPIENT
+		,		ACCOUNTNUM
+		,		BUSINESSATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'NAME') AS BUSINESSATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'PATH') AS BUSINESSATTACHFILEPATH		
+		,		APPRAISALATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'NAME') AS APPRAISALATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'PATH') AS APPRAISALATTACHFILEPATH		
+		,		ETCFIRSTATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTATTACHSEQ, 'NAME') AS ETCFIRSTATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTATTACHSEQ, 'PATH') AS ETCFIRSTATTACHPATH
+		,		ETCSECONDATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDATTACHSEQ, 'NAME') AS ETCSECONDATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDATTACHSEQ, 'PATH') AS ETCSECONDATTACHPATH
+		,		ETCTHIRDATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDATTACHSEQ, 'NAME') AS ETCTHIRDATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDATTACHSEQ, 'PATH') AS ETCTHIRDATTACHPATH
+		,		CONVERT(VARCHAR, REGISTERDATE, 23) AS REGISTERDATE
+		,		(SELECT USERNM FROM SMPUSERS A  WITH(NOLOCK) WHERE A.USERID = REQSMPVENDORS.CONFIRMORID) AS CONFIRMORID
+		,		CONVERT(VARCHAR, CONFIRDATE, 23) AS CONFIRDATE
+		,		CHECKSTAFFID
+		,		CONVERT(VARCHAR, CHECKDATE, 23) AS CHECKDATE
+		,		APPUSERID
+		,		APPDATE
+		,		SHARP_MAIL
+		,		CLASSIFY
+		,		ETCFOURTHATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFOURTHATTACHSEQ, 'NAME') AS ETCFOURTHATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFOURTHATTACHSEQ, 'PATH') AS ETCFOURTHATTACHPATH
+		FROM REQSMPVENDORS WITH(NOLOCK) 
+		WHERE VENDORID = #{vendorId}
+	</select>
+	
+	<select id="selectReqClientListCnt" resultType="int">
+		/*organ.selectReqClientListCnt*/	
+		SELECT  
+		        COUNT(1)
+		FROM  	REQSMPBRANCHS WITH(NOLOCK) 
+		WHERE 	1 = 1
+		<if test="srcClientNm != null and srcClientNm != ''">
+		AND		CLIENTNM LIKE '%' + #{srcClientNm} + '%'
+		</if>	
+		<if test="srcRegisterCd != null and srcRegisterCd != ''">
+		AND		REGISTERCD = #{srcRegisterCd}
+		</if>	
+	</select>
+	
+	<select id="selectReqVendorListCnt" resultType="int">
+		/*organ.selectReqVendorListCnt*/		
+		SELECT  
+		        COUNT(1)
+		FROM  	REQSMPVENDORS WITH(NOLOCK) 
+		WHERE 	1 = 1
+		<if test="srcVendorNm != null and srcVendorNm != ''">
+		AND		VENDORNM LIKE '%' + #{srcVendorNm} + '%'
+		</if>	
+		<if test="srcRegisterCd != null and srcRegisterCd != ''">
+		AND		REGISTERCD = #{srcRegisterCd}
+		</if>	
+	</select>
+	
+	<select id="selectReqBranchList" resultType="kr.co.bitcube.organ.dto.SmpBranchsDto">
+		/*organ.selectReqBranchList*/	
+		SELECT  
+		        BRANCHID
+		,       GROUPID
+		,       CLIENTID
+		,       CLIENTNM
+		,       CLIENTCD
+		,       (SELECT CODENM1 FROM SMPCODES WITH(NOLOCK)  WHERE CODETYPECD = 'REQ_BORG_TYPE' AND CODEVAL1 = REGISTERCD)  AS REGISTERCD
+		,       (SELECT CODENM1 FROM SMPCODES WITH(NOLOCK)  WHERE CODETYPECD = 'DELI_AREA_CODE' AND CODEVAL1 = AREATYPE)  AS AREATYPE
+		,       (SELECT CODENM1 FROM SMPCODES WITH(NOLOCK)  WHERE CODETYPECD = 'MEMBERGRADE' AND CODEVAL1 = BRANCHGRAD)  AS BRANCHGRAD
+		,       BUSINESSNUM
+		,       REGISTNUM
+		,       BRANCHBUSITYPE
+		,       BRANCHBUSICLAS
+		,       PRESSENTNM
+		,       PHONENUM
+		,       E_MAIL
+		,       HOMEPAGE
+		,       POSTADDRNUM
+		,       ADDRES + ' ' + ADDRESDESC AS ADDRES
+		,       FAXNUM
+		,       CASE 
+					WHEN LOGINAUTHTYPE = '10' THEN '모바일인증' 
+					WHEN LOGINAUTHTYPE = '20' THEN '일반'
+  				END AS LOGINAUTHTYPE
+		,       CASE 
+					WHEN ORDERAUTHTYPE = '10' THEN '공인인증' 
+					WHEN ORDERAUTHTYPE = '20' THEN '일반'
+  				END AS ORDERAUTHTYPE
+		,       REFERECEDESC
+		,       PAYBILLTYPE
+		,       PAYBILLDAY
+		,       ACCOUNTMANAGENM
+		,       ACCOUNTTELNUM
+		,       (SELECT CODENM1 FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'BANKCD' AND CODEVAL1 = BANKCD)  AS BANKCD
+		,       RECIPIENT
+		,       ACCOUNTNUM
+		,       BUSINESSATTACHFILESEQ
+		,       APPRAISALATTACHFILESEQ
+		,       ETCFIRSTSEQ
+		,       ETCSECONDSEQ
+		,       ETCTHIRDSEQ
+		,       CONVERT(VARCHAR, REGISTERDATE, 23) AS REGISTERDATE
+		,       CONFIRMORID
+		,       CONVERT(VARCHAR, CONFIRDATE, 23) AS CONFIRDATE
+		,       CHECKSTAFFID
+		,       CONVERT(VARCHAR, CHECKDATE, 23) AS CHECKDATE
+		,       APPUSERID
+		,       CONVERT(VARCHAR, APPDATE, 23) AS APPDATE
+		,		A.WORKID
+		,		B.WORKNM
+		,		A.ACCMANAGEUSERID
+		,		C.USERNM
+		FROM  	REQSMPBRANCHS A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPWORKINFO B WITH(NOLOCK) 
+			ON A.WORKID = B.WORKID
+		LEFT OUTER JOIN SMPUSERS C WITH(NOLOCK) 
+			ON A.ACCMANAGEUSERID = C.USERID 				
+		WHERE   1 = 1
+		<if test="srcClientNm != null and srcClientNm != ''">
+		AND		CLIENTNM LIKE '%' + #{srcClientNm} + '%'
+		</if>			
+		<if test="srcRegisterCd != null and srcRegisterCd != ''">
+		AND		REGISTERCD = #{srcRegisterCd}
+		</if>	
+		<if test="srcAccUser != null and srcAccUser != ''">
+		AND		ACCMANAGEUSERID = #{srcAccUser}
+		</if>	
+		<if test="srcWorkId != null and srcWorkId != ''">
+		AND		A.WORKID = #{srcWorkId}
+		</if>	
+		<if test="orderString != null and orderString != ''">
+		ORDER BY ${orderString}
+		</if>
+	</select>	
+	
+	<select id="selectReqVendorList" resultType="kr.co.bitcube.organ.dto.SmpVendorsDto">
+		/*organ.selectReqVendorList*/	
+		SELECT 
+		  		VENDORID
+		,       VENDORNM
+		,       VENDORCD
+		,       (SELECT CODENM1 FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'REQ_BORG_TYPE' AND CODEVAL1 = REGISTERCD)  AS REGISTERCD
+		,       (SELECT CODENM1 FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'VEN_AREA_CODE' AND CODEVAL1 = AREATYPE)  AS AREATYPE
+<!-- 		,       AREATYPE -->
+		,       BUSINESSNUM
+		,       REGISTNUM
+		,       VENDORBUSITYPE
+		,       VENDORBUSICLAS
+		,       PRESSENTNM
+		,       PHONENUM
+		,       E_MAIL
+		,       HOMEPAGE
+		,       POSTADDRNUM
+		,       ADDRES
+		,       ADDRESDESC
+		,       FAXNUM
+		,       CASE 
+					WHEN LOGINAUTHTYPE = '10' THEN '핸드폰인증' 
+					WHEN LOGINAUTHTYPE = '20' THEN '일반'
+  				END AS LOGINAUTHTYPE
+		,       REFERECEDESC
+		,       PAYBILLTYPE
+		,       PAYBILLDAY
+		,       ACCOUNTMANAGENM
+		,       ACCOUNTTELNUM
+		,       (SELECT CODENM1 FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPECD = 'BANKCD' AND CODEVAL1 = BANKCD)  AS BANKCD
+		,       RECIPIENT
+		,       ACCOUNTNUM
+		,       BUSINESSATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'NAME') AS BUSINESSATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'PATH') AS BUSINESSATTACHFILEPATH		
+		,       APPRAISALATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'NAME') AS APPRAISALATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'PATH') AS APPRAISALATTACHFILEPATH		
+		,       ETCFIRSTATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTATTACHSEQ, 'NAME') AS ETCFIRSTATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTATTACHSEQ, 'PATH') AS ETCFIRSTATTACHPATH
+		,       ETCSECONDATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDATTACHSEQ, 'NAME') AS ETCSECONDATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDATTACHSEQ, 'PATH') AS ETCSECONDATTACHPATH
+		,       ETCTHIRDATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDATTACHSEQ, 'NAME') AS ETCTHIRDATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDATTACHSEQ, 'PATH') AS ETCTHIRDATTACHPATH		
+		,       CONVERT(VARCHAR, REGISTERDATE, 23) AS REGISTERDATE
+		,       CONFIRMORID
+		,       CONVERT(VARCHAR, CONFIRDATE, 23) AS CONFIRDATE
+		,       CHECKSTAFFID
+		,       CONVERT(VARCHAR, CHECKDATE, 23) AS CHECKDATE
+		,       APPUSERID
+		,       CONVERT(VARCHAR, APPDATE, 23) AS APPDATE
+		FROM 	REQSMPVENDORS WITH(NOLOCK) 			
+		WHERE   1 = 1
+		<if test="srcVendorNm != null and srcVendorNm != ''">
+		AND		VENDORNM LIKE '%' + #{srcVendorNm} + '%'
+		</if>			
+		<if test="srcRegisterCd != null and srcRegisterCd != ''">
+		AND		REGISTERCD = #{srcRegisterCd}
+		</if>		
+		<if test="orderString != null and orderString != ''">
+		ORDER BY ${orderString}
+		</if>
+	</select>
+
+	<select id="selectOneVendors" resultType="kr.co.bitcube.organ.dto.SmpVendorsDto">
+		/*organ.selectOneVendors*/
+		SELECT	VENDORID
+		,		VENDORNM
+		,		VENDORCD
+		,		AREATYPE
+		,		BUSINESSNUM
+		,		REGISTNUM
+		,		VENDORBUSITYPE
+		,		VENDORBUSICLAS
+		,		PRESSENTNM
+		,		PHONENUM
+		,		E_MAIL
+		,		HOMEPAGE
+		,		POSTADDRNUM
+		,		ADDRES
+		,		ADDRESDESC
+		,		FAXNUM
+		,		LOGINAUTHTYPE
+		,		REFERECEDESC
+		,		PAYBILLTYPE
+		,		PAYBILLDAY
+		,		ACCOUNTMANAGENM
+		,		ACCOUNTTELNUM
+		,		BANKCD
+		,		RECIPIENT
+		,		ACCOUNTNUM
+		,		BUSINESSATTACHFILESEQ
+		,		APPRAISALATTACHFILESEQ
+		,		ETCFIRSTATTACHSEQ
+		,		ETCSECONDATTACHSEQ
+		,		ETCTHIRDATTACHSEQ
+		FROM	SMPVENDORS WITH(NOLOCK)
+		WHERE	VENDORID = #{vendorId}
+	</select>
+	
+	<sql id="selectOrganBranchSql">
+		FROM	SMPBRANCHS A WITH(NOLOCK)
+		LEFT OUTER JOIN SMPWORKINFO C WITH(NOLOCK)  
+			ON A.WORKID = C.WORKID 
+		LEFT OUTER JOIN SMPUSERS D WITH(NOLOCK) 
+			ON A.ACCMANAGEUSERID = D.USERID 
+		,	SMPBORGS B WITH(NOLOCK) 
+		INNER JOIN SMPBORGS B1 WITH(NOLOCK)
+			ON  B.PARBORGID = B1.BORGID
+		INNER JOIN SMPBORGS B2 WITH(NOLOCK)
+			ON B.CLIENTID   = B2.BORGID
+		LEFT OUTER JOIN
+		(
+			SELECT	BORGID
+			,		CONTRACT_CNT
+			,		SPECIALCONTRACT_CNT
+			FROM
+			(
+				SELECT	A.BORGID
+				,		COUNT(1) AS CONTRACT_CNT
+				,		(
+							SELECT	COUNT(1)
+							FROM	COMMODITY_CONTRACT_NEW A2 WITH(NOLOCK) 
+							,		SMPBRANCHS B2
+							WHERE	A2.SVCTYPECD = 'BUY'
+							AND		A2.CONTRACT_CLASSIFY = 'S'
+							AND		A2.CONTRACT_SPECIAL = B2.CONTRACTSPECIAL
+							AND		B2.BRANCHID = A.BORGID
+							GROUP BY B2.BRANCHID
+						) SPECIALCONTRACT_CNT	
+				FROM	SMPBORG_CONTRACT A
+				LEFT OUTER JOIN COMMODITY_CONTRACT_NEW B
+				ON		A.CONTRACT_VERSION = B.CONTRACT_VERSION
+				AND		A.CONTRACT_CLASSIFY = B.CONTRACT_CLASSIFY
+				AND		B.SVCTYPECD = 'BUY'
+				,		SMPBORGS C
+				WHERE	A.BORGID = C.BORGID
+				AND		C.SVCTYPECD = 'BUY'
+				GROUP BY A.BORGID
+			) A		
+		)B3			
+		ON B.BORGID = B3.BORGID
+		WHERE 	A.BRANCHID = B.BORGID 
+		<if test="srcBorgNameLike != null and  srcBorgNameLike != '' and srcBorgNameLike neq '0'.toString() ">
+		AND		A.BRANCHNM LIKE '%'+#{srcBorgNameLike}+'%'
+		</if>
+		<if test="srcClientNameLike != null and  srcClientNameLike != '' and srcClientNameLike neq '0'.toString() ">
+		AND		B2.BORGNM LIKE '%'+#{srcClientNameLike}+'%'
+		</if>
+		<if test="srcGroupId != null and  srcGroupId != '' and srcGroupId neq '0'.toString() ">
+		AND		B.groupId = #{srcGroupId}
+		</if>
+		<if test="srcClientId != null and  srcClientId != '' and srcClientId neq '0'.toString() ">
+		AND		B.clientId = #{srcClientId}
+		</if>
+		<if test="srcBranchId != null and  srcBranchId != '' and srcBranchId neq '0'.toString() ">
+		AND		A.branchId = #{srcBranchId}
+		</if> 
+		<if test="srcBranchGrad != null and srcBranchGrad != ''">
+		AND		A.branchGrad = #{srcBranchGrad}
+		</if>
+		<if test="srcAreaType != null and srcAreaType != ''">
+		AND		A.areaType= #{srcAreaType}
+		</if>
+		<if test="srcIsUse != null and srcIsUse != ''">
+		AND		B.isUse = #{srcIsUse}
+		</if>
+		<if test="srcWorkId != null and srcWorkId != ''">
+		AND		A.WORKID = #{srcWorkId}
+		</if>
+		<if test="srcAccUser != null and srcAccUser != ''">
+		AND		A.ACCMANAGEUSERID = #{srcAccUser}
+		</if>
+		<if test="srcIsOrderLimit != null and srcIsOrderLimit != ''">
+		AND		A.ISORDERLIMIT = #{srcIsOrderLimit}
+		</if>
+		<if test="srcPrePay != null and srcPrePay != ''">
+		AND		A.PREPAY = #{srcPrePay}
+		</if>
+		<if test="srcPressentNm != null and srcPressentNm !='' ">
+		AND		A.PRESSENTNM LIKE '%'+ #{srcPressentNm} +'%'
+		</if>
+		<if test="srcBusinessNum != null and srcBusinessNum != ''">
+		AND		A.BUSINESSNUM LIKE '%'+#{srcBusinessNum}+'%'
+		</if>
+	</sql>
+	<select id="selectOrganBranchListCnt" resultType="int">
+		/* organ.selectOrganBranchListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectOrganBranchSql"/>
+	</select>
+	<select id="selectOrganBranchList" resultType="kr.co.bitcube.organ.dto.SmpBranchsDto">
+		/* organ.selectOrganBranchList */
+		SELECT	CASE 
+					WHEN (SELECT COUNT(1) FROM SMPCODES WHERE CODETYPECD = 'CONTRACT_EXCLUDE_CLT' AND CODENM1 = b1.borgcd) = 1  THEN '-'
+					WHEN ISNULL(B3.CONTRACT_CNT,0) = ISNULL(B3.SPECIALCONTRACT_CNT,0) + (SELECT COUNT(1) FROM	COMMODITY_CONTRACT_NEW A WITH(NOLOCK) WHERE	A.SVCTYPECD = 'BUY' AND	A.CONTRACT_CLASSIFY IN ('B','I')) THEN 'Y' 
+					ELSE 'N' 
+				END AS CONTRACTYN		
+		,		ISNULL(B3.CONTRACT_CNT,0) AS CONTRACT_CNT
+		,		ISNULL(B3.SPECIALCONTRACT_CNT,0) AS SPECIALCONTRACT_CNT
+		,		(SELECT COUNT(1) FROM	COMMODITY_CONTRACT_NEW A WITH(NOLOCK) WHERE	A.SVCTYPECD = 'BUY' AND	A.CONTRACT_CLASSIFY IN ('B','I')) AS STDCONTRACT_CNT		
+		,		A.BRANCHID
+		,		A.BRANCHCD
+		,		B2.BORGNM
+		,		A.BRANCHNM 
+		,		A.BUSINESSNUM
+		,		A.AREATYPE
+		,		dbo.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE',A.areaType) AS AREATYPENM
+		,		dbo.FNS_CODENM1BYCODEVAL1('MEMBERGRADE',A.BRANCHGRAD) AS BRANCHGRAD
+		,		(CASE WHEN B.ISUSE='1' THEN '정상' ELSE '종료' END) AS ISUSE
+		,		A.phoneNum
+		,		A.pressentNm
+		,		A.postAddrNum
+		,		A.ADDRES
+		,		A.ADDRESDESC
+		,		CONVERT(VARCHAR(10), B.CREATEDATE, 121) AS CREATEDATE
+		,		C.WORKNM
+		,		D.USERNM
+		,		(CASE WHEN A.PREPAY='0' THEN '아니오' ELSE '예' END) AS PREPAY 
+		<![CDATA[
+		,		CASE
+					WHEN A.ISORDERLIMIT = 0 THEN '주문정상'
+					ELSE '<font color="red">주문제한</font>'
+				END AS ISORDERLIMIT	
+		,		CASE
+    				WHEN A.ISORDERLIMIT = 0 THEN '주문정상'
+					ELSE '주문제한'
+				END AS ISORDERLIMIT1 ,
+		
+		((CASE WHEN B1.ISUSE = '1' THEN '정상' ELSE '<font color="red">종료</font>' END) + '/' +
+			(CASE WHEN B1.ISLIMIT = '1' THEN '<font color="red">주문제한</font>' ELSE '주문정상' END)) AS clientStatus,
+		((CASE WHEN B1.ISUSE = '1' THEN '정상' ELSE '종료' END) + '/' + 
+			(CASE WHEN B1.ISLIMIT = '1' THEN '주문제한' ELSE '주문정상' END)) AS clientStatus1 
+		]]>
+		,		A.SHARP_MAIL
+		,		B.CLIENTID
+		,		A.AUTORDERLIMITPERIOD
+		,		CASE	WHEN (
+								SELECT	COUNT(1)
+								FROM	SMPBORGS_USERS AA
+								,		SMPUSERS BB
+								WHERE	A.BRANCHID = AA.BORGID
+								AND		AA.USERID = BB.USERID
+								<![CDATA[
+								AND		CONVERT(DATE, CONVERT(VARCHAR(10), BB.LASTLOGINDATE, 121)) < DATEADD(YEAR, -1, CONVERT(DATE, CONVERT(VARCHAR(10), GETDATE(), 121)))
+								]]>
+							) = (SELECT	COUNT(1) FROM SMPBORGS_USERS AA WHERE A.BRANCHID = AA.BORGID)
+							THEN 'Y'
+						ELSE 'N'
+				END userLoginYn
+		<include refid="selectOrganBranchSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectDeliveryInfoList" resultType="kr.co.bitcube.organ.dto.SmpDeliveryInfoDto">
+		/*organ.selectDeliveryInfoList*/	
+		SELECT	DELIVERYID
+		,       GROUPID
+		,       CLIENTID
+		,       BRANCHID
+		,       SHIPPINGPLACE
+		,       SHIPPINGADDRES
+		,       SHIPPINGPHONENUM
+		,       ISDEFAULT
+		FROM 	SMPDELIVERYINFO WITH(NOLOCK) 
+		WHERE 	BRANCHID = #{branchId}
+	</select>
+	
+	<select id="selectDefaultBorgRole" resultType="kr.co.bitcube.organ.dto.BorgRoleDto">
+		/*organ.selectDefaultBorgRole*/	
+		SELECT  A.ROLECD
+		,		A.ROLENM
+		,		A.ROLEDESC 
+		,		C.USERID
+		,		C.BORGID
+		,		B.ROLEID
+		,		B.BORGSCOPECD
+		,		dbo.FNS_CODENM1BYCODEVAL1('BORGSCOPECD',B.BORGSCOPECD) AS BORGSCOPENM
+		,		CASE
+					WHEN B.ISDEFAULT = '1' THEN '예'
+					ELSE '아니요'
+				END AS ISDEFAULT
+		FROM 	SMPROLES A WITH(NOLOCK) 
+		,		SMPBORGS_USERS_ROLES B WITH(NOLOCK) 
+		,		SMPBORGS_USERS C WITH(NOLOCK) 
+		WHERE   A.ROLEID = B.ROLEID   
+		AND		B.USERID = C.USERID
+		AND     B.BORGID = C.BORGID
+		AND     C.BORGID = #{borgId}	
+		<if test="userId != null and userId != ''">
+		AND     C.USERID = #{userId}	
+		</if>
+		<if test="orderString != null and orderString != ''">
+		ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectUserInfo" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/*organ.selectUserInfo*/	
+		SELECT  TOP 1
+				A.USERID
+		,		A.LOGINID
+		,		A.PWD
+		,		A.USERNM
+		,		A.TEL
+		,		A.MOBILE
+		,		A.FAX
+		,		A.ZIPCODE
+		,		A.EMAIL 
+		FROM 	SMPUSERS A WITH(NOLOCK) 
+		,		SMPBORGS_USERS B WITH(NOLOCK) 
+		WHERE 	A.USERID = B.USERID
+<!-- 		AND     B.ISDEFAULT = '1' -->
+		AND     B.BORGID = #{branchId}
+		ORDER BY A.CREATEDATE	
+		
+	
+	</select>
+	
+	<insert id="insertAdminBorgs">
+		/*organ.insertAdminBorgs*/	
+		/*
+		INSERT INTO SMPADMIN_BORGS(
+			  ADMINBORGID
+			, USERID
+			, MANAGEBORGID
+			, MANAGEBORGCD
+			, BORGTYPECD
+		)VALUES(
+			  #{adminBorgId}
+			, #{userId} 
+			, #{manageBorgId} 
+			, #{manageBorgCd} 
+			, #{borgTypeCd} 
+		)
+		*/	
+	</insert>
+	
+	<select id="selectAdminborgsDupCheck" resultType="int">
+		/*organ.selectAdminborgsDupCheck*/		
+		/*
+		SELECT 	COUNT(1) AS DUPCNT 
+		FROM 	SMPADMIN_BORGS WITH(NOLOCK)  
+		WHERE 	USERID = #{userId} 
+		AND 	MANAGEBORGID = #{manageBorgId}
+		*/	
+	</select>
+	
+	<select id="selectAdminborgs" resultType="kr.co.bitcube.organ.dto.AdminBorgsDto">
+		/*organ.selectAdminborgs*/	
+		/*
+		SELECT 
+				A.ADMINBORGID
+		,		A.USERID
+		,		A.MANAGEBORGID
+		,		A.MANAGEBORGCD
+		,		A.BORGTYPECD
+		,		B.USERNM
+		,		B.MOBILE
+		,		B.LOGINID 
+		FROM 	SMPADMIN_BORGS A WITH(NOLOCK) 
+		,		SMPUSERS B WITH(NOLOCK) 
+		WHERE   A.USERID = B.USERID
+		AND 	A.MANAGEBORGID = #{clientId}
+		*/
+	</select>
+	
+	<delete id="deleteAdminBorgs">
+		/*organ.deleteAdminBorgs*/
+		/*	
+		DELETE FROM SMPADMIN_BORGS WHERE ADMINBORGID = #{adminBorgId}
+		*/
+	</delete>
+
+	<sql id="selectOrganVendorSql">
+		FROM	SMPVENDORS A WITH(NOLOCK) 
+		,		SMPBORGS B WITH(NOLOCK)
+		LEFT OUTER JOIN 
+		(
+			SELECT	A.BORGID
+			,		COUNT(1) AS CONTRACT_CNT
+			FROM	SMPBORG_CONTRACT A
+			LEFT OUTER JOIN COMMODITY_CONTRACT_NEW B
+			ON		A.CONTRACT_VERSION = B.CONTRACT_VERSION
+			AND		A.CONTRACT_CLASSIFY = B.CONTRACT_CLASSIFY
+			AND		B.SVCTYPECD = 'VEN'
+			,		SMPBORGS C
+			WHERE	A.BORGID = C.BORGID
+			AND		C.SVCTYPECD = B.SVCTYPECD
+			GROUP BY A.BORGID
+		)B1
+		ON 	B.BORGID = B1.BORGID
+		WHERE 	A.VENDORID = B.BORGID 
+		<if test="srcVendorNm != null and srcVendorNm != ''">
+		AND		A.vendorNm LIKE '%' + #{srcVendorNm} + '%'
+		</if>
+		<if test="srcBusinessNum != null and srcBusinessNum != ''">
+		AND		A.businessNum LIKE '%' + #{srcBusinessNum} + '%'
+		</if>
+		<if test="srcAreaType != null and srcAreaType != ''">
+		AND		A.areaType= #{srcAreaType}
+		</if>
+		<if test="srcIsUse != null and srcIsUse != ''">
+		AND		B.isUse = #{srcIsUse}
+		</if>
+		<if test="vendorSearchId != null and vendorSearchId != '' and  vendorSearchId neq '0'.toString() ">
+		AND		A.VENDORID = #{vendorSearchId}
+		</if>
+		<if test="classify != null and classify != '' ">
+		AND		A.CLASSIFY = #{classify}
+		</if>
+		<if test="srcPressentNm != null and srcPressentNm != ''">
+		AND		A.PRESSENTNM LIKE '%'+#{srcPressentNm}+'%'
+		</if>
+	</sql>
+	<select id="selectOrganVendorListCnt" resultType="int">
+		/* organ.selectOrganVendorListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectOrganVendorSql"/>
+	</select>
+	<select id="selectOrganVendorList" resultType="kr.co.bitcube.organ.dto.SmpVendorsDto">
+		/* organ.selectOrganVendorList */
+		select  B1.CONTRACT_CNT
+		,		CASE 
+					WHEN (SELECT COUNT(1) FROM SMPCODES WHERE CODETYPECD = 'CONTRACT_EXCLUDE_CLT' AND CODENM1 = b.borgcd) = 1  THEN '-'
+					WHEN ISNULL(B1.CONTRACT_CNT, 0) = (SELECT	COUNT(1) FROM COMMODITY_CONTRACT_NEW A WITH(NOLOCK) WHERE A.SVCTYPECD = 'VEN' AND A.CONTRACT_CLASSIFY IN ('B','I','Q')) THEN 'Y'
+					ELSE 'N' 
+				END AS CONTRACTYN
+		,		A.VENDORID
+		,		A.VENDORCD
+		,		A.VENDORNM
+		,		A.BUSINESSNUM
+		,		A.AREATYPE
+		,		dbo.FNS_CODENM1BYCODEVAL1('VEN_AREA_CODE',A.areaType) AS AREATYPENM
+		,		(CASE WHEN B.ISUSE='1' THEN '정상' ELSE '종료' END) AS ISUSE
+		,		A.phoneNum
+		,		A.pressentNm
+		,		A.postAddrNum
+		,		A.addres
+		,		A.addresDesc
+		,		CONVERT(VARCHAR(10), B.CREATEDATE, 121) AS CREATEDATE
+		,		A.SHARP_MAIL
+		,		A.HOMEPAGE
+		,		(SELECT CODENM1 FROM SMPCODES C  WITH(NOLOCK) WHERE A.CLASSIFY = C.CODEVAL1 AND C.CODETYPECD = 'REQVENDOR_CLASSIFY') AS CLASSIFY
+		<![CDATA[
+		,		CASE	WHEN (
+								SELECT	COUNT(1)
+								FROM	SMPBORGS_USERS AA
+								,		SMPUSERS BB
+								WHERE	A.VENDORID = AA.BORGID
+								AND		AA.USERID = BB.USERID
+								AND		CONVERT(DATE, CONVERT(VARCHAR(10), BB.LASTLOGINDATE, 121)) < DATEADD(YEAR, -1, CONVERT(DATE, CONVERT(VARCHAR(10), GETDATE(), 121)))
+							) = (SELECT	COUNT(1) FROM SMPBORGS_USERS AA WHERE A.VENDORID = AA.BORGID)
+							THEN 'Y'
+						ELSE 'N'
+				END userLoginYn
+		]]>
+		<include refid="selectOrganVendorSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<delete id="deleteBorgsUserRole">
+		/* organ.deleteBorgsUserRole */
+		DELETE FROM SMPBORGS_USERS_ROLES 
+		WHERE  ROLEID = #{roleId}
+		AND    USERID = #{userId}
+		AND    BORGID = #{borgId}
+	</delete>
+	<insert id="insertBorgsUsersRoles">
+		/* organ.insertBorgsUsersRoles */
+		INSERT INTO SMPBORGS_USERS_ROLES (
+				ROLEID
+		,		BORGID
+		,		USERID
+		,		ISDEFAULT
+		,		BORGSCOPECD
+		) VALUES (
+				#{roleId}
+		,		#{borgId}
+		,		#{userId}
+		,		#{isDefault}
+		,		#{borgScopeCd}
+		)
+	</insert>
+	
+	<update id="updateBranchReq">
+		/*organ.updateBranchReq*/	
+		UPDATE REQSMPBRANCHS SET
+		   CLIENTNM					= #{clientNm} 
+		,  CLIENTCD             	= #{clientCd} 
+		<if test="registerCd != null and registerCd != '00'">
+		,  REGISTERCD           	= #{registerCd} 
+		</if>
+		,  AREATYPE             	= #{areaType} 
+		,  BRANCHGRAD           	= #{branchGrad} 
+		,  BUSINESSNUM          	= #{businessNum} 
+		,  REGISTNUM            	= #{registNum}
+		,  BRANCHBUSITYPE       	= #{branchBustType} 
+		,  BRANCHBUSICLAS       	= #{branchBustClas} 
+		,  PRESSENTNM           	= #{pressentNm} 
+		,  PHONENUM             	= #{phoneNum} 
+		,  E_MAIL               	= #{eMail} 
+		,  HOMEPAGE             	= #{homePage} 
+		,  POSTADDRNUM          	= #{postAddrNum} 
+		,  ADDRES               	= #{addres} 
+		,  ADDRESDESC           	= #{addresDesc} 
+		,  FAXNUM               	= #{faxNum} 
+		,  LOGINAUTHTYPE        	= #{loginAuthType}
+		,  ORDERAUTHTYPE        	= #{orderAuthType}
+		,  REFERECEDESC         	= #{refereceDesc} 
+		,  PAYBILLTYPE          	= #{payBillType} 
+		,  PAYBILLDAY           	= #{payBillDay} 
+		,  ACCOUNTMANAGENM      	= #{accountManagerNm}	
+		,  ACCOUNTTELNUM        	= #{accountTelNum} 
+		,  BANKCD               	= #{bankCd} 
+		,  RECIPIENT            	= #{recipient} 
+		,  ACCOUNTNUM           	= #{accountNum} 
+		,  WORKID 	          		= #{workId} 
+		,  ACCMANAGEUSERID      	= #{accUser} 
+		,  SHARP_MAIL           	= #{sharpMail}
+		<if test="registerCd != null and registerCd == '20'">
+		,	CONFIRMORID				= #{creatorUserId}		
+		,	CONFIRDATE				= GETDATE()
+		</if>
+		<if test="registerCd != null and registerCd == '30'">
+		,	CHECKSTAFFID			= #{creatorUserId}
+		,	CHECKDATE				= GETDATE()
+		</if>
+		<if test="registerCd != null and registerCd == '40'">
+		,	APPUSERID				= #{creatorUserId}
+		,	APPDATE					= GETDATE()
+		</if>
+		<if test="contractSpecial != null and contractSpecial !=''">
+		,	CONTRACTSPECIAL	= #{contractSpecial}
+		</if>
+		<if test="file_biz_reg_list != null and file_biz_reg_list !=''">
+		,	BUSINESSATTACHFILESEQ	= #{file_biz_reg_list}
+		</if>
+		<if test="file_app_sal_list != null and file_app_sal_list !=''">
+		,	APPRAISALATTACHFILESEQ	= #{file_app_sal_list}
+		</if>
+		<if test="file_list1 != null and file_list1 !=''">
+		,	ETCFIRSTSEQ				= #{file_list1}
+		</if>
+		<if test="file_list2 != null and file_list2 !=''">
+		,	ETCSECONDSEQ			= #{file_list2}
+		</if>
+		<if test="file_list3 != null and file_list3 !=''">
+		,	ETCTHIRDSEQ				= #{file_list3}
+		</if>
+		
+		WHERE BRANCHID = #{branchId}	
+	</update>
+	
+	<update id="updateSmpUser">
+		/*organ.updateSmpUser*/	
+		UPDATE SMPUSERS SET 
+				TEL 			= #{tel}
+		,		MOBILE 			= #{mobile}
+		,		EMAIL 			= #{userEmail}
+		<if test="pwd != null and pwd != ''">
+		,		PWD 			= #{pwd}
+		</if>
+		,		USERNM 			= #{userNm}
+		,		ISUSE 			= #{isUse}
+		,		ENDCAUSEDESC 	= #{endCauseDesc}
+		,		USERNOTE 		= #{userNote}
+		WHERE USERID = #{userId} 	
+	</update>
+	
+	<sql id="selectOrganUserSql">
+		FROM	SMPUSERS A WITH(NOLOCK) 
+		,		SMPBORGS_USERS B WITH(NOLOCK) 
+		,		SMPBRANCHS C WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPWORKINFO C1 WITH(NOLOCK) 
+			ON C.WORKID = C1.WORKID
+		,		SMPBORGS D WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPBORGS E WITH(NOLOCK) 
+		  ON    D.CLIENTID = E.BORGID
+		WHERE	A.USERID = B.USERID
+		AND		B.BORGID = C.BRANCHID
+		AND 	b.BORGID = D.BORGID
+		<if test="srcGroupId != null and  srcGroupId != '' and srcGroupId neq '0'.toString() ">
+		AND		D.groupId = #{srcGroupId}
+		</if>
+		<if test="srcClientId != null and  srcClientId != '' and srcClientId neq '0'.toString() ">
+		AND		D.clientId = #{srcClientId}
+		</if>
+		<if test="srcBranchId != null and  srcBranchId != '' and srcBranchId neq '0'.toString() ">
+		AND		C.branchId = #{srcBranchId}
+		</if> 
+		<if test="srcUserNm != null and srcUserNm != ''">
+		AND		A.userNm  LIKE '%' + #{srcUserNm} + '%' 				
+		</if>
+		<if test="srcLoginId != null and srcLoginId != ''">
+		AND		A.loginId  LIKE '%' + #{srcLoginId} + '%'						
+		</if>
+		<if test="srcIsUse != null and srcIsUse != ''">
+		AND		A.isUse = #{srcIsUse}
+		</if>
+		<if test="srcBorgId != null and srcBorgId != ''">
+		AND		D.borgId = #{srcBorgId}
+		</if>
+		<if test="srcIsDirect != null and srcIsDirect != '' and srcIsDirect eq 'Y'.toString() ">
+		AND		EXISTS (SELECT 1 FROM SMPDIRECTINFO A1  WITH(NOLOCK) WHERE A1.DIRECTORID = A.USERID AND A1.BRANCHID = C.BRANCHID)
+		</if>
+		<if test="srcIsDirect != null and srcIsDirect != '' and srcIsDirect eq 'N'.toString() ">
+		AND		NOT EXISTS (SELECT 1 FROM SMPDIRECTINFO A1  WITH(NOLOCK) WHERE A1.DIRECTORID = A.USERID AND A1.BRANCHID = C.BRANCHID)
+		</if>
+		<if test="srcWorkId != null and srcWorkId != ''">
+		AND		C1.WORKID = #{srcWorkId}
+		</if>
+		<if test="srcBorgIsUse != null and srcBorgIsUse != ''">
+		AND		D.ISUSE = #{srcBorgIsUse}
+		</if>
+	</sql>
+	<select id="selectOrganUserListCnt" resultType="int">
+		/* organ.selectOrganUserListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectOrganUserSql"/>
+	</select>
+	<select id="selectOrganUserList" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/* organ.selectOrganUserList */
+		SELECT	C.BRANCHID AS BORGID
+		,		dbo.FNS_BORG_STRING(C.BRANCHID) AS BRANCHNM
+		,		D.BORGNM
+		,		C.AREATYPE
+		,		dbo.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE',C.AREATYPE) AS AREATYPENM
+		,		A.USERNM
+		,		A.USERID
+		,		A.LOGINID
+		,		A.ISUSE AS ISUSECD
+		<![CDATA[
+		,		(CASE WHEN A.ISUSE='1' THEN '정상' ELSE '<font color="red">종료</font>' END) AS ISUSE
+		,		(CASE WHEN A.ISLOGIN='1' THEN '정상' ELSE '<font color="red">종료</font>' END) AS ISLOGIN
+		,		D.ISUSE AS BORG_ISUSECD
+		,		(CASE WHEN (D.ISUSE='1' AND E.ISUSE='1') THEN '정상' ELSE '<font color="red">종료</font>' END) AS BORG_ISUSE
+		]]>
+		,		A.TEL
+		,		A.MOBILE
+		,		CONVERT(VARCHAR(10), A.CREATEDATE, 121) AS CREATEDATE
+		,		ISNULL((SELECT ISEMAIL FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = A.USERID), '0') AS ISEMAIL
+		,		ISNULL((SELECT ISSMS FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = A.USERID), '0') AS ISSMS
+		,		A.ENDCAUSEDESC	
+		,		A.USERNOTE
+		,		CASE
+					WHEN (SELECT TOP 1 DIRECTORID FROM SMPDIRECTINFO A1  WITH(NOLOCK) WHERE A1.DIRECTORID = A.USERID) IS NULL THEN '아니요'
+					ELSE '예'
+				END AS ISDIRECT		
+		,		C1.WORKNM
+		,		A.EMAIL
+		<![CDATA[
+		,	CASE	WHEN CONVERT(DATE, CONVERT(VARCHAR(10), A.LASTLOGINDATE, 121)) < DATEADD(YEAR, -1, CONVERT(DATE, CONVERT(VARCHAR(10), GETDATE(), 121)))
+						THEN 'Y'
+					ELSE 'N'
+			END userLoginYn
+		]]>
+		<include refid="selectOrganUserSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>	
+	
+	<sql id="selectOrganVendorUserSql">
+		FROM	SMPUSERS A WITH(NOLOCK) 
+		,		SMPBORGS_USERS B WITH(NOLOCK) 
+		,		SMPVENDORS C WITH(NOLOCK) 
+		,		SMPBORGS D WITH(NOLOCK) 
+		WHERE	A.USERID = B.USERID
+		AND		B.BORGID = C.VENDORID
+		AND		C.VENDORID = D.BORGID
+		<if test="srcUserNm != null and srcUserNm != ''">
+		AND		A.userNm  LIKE '%' + #{srcUserNm} + '%' 				
+		</if>
+		<if test="srcLoginId != null and srcLoginId != ''">
+		AND		A.loginId  LIKE '%' + #{srcLoginId} + '%'						
+		</if>
+		<if test="srcIsUse != null and srcIsUse != ''">
+		AND		A.isUse = #{srcIsUse}
+		</if>
+		<if test="srcVendorId != null and srcVendorId != '' and  srcVendorId neq '0'.toString() ">
+		AND		C.vendorId = #{srcVendorId}
+		</if>
+	</sql>
+	<select id="selectOrganVendorUserListCnt" resultType="int">
+		/* organ.selectOrganVendorUserListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectOrganVendorUserSql"/>
+	</select>
+	<select id="selectOrganVendorUserList" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/* organ.selectOrganVendorUserList */
+		select  dbo.FNS_BORG_STRING(C.VENDORID) AS VENDORNM
+		,		C.AREATYPE
+		,		dbo.FNS_CODENM1BYCODEVAL1('VEN_AREA_CODE',C.AREATYPE) AS AREATYPENM
+		,		A.USERNM
+		,		A.USERID
+		,		A.LOGINID
+		,		A.ISUSE AS ISUSECD
+		,		(CASE WHEN A.ISUSE='1' THEN '정상' ELSE '종료' END) AS ISUSE
+		,		(CASE WHEN A.ISLOGIN='1' THEN '정상' ELSE '종료' END) AS ISLOGIN
+		,		D.ISUSE AS BORG_ISUSECD
+		,		(CASE WHEN D.ISUSE='1' THEN '정상' ELSE '종료' END) AS BORG_ISUSE
+		,		A.TEL
+		,		A.MOBILE
+		,		CONVERT(VARCHAR(10), A.CREATEDATE, 121) AS CREATEDATE
+		,		ISNULL((SELECT ISEMAIL FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = A.USERID), '0') AS ISEMAIL
+		,		ISNULL((SELECT ISSMS FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = A.USERID), '0') AS ISSMS
+		,		B.BORGID
+		,		A.EMAIL
+		<![CDATA[
+		,		CASE	WHEN CONVERT(DATE, CONVERT(VARCHAR(10), A.LASTLOGINDATE, 121)) < DATEADD(YEAR, -1, CONVERT(DATE, CONVERT(VARCHAR(10), GETDATE(), 121)))
+							THEN 'Y'
+						ELSE 'N'
+				END userLoginYn
+		]]>
+		<include refid="selectOrganVendorUserSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<insert id="insertDeliveryInfo">
+		/* insertDeliveryInfo */
+		INSERT INTO SMPDELIVERYINFO(
+			  DELIVERYID
+			, GROUPID
+			, CLIENTID
+			, BRANCHID
+			, SHIPPINGPLACE
+			, SHIPPINGADDRES
+			, SHIPPINGPHONENUM
+			, ISDEFAULT
+		)VALUES(
+			  #{deliveryId}
+			, #{groupId}
+			, #{clientId}
+			, #{branchId}
+			, #{shippingPlace}
+			, #{shippingAddres}
+			, #{shippingPhoneNum}
+			, #{isDefault}
+		)	
+	</insert>
+	
+	<delete id="deleteDeliveryInfo">
+		/*organ.deleteDeliveryInfo*/	
+		DELETE 
+		FROM 	SMPDELIVERYINFO 
+		WHERE 	DELIVERYID = #{deliveryId}
+	</delete>
+	
+	<update id="updateVendorReq">
+		/*organ.updateVendorReq*/	
+		UPDATE REQSMPVENDORS SET
+			VENDORNM			= #{vendorNm}
+		<if test="registerCd != null and registerCd != '00'">
+		,	REGISTERCD			= #{registerCd}
+		</if>
+		,	AREATYPE			= #{areaType} 
+		,	BUSINESSNUM			= #{businessNum} 
+		,	REGISTNUM			= #{registNum}
+		,	VENDORBUSITYPE		= #{vendorBustType} 
+		,	VENDORBUSICLAS		= #{vendorBustClas} 
+		,	PRESSENTNM			= #{pressentNm} 
+		,	PHONENUM			= #{phoneNum} 
+		,	E_MAIL				= #{eMail} 
+		,	HOMEPAGE			= #{homePage} 
+		,	POSTADDRNUM			= #{postAddrNum} 
+		,	ADDRES				= #{addres} 
+		,	ADDRESDESC			= #{addresDesc} 
+		,	FAXNUM				= #{faxNum} 
+		,	LOGINAUTHTYPE		= #{loginAuthType}
+		,	REFERECEDESC		= #{refereceDesc} 
+		,	PAYBILLTYPE			= #{payBillType} 
+		,	PAYBILLDAY			= #{payBillDay} 
+		,	ACCOUNTMANAGENM		= #{accountManagerNm}	
+		,	ACCOUNTTELNUM		= #{accountTelNum} 
+		,	BANKCD				= #{bankCd} 
+		,	RECIPIENT			= #{recipient} 
+		,	ACCOUNTNUM			= #{accountNum} 
+		<if test="registerCd != null and registerCd == '20'">
+		,	CONFIRMORID			= #{creatorUserId}		
+		,	CONFIRDATE			= GETDATE()
+		</if>
+		<if test="registerCd != null and registerCd == '30'">
+		,	CHECKSTAFFID		= #{creatorUserId}
+		,	CHECKDATE			= GETDATE()
+		</if>
+		<if test="registerCd != null and registerCd == '40'">
+		,	APPUSERID			= #{creatorUserId}
+		,	APPDATE				= GETDATE()
+		</if>
+<!-- 		팝업창 가운데 저장버튼 삭제 후 저장후 승인버튼을 클릭시 첨부파일도 함께 저장되도록 수정 -->
+		<if test="contractSpecial != null and contractSpecial !=''">
+		,	CONTRACTSPECIAL	= #{contractSpecial}
+		</if>
+		<if test="file_biz_reg_list != null and file_biz_reg_list !=''">
+		,	BUSINESSATTACHFILESEQ	= #{file_biz_reg_list}
+		</if>
+		<if test="file_app_sal_list != null and file_app_sal_list !=''">
+		,	APPRAISALATTACHFILESEQ	= #{file_app_sal_list}
+		</if>
+		<if test="file_list1 != null and file_list1 !=''">
+		,	ETCFIRSTATTACHSEQ				= #{file_list1}
+		</if>
+		<if test="file_list2 != null and file_list2 !=''">
+		,	ETCSECONDATTACHSEQ			= #{file_list2}
+		</if>
+		<if test="file_list3 != null and file_list3 !=''">
+		,	ETCTHIRDATTACHSEQ				= #{file_list3}
+		</if>
+		
+		,	CLASSIFY			= #{classify}
+		WHERE VENDORID			= #{vendorId}	
+	</update>
+	
+	<update id="reqBranchRegisterCdCancel">
+		/*organ.reqBranchRegisterCdCancel*/	
+		UPDATE 	REQSMPBRANCHS SET 
+		REGISTERCD = #{registerCd} 
+		WHERE 	BRANCHID = #{branchId}
+	</update>	
+	
+	<delete id="deleteReqBranch">
+		/*organ.deleteReqBranch*/	
+		DELETE 
+		FROM 	REQSMPBRANCHS 
+		WHERE 	BRANCHID = #{branchId}
+	</delete>
+	
+	<delete id="deleteSmpBorgsUsersRoles">
+		/*organ.deleteSmpBorgsUsersRoles*/	
+		DELETE 
+		FROM 	SMPBORGS_USERS_ROLES 
+		WHERE 	BORGID = #{borgId}
+		AND		USERID = #{userId}
+	</delete>
+
+	<delete id="deleteSmpBorgsUsers">
+		/*organ.deleteSmpBorgsUsers*/	
+		DELETE 
+		FROM 	SMPBORGS_USERS 
+		WHERE 	BORGID = #{borgId} 
+		AND     USERID = #{userId}
+	</delete>
+	
+	<delete id="deleteSmpUsers">
+		/*organ.deleteSmpUsers*/	
+		DELETE 
+		FROM 	SMPUSERS 
+		WHERE 	USERID = #{userId}
+	</delete>
+	
+	<delete id="deleteDeliveryInfoToCancel">
+		/*organ.deleteDeliveryInfoToCancel*/	
+		DELETE 
+		FROM 	SMPDELIVERYINFO 
+		WHERE  	CLIENTID = #{clientId} 
+		AND 	BRANCHID = #{branchId}
+	</delete>	
+	
+	<delete id="deleteAdminBorgsToCancel">
+		/* organ.deleteAdminBorgsToCancel*/
+		/*
+		DELETE 
+		FROM 	SMPADMIN_BORGS 
+		WHERE 	MANAGEBORGID = #{borgId}
+		*/
+	</delete>	
+	
+	<insert id="insertSmpBorgs">
+		/* organ.insertSmpBorgs*/
+		INSERT INTO SMPBORGS (
+			  BORGID
+			, BORGCD
+			, BORGNM
+			, TOPBORGID
+			, PARBORGID
+			, BORGLEVEL
+			, BORGTYPECD
+			, SVCTYPECD
+			, GROUPID
+			, CLIENTID
+			, BRANCHID
+			, DEPTID
+			, REMOTEIP
+			, CREATEDATE
+			, CREATORID
+			, ISUSE
+			, ISKEY
+			, ISLIMIT
+		)VALUES(
+			  #{borgId}
+			, #{borgCd}	  
+			, #{borgNm}	  
+			, #{topBorgId}	  
+			, #{parBorgId}	  
+			, #{borgLevel}	  
+			, #{borgTypeCd}	  
+			, #{svcTypeCd}	  
+			, #{groupId}	  
+			, #{clientId}	  
+			, #{branchId}	  
+			, #{deptId}	  
+			, #{remoteIp}	  
+			, GETDATE()	  
+			, #{creatorId}	  
+			, #{isUse}	  
+			, #{isKey}	  
+			, #{isLimit}	  
+		)
+	</insert>
+	
+	<update id="updateSmpUsersIsUse">
+		/* organ.updateSmpUsersIsUse*/	
+		UPDATE 	SMPUSERS SET	
+				ISLOGIN = '1' 
+		, 		ISUSE = '1' 
+		WHERE 	USERID = #{userId}	
+	</update>
+	
+	<select id="insertSmpBranchs">
+		/* organ.insertSmpBranchs*/
+		INSERT INTO SMPBRANCHS
+			SELECT 
+			  		BRANCHID
+			,       CLIENTNM + '_본사'
+			,       UPPER(CLIENTCD) + '0000001'
+			,       AREATYPE
+			,       BRANCHGRAD
+			,       BUSINESSNUM
+			,       REGISTNUM
+			,       BRANCHBUSITYPE
+			,       BRANCHBUSICLAS
+			,       PRESSENTNM
+			,       PHONENUM
+			,       E_MAIL
+			,       HOMEPAGE
+			,       POSTADDRNUM
+			,       ADDRES
+			,       ADDRESDESC
+			,       FAXNUM
+			,       LOGINAUTHTYPE
+			,       ORDERAUTHTYPE
+			,       REFERECEDESC
+			,       PAYBILLTYPE
+			,       PAYBILLDAY
+			,		'0'
+			,       ACCOUNTMANAGENM
+			,       ACCOUNTTELNUM
+			,       BANKCD
+			,       RECIPIENT
+			,       ACCOUNTNUM
+			,       BUSINESSATTACHFILESEQ
+			,       APPRAISALATTACHFILESEQ
+			,       ETCFIRSTSEQ
+			,       ETCSECONDSEQ
+			,       ETCTHIRDSEQ
+			,		''
+			,		WORKID
+			,		ACCMANAGEUSERID
+			,		'0'
+			,		'100'
+			,		CONTRACTSPECIAL
+			,		SHARP_MAIL
+			,		''
+			FROM 	REQSMPBRANCHS WITH(NOLOCK) 
+			WHERE 	BRANCHID = #{branchId}	
+	</select>
+	
+	<insert id="insertSmpReceiveInfo">
+		/* organ.insertSmpReceiveInfo*/
+		INSERT INTO SMPRECEIVEINFO (
+			  USERID
+			, ISEMAIL
+			, ISSMS
+			, EMAILBYPURCHASE
+			, EMAILBYDELIVERY
+			, EMAILBYREGISTERGOOD
+			, SMSBYPURCHASE
+			, SMSBYDELIVERY
+			, SMSBYREGISTERGOOD
+			, EMAILBYPURCHASEORDER
+			, EMAILBYORDRTRECEIVE
+			, EMAILBYNOTIAUCTION
+			, EMAILBYNOTISUCCESSBID
+			, SMSBYPURCHASEORDER
+			, SMSBYORDRTRECEIVE
+			, SMSBYNOTIAUCTION
+			, SMSBYNOTISUCCESSBID
+		)VALUES(
+			  #{userId}
+			, #{isEmail}
+			, #{isSms}
+			, #{emailByPurchase}
+			, #{emailByDelivery}
+			, #{emailByRegistergood}
+			, #{smsByPurchase}
+			, #{smsByDelivery}
+			, #{smsByRegistergood}
+			, #{emailByPurchaseorder}
+			, #{emailByOrdrtreceive}
+			, #{emailByNotiauction}
+			, #{emailByNotisuccessbid}
+			, #{smsByPurchaseorder}
+			, #{smsByOrdrtreceive}
+			, #{smsByNotiauction}
+			, #{smsByNotisuccessbid}		
+		)	
+	</insert>
+	
+	<insert id="insertSmpVendors">
+		/* organ.insertSmpVendors*/
+		INSERT INTO SMPVENDORS
+			SELECT	VENDORID
+			,		VENDORNM
+			,		VENDORCD
+			,		AREATYPE
+			,		BUSINESSNUM
+			,		REGISTNUM
+			,		VENDORBUSITYPE
+			,		VENDORBUSICLAS
+			,		PRESSENTNM
+			,		PHONENUM
+			,		E_MAIL
+			,		HOMEPAGE
+			,		POSTADDRNUM
+			,		ADDRES
+			,		ADDRESDESC
+			,		FAXNUM
+			,		LOGINAUTHTYPE
+			,		REFERECEDESC
+			,		PAYBILLTYPE
+			,		PAYBILLDAY
+			,		ACCOUNTMANAGENM
+			,		ACCOUNTTELNUM
+			,		BANKCD
+			,		RECIPIENT
+			,		ACCOUNTNUM
+			,		BUSINESSATTACHFILESEQ
+			,		APPRAISALATTACHFILESEQ
+			,		ETCFIRSTATTACHSEQ
+			,		ETCSECONDATTACHSEQ
+			,		ETCTHIRDATTACHSEQ
+			,		''
+			,		''
+			,		''
+			,		''
+			,		SHARP_MAIL
+			,		CLASSIFY
+			,		ETCFOURTHATTACHSEQ
+			,		''
+			FROM 	REQSMPVENDORS WITH(NOLOCK) 
+			WHERE 	VENDORID = #{vendorId}	
+	</insert>
+	
+	<update id="reqVendorRegisterCdCancel">
+		/* organ.reqVendorRegisterCdCancel*/
+		UPDATE 	REQSMPVENDORS SET 
+		REGISTERCD = #{registerCd} 
+		WHERE 	VENDORID = #{vendorId}
+	</update>		
+	
+	<delete id="deleteReqVendor">
+		/* organ.deleteReqVendor*/
+		DELETE 
+		FROM 	REQSMPVENDORS 
+		WHERE 	VENDORID = #{vendorId}
+	</delete>
+	
+	<select id="selectUsersMobile" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/* organ.selectUsersMobile*/		
+		/*
+		SELECT 	REPLACE(MOBILE, '-', '') AS MOBILE 
+		FROM 	SMPUSERS WITH(NOLOCK)  
+		WHERE 	USERID IN (
+							SELECT 	USERID 
+							FROM 	SMPADMIN_BORGS WITH(NOLOCK)  
+							WHERE 	MANAGEBORGID = #{borgId}	
+							GROUP 	BY USERID)
+		*/	
+	</select>
+	
+	
+	
+	
+		<select id="selectBranchsDetail" resultType="kr.co.bitcube.organ.dto.SmpBranchsDto">
+		/* organ.selectBranchsDetail*/
+		SELECT	A.BRANCHID
+		,		A.BRANCHCD
+		,       B.CLIENTID
+		,		B.GROUPID
+		,		dbo.FNS_BORG_STRING(A.BRANCHID) AS CLIENTNM
+		,		B.BORGNM AS BRANCHNM
+		,		A.AREATYPE
+		,		A.BRANCHGRAD
+		,		A.BUSINESSNUM
+		,		A.REGISTNUM
+		,		A.BRANCHBUSITYPE
+		,		A.BRANCHBUSICLAS
+		,		A.PRESSENTNM
+		,		A.PHONENUM
+		,		A.E_MAIL
+		,		A.HOMEPAGE
+		,		A.POSTADDRNUM
+		,		A.ADDRES
+		,		A.ADDRESDESC
+		,		A.FAXNUM
+		,		A.LOGINAUTHTYPE
+		,		A.ORDERAUTHTYPE
+		,		A.REFERECEDESC
+		,		A.PAYBILLTYPE
+		,		A.PAYBILLDAY
+		,		A.PREPAY
+		,		A.ACCOUNTMANAGENM
+		,		A.ACCOUNTTELNUM
+		,		A.BANKCD
+		,		A.RECIPIENT
+		,		A.ACCOUNTNUM
+		,		A.BUSINESSATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'NAME') AS BUSINESSATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'PATH') AS BUSINESSATTACHFILEPATH		
+		,		A.APPRAISALATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'NAME') AS APPRAISALATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'PATH') AS APPRAISALATTACHFILEPATH
+		,		A.ETCFIRSTSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTSEQ, 'NAME') AS ETCFIRSTNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTSEQ, 'PATH') AS ETCFIRSTPATH		
+		,		A.ETCSECONDSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDSEQ, 'NAME') AS ETCSECONDNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDSEQ, 'PATH') AS ETCSECONDPATH		
+		,		A.ETCTHIRDSEQ		
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDSEQ, 'NAME') AS ETCTHIRDNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDSEQ, 'PATH') AS ETCTHIRDPATH		
+		,		B.ISUSE
+		,		B.CLOSEREASON
+		,		C.WORKID
+		,		D.USERID
+		,		A.ISORDERLIMIT
+		,		A.AUTORDERLIMITPERIOD
+		,		A.CONTRACTSPECIAL
+		,		A.SHARP_MAIL
+		,		ISNULL(A.EBILL_EMAIL,'') as ebillEmail
+		
+		,		CONVERT(VARCHAR, B.CREATEDATE, 23) AS CREATEDATE
+		,		ISNULL(CONVERT(VARCHAR, B.UPDATEDATE, 23),'') AS UPDATEDATE
+		,		ISNULL((SELECT LOAN FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID = B.CLIENTID ),0) AS LOAN
+		
+		,		E.BASICCONTRACTDATE
+		,		E.BASICCONTRACTVERSION
+		,		E.INDIVIDUALCONTRACTDATE 
+		,		E.INDIVIDUALCONTRACTVERSION
+		,		E.SPECIALCONTRACTDATE
+		,		E.SPECIALCONTRACTVERSION
+		
+		,		ISNULL(F.CLT_LOAN,0) AS CLT_LOAN
+		,		ISNULL(F.CLT_ISPREPAY,'0') AS CLT_ISPREPAY
+		,		ISNULL(F.CLT_ISLIMIT,'0') AS CLT_ISLIMIT
+		FROM	SMPBRANCHS A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPWORKINFO C WITH(NOLOCK) 
+			ON A.WORKID = C.WORKID
+		LEFT OUTER JOIN SMPUSERS D WITH(NOLOCK) 
+			ON A.ACCMANAGEUSERID = D.USERID
+		,		SMPBORGS B WITH(NOLOCK) 
+		LEFT OUTER JOIN (
+            SELECT 
+                ISNULL(LOAN,0) AS CLT_LOAN	
+            ,	ISNULL(ISPREPAY,'0') AS CLT_ISPREPAY
+            ,	ISNULL(ISLIMIT,'0') AS CLT_ISLIMIT
+            ,	BORGID
+            FROM SMPBORGS  WITH(NOLOCK) 
+            WHERE BORGID =
+            	(
+            	SELECT CLIENTID FROM SMPBORGS WITH(NOLOCK)  WHERE BORGID = #{branchId}
+            	)
+		) F
+			ON B.CLIENTID = F.BORGID
+		LEFT OUTER JOIN 
+		(
+			SELECT
+					MAX(ZZ.BORGID) AS BORGID
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'B'
+					THEN CONVERT(VARCHAR, CONTRACT_DATE, 23)
+					ELSE ''
+					END) AS BASICCONTRACTDATE
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'B'
+					THEN CONTRACT_VERSION
+					ELSE ''
+					END) AS BASICCONTRACTVERSION
+					
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'I'
+					THEN CONVERT(VARCHAR, CONTRACT_DATE, 23)
+					ELSE ''
+					END) AS INDIVIDUALCONTRACTDATE 
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'I'
+					THEN CONTRACT_VERSION
+					ELSE ''
+					END) AS INDIVIDUALCONTRACTVERSION
+					
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'S'
+					THEN CONVERT(VARCHAR, CONTRACT_DATE, 23)
+					ELSE ''
+					END) AS SPECIALCONTRACTDATE
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'S'
+					THEN CONTRACT_VERSION
+					ELSE ''
+					END) AS SPECIALCONTRACTVERSION
+			FROM 
+			(
+				SELECT 
+					BORGID 
+				,	CONTRACT_CLASSIFY
+				,	ISNULL(MAX(CONTRACT_VERSION),'') AS CONTRACT_VERSION
+				,	ISNULL(MAX(CONTRACT_DATE),'') AS CONTRACT_DATE
+				FROM SMPBORG_CONTRACT WITH(NOLOCK)  
+				WHERE BORGID = #{branchId}
+				GROUP BY BORGID ,CONTRACT_CLASSIFY
+			) ZZ
+		) E
+		ON B.BORGID = E.BORGID
+		WHERE 	A.BRANCHID = B.BORGID
+		AND     A.BRANCHID = #{branchId} 		
+	</select>
+	
+	
+	
+	
+	<update id="updateSmpBranchs">
+		/* organ.updateSmpBranchs*/
+		UPDATE 	SMPBRANCHS SET
+				BRANCHNM				=	#{branchNm}
+		,		AREATYPE				=   #{areaType}
+		,		BRANCHGRAD				=   #{branchGrad}
+		,		REGISTNUM				=   #{registNum}
+		,		BRANCHBUSITYPE			=   #{branchBusiType}
+		,		BRANCHBUSICLAS			=   #{branchBusiClas}
+		,		PRESSENTNM				=   #{pressentNm}
+		,		PHONENUM				=   #{phoneNum}
+		,		E_MAIL					=   #{eMail}
+		,		HOMEPAGE				=   #{homePage}
+		,		POSTADDRNUM				=   #{postAddrNum}
+		,		ADDRES					=   #{addres}
+		,		ADDRESDESC				=   #{addresDesc}
+		,		FAXNUM					=   #{faxNum}
+		,		LOGINAUTHTYPE			=   #{loginAuthType}
+		,		ORDERAUTHTYPE			=   #{orderAuthType}
+		,		REFERECEDESC			=   #{refereceDesc}
+		,		PAYBILLTYPE				=   #{payBillType}
+		,		PAYBILLDAY				=   #{payBillDay}
+		,		PREPAY					=   #{prePay}
+		,		ACCOUNTMANAGENM			=   #{accountManageNm}
+		,		ACCOUNTTELNUM			=   #{accountTelNum}
+		,		BANKCD					=   #{bankCd}
+		,		RECIPIENT				=   #{recipient}
+		,		ACCOUNTNUM				=   #{accountNum}
+		,		BUSINESSATTACHFILESEQ	=   #{file_biz_reg_list}
+		,		APPRAISALATTACHFILESEQ	=   #{file_app_sal_list}
+		,		ETCFIRSTSEQ				=   #{file_list1}
+		,		ETCSECONDSEQ			=   #{file_list2}
+		,		ETCTHIRDSEQ				=   #{file_list3}	
+		,		ISORDERLIMIT			=   #{isOrderLimit}
+		,		AUTORDERLIMITPERIOD		=	#{autOrderLimitPeriod}
+		,		SHARP_MAIL				=	#{sharpMail}
+		<if test="contractSpecial !='' and contractSpecial != null">
+		,		CONTRACTSPECIAL		=	#{contractSpecial}
+		</if>
+		,		EBILL_EMAIL				=	#{ebillEmail}
+		,		WORKID					=	#{workId}
+		WHERE	BRANCHID				=	#{branchId}
+	</update>
+	
+	<update id="updateSmpBorgs">
+		/* organ.updateSmpBorgs */
+		UPDATE  SMPBORGS SET
+				REMOTEIP 	= #{remoteIp} 
+		,       BORGNM	 	= #{borgNm}
+		,       UPDATEDATE 	= GETDATE()
+		,       UPDATERID  	= #{userId}
+		,       ISUSE 		= #{isUse}
+		,       CLOSEREASON	= #{closeReason}
+		WHERE 	BORGID 		= #{borgId}	
+	</update>
+
+	<update id="updateSmpBorgsIsUse">
+		/* organ.updateSmpBorgsIsUse */
+		UPDATE  SMPBORGS SET
+				REMOTEIP 	= #{creatorRemoteIp} 
+		,       UPDATEDATE 	= GETDATE()
+		,       UPDATERID  	= #{creatorUserId}
+		,       ISUSE 		= #{isUse}
+		,		BORGNM		= #{borgNm}
+		WHERE 	BORGID 		= #{vendorId}	
+	</update>
+	
+	<select id="selectBorgUsers" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/* organ.selectBorgUsers */
+		SELECT  A.BORGID
+		,		B.USERNM
+		,		B.LOGINID
+		,		B.USERID
+		,		CASE WHEN B.ISUSE = '1' THEN '정상'
+				ELSE '종료'
+				END AS ISUSE
+		,		B.TEL
+		,		B.MOBILE
+		,		CONVERT(VARCHAR, B.CREATEDATE, 23) AS CREATEDATE
+		FROM 	SMPBORGS A WITH(NOLOCK) 
+		,		SMPUSERS B WITH(NOLOCK) 
+		,		SMPBORGS_USERS C WITH(NOLOCK) 
+		WHERE 	A.BORGID = C.BORGID
+		AND 	B.USERID = C.USERID
+		AND     A.BORGID = #{borgId}	
+	</select>
+	
+	<insert id="insertBorgsUsers">
+		/* organ.insertBorgsUsers */
+		INSERT INTO SMPBORGS_USERS(
+			  USERID
+			, BORGID
+			, LOGINID
+			, ISDEFAULT
+			, CREATEDATE
+		)VALUES(
+			  #{userId}
+			, #{borgId}	  
+			, #{loginId}	  
+			, #{borgsIsDefault}	  
+			, GETDATE()	  
+		)	
+	</insert>
+	
+	<select id="organBranchSearchForReg" resultType="kr.co.bitcube.organ.dto.SmpBranchsDto">
+		/*organ.organBranchSearchForReg*/	
+            SELECT 
+                ISNULL(LOAN,0) AS CLT_LOAN	
+            ,	ISNULL(ISPREPAY,'0') AS CLT_ISPREPAY
+            ,	ISNULL(ISLIMIT,'0') AS CLT_ISLIMIT
+            ,	BORGID
+            FROM SMPBORGS WITH(NOLOCK)  
+            WHERE BORGID = #{clientId}
+	</select>
+	<select id="organBranchSearch" resultType="kr.co.bitcube.organ.dto.SmpBranchsDto">
+		/*organ.organBranchSearch*/	
+		SELECT	A.BRANCHID
+		,		B.GROUPID
+		,		A.BRANCHCD
+		,       B.CLIENTID
+		,		B.BORGCD
+		,		dbo.FNS_BORG_STRING(A.BRANCHID) AS CLIENTNM
+		,		B.BORGNM AS BRANCHNM
+		,		A.AREATYPE
+		,		A.BRANCHGRAD
+		,		A.BUSINESSNUM
+		,		A.REGISTNUM
+		,		A.BRANCHBUSITYPE
+		,		A.BRANCHBUSICLAS
+		,		A.PRESSENTNM
+		,		A.PHONENUM
+		,		A.E_MAIL
+		,		A.HOMEPAGE
+		,		A.POSTADDRNUM
+		,		A.ADDRES
+		,		A.ADDRESDESC
+		,		A.FAXNUM
+		,		A.LOGINAUTHTYPE
+		,		A.ORDERAUTHTYPE
+		,		A.REFERECEDESC
+		,		A.PAYBILLTYPE
+		,		A.PAYBILLDAY
+		,		A.PREPAY
+		,		A.ACCOUNTMANAGENM
+		,		A.ACCOUNTTELNUM
+		,		A.BANKCD
+		,		A.RECIPIENT
+		,		A.ACCOUNTNUM
+		,		A.BUSINESSATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'NAME') AS BUSINESSATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'PATH') AS BUSINESSATTACHFILEPATH		
+		,		A.APPRAISALATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'NAME') AS APPRAISALATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(APPRAISALATTACHFILESEQ, 'PATH') AS APPRAISALATTACHFILEPATH
+		,		A.ETCFIRSTSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTSEQ, 'NAME') AS ETCFIRSTNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCFIRSTSEQ, 'PATH') AS ETCFIRSTPATH		
+		,		A.ETCSECONDSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDSEQ, 'NAME') AS ETCSECONDNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCSECONDSEQ, 'PATH') AS ETCSECONDPATH		
+		,		A.ETCTHIRDSEQ		
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDSEQ, 'NAME') AS ETCTHIRDNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(ETCTHIRDSEQ, 'PATH') AS ETCTHIRDPATH		
+		,		B.ISUSE
+		,		B.CLOSEREASON
+		
+		,		ISNULL(C.CLT_LOAN,0) AS CLT_LOAN	
+        ,		ISNULL(C.CLT_ISPREPAY,'0') AS CLT_ISPREPAY
+        ,		ISNULL(C.CLT_ISLIMIT,'0') AS CLT_ISLIMIT
+		FROM	SMPBRANCHS A WITH(NOLOCK) 
+		,		SMPBORGS B WITH(NOLOCK) 
+		LEFT OUTER JOIN (
+            SELECT 
+                ISNULL(LOAN,0) AS CLT_LOAN	
+            ,	ISNULL(ISPREPAY,'0') AS CLT_ISPREPAY
+            ,	ISNULL(ISLIMIT,'0') AS CLT_ISLIMIT
+            ,	BORGID
+            FROM SMPBORGS WITH(NOLOCK)  
+            WHERE BORGID = #{clientId}
+		) C
+			ON B.CLIENTID = C.BORGID
+		WHERE 	A.BRANCHID = B.BORGID
+		AND     B.CLIENTID = #{clientId}	
+		AND     B.ISKEY = '1'	
+	</select>
+	
+	<insert id="insertRegSmpBranchs">
+		/*organ.insertRegSmpBranchs*/	
+		INSERT INTO SMPBRANCHS(
+			BRANCHID
+		,   BRANCHNM
+		,   BRANCHCD
+		,   AREATYPE
+		,   BRANCHGRAD
+		,   BUSINESSNUM
+		,   REGISTNUM
+		,   BRANCHBUSITYPE
+		,   BRANCHBUSICLAS
+		,   PRESSENTNM
+		,   PHONENUM
+		,   E_MAIL
+		,   HOMEPAGE
+		,   POSTADDRNUM
+		,   ADDRES
+		,   ADDRESDESC
+		,   FAXNUM
+		,   LOGINAUTHTYPE
+		,   ORDERAUTHTYPE
+		,   REFERECEDESC
+		,   PAYBILLTYPE
+		,   PAYBILLDAY
+		,   PREPAY
+		,   ACCOUNTMANAGENM
+		,   ACCOUNTTELNUM
+		,   BANKCD
+		,   RECIPIENT
+		,   ACCOUNTNUM
+		,   BUSINESSATTACHFILESEQ
+		,   APPRAISALATTACHFILESEQ
+		,   ETCFIRSTSEQ
+		,   ETCSECONDSEQ
+		,   ETCTHIRDSEQ
+		,	WORKID
+		,	ACCMANAGEUSERID
+		,	AUTORDERLIMITPERIOD
+		<if test="contractSpecial != '' and contractSpecial != null ">
+		,	CONTRACTSPECIAL
+		</if>
+		,	SHARP_MAIL
+		)VALUES(
+			#{branchId}
+		,	#{branchNm}
+		,	#{branchCd}
+		,	#{areaType}
+		,	#{branchGrad}
+		,	#{businessNum}
+		,	#{registNum}
+		,	#{branchBusiType}
+		,	#{branchBusiClas}
+		,	#{pressentNm}
+		,	#{phoneNum}
+		,	#{eMail}
+		,	#{homePage}
+		,	#{postAddrNum}
+		,	#{addres}
+		,	#{addresDesc}
+		,	#{faxNum}
+		,	#{loginAuthType}
+		,	#{orderAuthType}
+		,	#{refereceDesc}
+		,	#{payBillType}
+		,	#{payBillDay}
+		,	#{prePay}
+		,	#{accountManageNm}
+		,	#{accountTelNum}
+		,	#{bankCd}
+		,	#{recipient}
+		,	#{accountNum}
+		,	#{file_biz_reg_list}
+		,	#{file_app_sal_list}
+		,	#{file_list1}
+		,	#{file_list2}
+		,	#{file_list3}		
+		,	#{workId}		
+		,	#{accUser}
+		,	#{autOrderLimitPeriod}
+		<if test="contractSpecial != '' and contractSpecial != null ">
+		,	#{contractSpecial}
+		</if>
+		,	#{sharpMail}
+		)	
+	</insert>
+	
+	<insert id="insertSmpUser">
+		/* organ.insertSmpUser */
+		INSERT INTO SMPUSERS(
+			  USERID
+			, LOGINID
+			, PWD
+			, USERNM
+			, TEL
+			, MOBILE
+			, ISLOGIN
+			, EMAIL
+			, REMOTEIP
+			, ISUSE
+			, CREATEDATE
+		)VALUES(
+			  #{userId}		
+			, #{loginId}		
+			, #{pwd}		
+			, #{userNm}
+			, #{tel}
+			, #{mobile}
+			, #{isLogin}
+			, #{userEmail}
+			, #{remoteIp}
+			, #{isUse}
+			, GETDATE()		
+		)	
+	</insert>
+	
+	<select id="getClientCdByClientId" resultType="java.lang.String">
+		/*organ.getClientCdByClientId*/
+		SELECT	BORGCD
+		FROM	SMPBORGS WITH(NOLOCK) 
+		WHERE	BORGID = #{clientId}
+	</select>
+	
+	<select id="getBranchCdSeq" resultType="java.lang.String">
+		/*organ.getBranchCdSeq*/	
+		SELECT 	#{clientCd} + REPLICATE('0', 7 - LEN(CONVERT(VARCHAR, COUNT(1) + 1))) +  CONVERT(VARCHAR, COUNT(1) + 1) 
+		FROM 	SMPBORGS WITH(NOLOCK)  
+		WHERE 	SUBSTRING(BORGCD, 0, 4) = #{clientCd} 
+		AND 	LEN(BORGCD) > 3	
+	</select>
+	
+	<select id="selectSmpRoles" resultType="kr.co.bitcube.common.dto.RolesDto">
+		/*organ.selectSmpRoles*/
+		SELECT 
+		  ROLEID
+		, ROLECD
+		, ROLENM
+		, ROLEDESC
+		, BORGSCOPECD
+		, SVCTYPECD
+		, ISUSE
+		, INITISROLE
+		, INITBORGSCOPECD
+		FROM  SMPROLES WITH(NOLOCK)  
+		WHERE ROLEID = #{roleId}
+		AND   ISUSE = '1'	
+	</select>
+	
+	<select id="selectOrganUserDetail" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/* organ.selectOrganUserDetail */
+		SELECT	C.BRANCHID AS BORGID
+		,		dbo.FNS_BORG_STRING(C.BRANCHID) AS BRANCHNM
+		,		C.AREATYPE
+		,		dbo.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE',C.AREATYPE) AS AREATYPENM
+		,		A.USERNM
+		,		A.USERID
+		,		A.LOGINID
+		,		A.ISUSE
+		,		A.ISLOGIN
+		,		A.TEL
+		,		A.MOBILE
+		,		A.PWD
+		,		A.EMAIL
+		,		CONVERT(VARCHAR(10), A.CREATEDATE, 121) AS CREATEDATE
+		,		ISNULL(E.ISEMAIL, '0') AS ISEMAIL
+		,		ISNULL(E.ISSMS, '0') AS ISSMS
+		,		ISNULL(E.EMAILBYPURCHASE, '0') AS EMAILBYPURCHASE
+		,		ISNULL(E.EMAILBYDELIVERY, '0') AS EMAILBYDELIVERY
+		,		ISNULL(E.EMAILBYREGISTERGOOD, '0') AS EMAILBYREGISTERGOOD
+		,		ISNULL(E.SMSBYPURCHASE, '0') AS SMSBYPURCHASE
+		,		ISNULL(E.SMSBYDELIVERY, '0') AS SMSBYDELIVERY
+		,		ISNULL(E.SMSBYREGISTERGOOD, '0') AS SMSBYREGISTERGOOD
+		,		A.ENDCAUSEDESC	
+		,		A.USERNOTE
+		,       D.SVCTYPECD
+		,		CASE
+					WHEN (SELECT TOP 1 DIRECTORID FROM SMPDIRECTINFO A1  WITH(NOLOCK) WHERE A1.DIRECTORID = A.USERID) IS NULL THEN 'N'
+					ELSE 'Y'
+				END AS ISDIRECT
+		FROM	SMPBORGS_USERS B WITH(NOLOCK) 
+		,		SMPBRANCHS C WITH(NOLOCK) 
+		,		SMPBORGS D WITH(NOLOCK) 
+		,		SMPUSERS A WITH(NOLOCK) 
+		LEFT OUTER JOIN	SMPRECEIVEINFO E WITH(NOLOCK) 
+			ON		A.USERID = E.USERID
+		WHERE	A.USERID = B.USERID
+		AND		B.BORGID = C.BRANCHID
+		AND 	b.BORGID = D.BORGID
+<!-- 		AND		D.ISUSE = '1' -->
+		AND     A.USERID = #{userId}
+		AND     C.BRANCHID = #{borgId}
+	</select>
+	
+	<update id="updateUserRolesNoDefault">
+		/* organ.updateUserRolesNoDefault*/	
+		UPDATE SMPBORGS_USERS_ROLES SET
+		ISDEFAULT = '0'
+		WHERE USERID = #{userId}
+		AND   BORGID = #{borgId}
+	</update>	
+
+	<update id="updateUserRolesDefault">
+		/* organ.updateUserRolesDefault*/	
+		UPDATE SMPBORGS_USERS_ROLES SET
+		ISDEFAULT = '1'
+		WHERE USERID = #{userId}
+		AND   BORGID = #{borgId}
+		AND   ROLEID = #{roleId}
+	</update>
+	
+	<update id="updateSmpReceiveInfo">
+		/* organ.updateSmpReceiveInfo*/	
+		UPDATE SMPRECEIVEINFO SET
+			   ISEMAIL				 = #{isEmail}
+		,      ISSMS                 = #{isSms}
+		,      EMAILBYPURCHASE       = #{emailByPurchase}
+		,      EMAILBYDELIVERY       = #{emailByDelivery}
+		,      EMAILBYREGISTERGOOD   = #{emailByRegistergood}
+		,      SMSBYPURCHASE         = #{smsByPurchase}
+		,      SMSBYDELIVERY         = #{smsByDelivery}
+		,      SMSBYREGISTERGOOD     = #{smsByRegistergood}
+		,      EMAILBYPURCHASEORDER  = #{emailByPurchaseorder}
+		,      EMAILBYORDRTRECEIVE   = #{emailByOrdrtreceive}
+		,      EMAILBYNOTIAUCTION    = #{emailByNotiauction}
+		,      EMAILBYNOTISUCCESSBID = #{emailByNotisuccessbid}
+		,      SMSBYPURCHASEORDER    = #{smsByPurchaseorder}
+		,      SMSBYORDRTRECEIVE     = #{smsByOrdrtreceive}
+		,      SMSBYNOTIAUCTION      = #{smsByNotiauction}
+		,      SMSBYNOTISUCCESSBID   = #{smsByNotisuccessbid}
+		WHERE  USERID 				 = #{userId}
+	</update>
+	
+	<select id="smpReceiveInfoCnt" resultType="int">
+		/* organ.smpReceiveInfoCnt*/	
+		SELECT COUNT(1) FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = #{userId}
+	</select>	
+	
+	<select id="selectSmpBorgsUserRoles" resultType="kr.co.bitcube.common.dto.RolesDto">
+		/* organ.selectSmpBorgsUserRoles */
+		SELECT 	TOP 1
+				ROLEID
+		,		ROLECD
+		,		ROLENM
+		,		ROLEDESC
+		,		BORGSCOPECD
+		,		SVCTYPECD
+		,		INITBORGSCOPECD 
+		FROM 	SMPROLES WITH(NOLOCK)  
+		WHERE 	SVCTYPECD = #{svcTypeCd} 
+		AND 	ISUSE = '1' 
+		AND 	INITISROLE = '1'
+	</select>
+	
+	<insert id="insertRegSmpVendors">
+		/* organ.insertRegSmpVendors */
+		INSERT INTO SMPVENDORS(
+			VENDORID
+		,	VENDORNM
+		,	VENDORCD
+		,	AREATYPE
+		,	BUSINESSNUM
+		,	REGISTNUM
+		,	VENDORBUSITYPE
+		,	VENDORBUSICLAS
+		,	PRESSENTNM
+		,	PHONENUM
+		,	E_MAIL
+		,	HOMEPAGE
+		,	POSTADDRNUM
+		,	ADDRES
+		,	ADDRESDESC
+		,	FAXNUM
+		,	LOGINAUTHTYPE
+		,	REFERECEDESC
+		,	PAYBILLTYPE
+		,	PAYBILLDAY
+		,	ACCOUNTMANAGENM
+		,	ACCOUNTTELNUM
+		,	BANKCD
+		,	RECIPIENT
+		,	ACCOUNTNUM
+		,	BUSINESSATTACHFILESEQ
+		,	APPRAISALATTACHFILESEQ
+		,	ETCFIRSTATTACHSEQ
+		,	ETCSECONDATTACHSEQ
+		,	ETCTHIRDATTACHSEQ
+		,	SHARP_MAIL
+		,	ETCFOURTHATTACHSEQ
+		)VALUES(
+			#{vendorId}
+		,	#{vendorNm}
+		,	#{vendorCd}
+		,	#{areaType}
+		,	#{businessNum}
+		,	#{registNum}
+		,	#{vendorBusiType}
+		,	#{vendorBusiClas}
+		,	#{pressentNm}
+		,	#{phoneNum}
+		,	#{eMail}
+		,	#{homePage}
+		,	#{postAddrNum}
+		,	#{addres}
+		,	#{addresDesc}
+		,	#{faxNum}
+		,	#{loginAuthType}
+		,	#{refereceDesc}
+		,	#{payBillType}
+		,	#{payBillDay}
+		,	#{accountManagerNm}
+		,	#{accountTelNum}
+		,	#{bankCd}
+		,	#{recipient}
+		,	#{accountNum}
+		,	#{file_biz_reg_list}
+		,	#{file_app_sal_list}
+		,	#{file_list1}
+		,	#{file_list2}
+		,	#{file_list3}
+		,	#{sharpMail}
+		,	#{file_list4}
+		)	
+	</insert>
+	
+	<select id="selectVendorsDetail" resultType="kr.co.bitcube.organ.dto.SmpVendorsDto">
+		/* organ.selectVendorsDetail */
+		SELECT	A.VENDORID
+		,		A.VENDORNM
+		,		A.VENDORCD
+		,		A.AREATYPE
+		,		A.BUSINESSNUM
+		,		A.REGISTNUM
+		,		A.VENDORBUSITYPE
+		,		A.VENDORBUSICLAS
+		,		A.PRESSENTNM
+		,		A.PHONENUM
+		,		A.E_MAIL
+		,		A.HOMEPAGE
+		,		A.POSTADDRNUM
+		,		A.ADDRES
+		,		A.ADDRESDESC
+		,		A.FAXNUM
+		,		A.LOGINAUTHTYPE
+		,		A.REFERECEDESC
+		,		A.PAYBILLTYPE
+		,		A.PAYBILLDAY
+		,		A.ACCOUNTMANAGENM
+		,		A.ACCOUNTTELNUM
+		,		A.BANKCD
+		,		A.RECIPIENT
+		,		A.ACCOUNTNUM
+		,		A.BUSINESSATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.BUSINESSATTACHFILESEQ, 'NAME') AS BUSINESSATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.BUSINESSATTACHFILESEQ, 'PATH') AS BUSINESSATTACHFILEPATH
+		,		A.APPRAISALATTACHFILESEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.APPRAISALATTACHFILESEQ, 'NAME') AS APPRAISALATTACHFILENM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.APPRAISALATTACHFILESEQ, 'PATH') AS APPRAISALATTACHFILEPATH
+		,		A.ETCFIRSTATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ETCFIRSTATTACHSEQ, 'NAME') AS ETCFIRSTATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ETCFIRSTATTACHSEQ, 'PATH') AS ETCFIRSTATTACHPATH
+		,		A.ETCSECONDATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ETCSECONDATTACHSEQ, 'NAME') AS ETCSECONDATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ETCSECONDATTACHSEQ, 'PATH') AS ETCSECONDATTACHPATH
+		,		A.ETCTHIRDATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ETCTHIRDATTACHSEQ, 'NAME') AS ETCTHIRDATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ETCTHIRDATTACHSEQ, 'PATH') AS ETCTHIRDATTACHPATH
+		,		TRUSTBILLUSERID		
+		,		TRUSTBILLUSERNM		
+		,		TRUSTBILLUSEREMAIL
+		,		TRUSTBILLUSERTEL	
+		,		B.ISUSE
+		,		E.BASICCONTRACTDATE AS FIRSTCONTRACTDATE
+		,		E.BASICCONTRACTVERSION AS FIRSTCONTRACTVERSION
+		,		E.INDIVIDUALCONTRACTDATE AS BASICCONTRACTDATE
+		,		E.INDIVIDUALCONTRACTVERSION AS BASICCONTRACTVERSION
+		,		E.SPECIALCONTRACTDATE AS INDIVIDUALCONTRACTDATE
+		,		E.SPECIALCONTRACTVERSION AS INDIVIDUALCONTRACTVERSION
+		,		SHARP_MAIL
+		,		A.ETCFOURTHATTACHSEQ
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ETCFOURTHATTACHSEQ, 'NAME') AS ETCFOURTHATTACHNM
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ETCFOURTHATTACHSEQ, 'PATH') AS ETCFOURTHATTACHPATH
+		FROM SMPVENDORS A WITH(NOLOCK),	SMPBORGS B WITH(NOLOCK)
+		LEFT OUTER JOIN 
+		(
+			SELECT
+					MAX(ZZ.BORGID) AS BORGID
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'B'
+					THEN CONVERT(VARCHAR, CONTRACT_DATE, 23)
+					ELSE ''
+					END) AS BASICCONTRACTDATE
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'B'
+					THEN CONTRACT_VERSION
+					ELSE ''
+					END) AS BASICCONTRACTVERSION
+					
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'I'
+					THEN CONVERT(VARCHAR, CONTRACT_DATE, 23)
+					ELSE ''
+					END) AS INDIVIDUALCONTRACTDATE 
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'I'
+					THEN CONTRACT_VERSION
+					ELSE ''
+					END) AS INDIVIDUALCONTRACTVERSION
+					
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'Q'
+					THEN CONVERT(VARCHAR, CONTRACT_DATE, 23)
+					ELSE ''
+					END) AS SPECIALCONTRACTDATE
+			,		MAX(CASE WHEN 
+						ZZ.CONTRACT_CLASSIFY IS NOT NULL AND  ZZ.CONTRACT_CLASSIFY = 'Q'
+					THEN CONTRACT_VERSION
+					ELSE ''
+					END) AS SPECIALCONTRACTVERSION
+			FROM 
+			(
+				SELECT 
+					BORGID 
+				,	CONTRACT_CLASSIFY
+				,	ISNULL(MAX(CONTRACT_VERSION),'') AS CONTRACT_VERSION
+				,	ISNULL(MAX(CONTRACT_DATE),'') AS CONTRACT_DATE
+				FROM SMPBORG_CONTRACT WITH(NOLOCK)  
+				WHERE BORGID = #{vendorId}
+				GROUP BY BORGID ,CONTRACT_CLASSIFY
+			) ZZ
+		) E
+		ON B.BORGID = E.BORGID
+		WHERE A.VENDORID = B.BORGID	
+		AND A.VENDORID = #{vendorId}
+	</select>
+	
+	<update id="updateSmpVendorsDetail">
+		/* organ.updateSmpVendorsDetail */
+		UPDATE SMPVENDORS SET 
+			VENDORNM				= #{vendorNm}
+		,	AREATYPE				= #{areaType}
+		,	BUSINESSNUM				= #{businessNum}
+		,	REGISTNUM				= #{registNum}
+		,	VENDORBUSITYPE			= #{vendorBusiType}
+		,	VENDORBUSICLAS			= #{vendorBusiClas}
+		,	PRESSENTNM				= #{pressentNm}
+		,	PHONENUM				= #{phoneNum}
+		,	E_MAIL					= #{eMail}
+		,	HOMEPAGE				= #{homePage}
+		,	POSTADDRNUM				= #{postAddrNum}
+		,	ADDRES					= #{addres}
+		,	ADDRESDESC				= #{addresDesc}
+		,	FAXNUM					= #{faxNum}
+		,	LOGINAUTHTYPE			= #{loginAuthType}
+		,	REFERECEDESC			= #{refereceDesc}
+		,	PAYBILLTYPE				= #{payBillType}
+		,	PAYBILLDAY				= #{payBillDay}
+		,	ACCOUNTMANAGENM			= #{accountManagerNm}
+		,	ACCOUNTTELNUM			= #{accountTelNum}
+		,	BANKCD					= #{bankCd}
+		,	RECIPIENT				= #{recipient}
+		,	ACCOUNTNUM				= #{accountNum}
+		,	BUSINESSATTACHFILESEQ	= #{file_biz_reg_list}
+		,	APPRAISALATTACHFILESEQ	= #{file_app_sal_list}
+		,	ETCFIRSTATTACHSEQ		= #{file_list1}
+		,	ETCSECONDATTACHSEQ		= #{file_list2}
+		,	ETCTHIRDATTACHSEQ		= #{file_list3}
+		,	TRUSTBILLUSERID			= #{trustBillUserId}
+		,	TRUSTBILLUSERNM			= #{trustBillUserNm}
+		,	TRUSTBILLUSEREMAIL		= #{trustBillUserEmail}
+		,	TRUSTBILLUSERTEL		= #{trustBillUserTel}
+		,	SHARP_MAIL				= #{sharpMail}
+		,	ETCFOURTHATTACHSEQ		= #{file_list4}
+		WHERE 	VENDORID 			= #{vendorId}	
+	</update>
+	
+	<select id="selectVendorUserDetail" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		/* organ.selectVendorUserDetail */
+		SELECT	D.BORGID
+		,		C.VENDORNM
+		,		C.AREATYPE
+		,		dbo.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE',C.AREATYPE) AS AREATYPENM
+		,		A.USERNM
+		,		A.USERID
+		,		A.LOGINID
+		,		A.ISUSE
+		,		A.ISLOGIN
+		,		A.TEL
+		,		A.MOBILE
+		,		A.PWD
+		,		A.EMAIL
+		,		CONVERT(VARCHAR(10), A.CREATEDATE, 121) AS CREATEDATE
+		,		ISNULL(E.ISEMAIL, '0') AS ISEMAIL
+		,		ISNULL(E.ISSMS, '0') AS ISSMS
+		,		ISNULL(E.EMAILBYPURCHASEORDER, '0') AS EMAILBYPURCHASEORDER
+		,		ISNULL(E.EMAILBYORDRTRECEIVE, '0') AS EMAILBYORDRTRECEIVE
+		,		ISNULL(E.EMAILBYNOTIAUCTION, '0') AS EMAILBYNOTIAUCTION
+		,		ISNULL(E.EMAILBYNOTISUCCESSBID, '0') AS EMAILBYNOTISUCCESSBID
+		,		ISNULL(E.SMSBYPURCHASEORDER, '0') AS SMSBYPURCHASEORDER
+		,		ISNULL(E.SMSBYORDRTRECEIVE, '0') AS SMSBYORDRTRECEIVE
+		,		ISNULL(E.SMSBYNOTIAUCTION, '0') AS SMSBYNOTIAUCTION
+		,		ISNULL(E.SMSBYNOTISUCCESSBID, '0') AS SMSBYNOTISUCCESSBID
+		,		A.ENDCAUSEDESC	
+		,		A.USERNOTE
+		,       D.SVCTYPECD
+		FROM	SMPBORGS_USERS B WITH(NOLOCK) 
+		,		SMPVENDORS C WITH(NOLOCK) 
+		,		SMPBORGS D WITH(NOLOCK) 
+		,		SMPUSERS A WITH(NOLOCK) 
+		LEFT OUTER JOIN	SMPRECEIVEINFO E WITH(NOLOCK) 
+			ON		A.USERID = E.USERID
+		WHERE	A.USERID = B.USERID
+		AND		B.BORGID = C.VENDORID
+		AND 	B.BORGID = D.BORGID
+<!-- 		AND		D.ISUSE = '1' -->
+		AND     A.USERID = #{userId}
+		AND     C.VENDORID = #{borgId}	
+	</select>
+	
+	<insert id="insertSmpDirectInfo">
+		INSERT INTO SMPDIRECTINFO(
+			BRANCHID
+		,	USERID
+		,	DIRECTORID
+		)VALUES(
+			#{branchId}
+		,	#{userId}
+		,	#{directorId}	
+		)
+	</insert>
+	
+	<insert id="deleteSmpDirectInfo">
+		DELETE FROM SMPDIRECTINFO
+		WHERE	BRANCHID 	= #{branchId}
+		<if test="userId != null and userId != ''">
+		AND		USERID 		= #{userId}
+		</if>
+		AND		DIRECTORID  = #{directorId}	
+	</insert>
+	
+	<select id="selectSmpDirectInfoList" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		SELECT 	A.USERID
+		,		A.DIRECTORID
+		,		B.USERNM 	
+		,		B.LOGINID 
+		FROM 	SMPDIRECTINFO A WITH(NOLOCK) 
+		,		SMPUSERS B
+		WHERE	A.USERID = B.USERID	
+		AND		BRANCHID = #{borgId}
+		AND 	DIRECTORID = #{userId}	
+	</select>
+
+	<select id="getMrordmCount" resultType="int">
+		SELECT 	COUNT(1) 
+		FROM 	MRORDM WITH(NOLOCK)  
+		WHERE 	ORDE_USER_ID = #{userId} 
+		AND 	BRANCHID = #{borgId}
+	</select>
+
+	<select id="getSmpBorgsUsersByUserId" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
+		SELECT 	USERID
+		,		BORGID
+		,		DBO.FNS_BORGNAMEBYBORGID(BORGID) AS BRANCHNM
+		,		ISNULL(ISDEFAULT, 0) AS ISDEFAULT
+		FROM 	SMPBORGS_USERS WITH(NOLOCK)  
+		WHERE 	USERID = #{userId}
+	</select>
+	
+	<update id="setSmpBorgsUsersIsDefault">
+		UPDATE SMPBORGS_USERS SET
+		ISDEFAULT = #{isDefault}
+		WHERE	USERID = #{userId}
+		<if test="isDefaultFlag != null and isDefaultFlag != '' and isDefaultFlag eq 'Y'.toString() ">
+		AND 	BORGID = #{isDefaultBorgs}	
+		</if>
+	</update>
+	
+	<insert id="insertIfBorgsHist">
+		INSERT INTO IFBORGSHIST(
+			  BORGID
+			, BORGNM
+			, BUSINESSNUM
+			, SVCTYPECD
+			, TRANSDESC
+			, TRANSCD
+			, TRANSDATE
+		)VALUES(
+			  #{borgId}
+			, #{borgNm}
+			, #{businessNum}
+			, #{svcTypeCd}
+			, #{tranDesc}
+			, #{transCd}
+			, GETDATE()
+		)	
+	</insert>
+	
+	<update id="updateReqSmpBranchs">
+		UPDATE REQSMPBRANCHS SET
+			BUSINESSATTACHFILESEQ = #{file_biz_reg_list}
+		<if test="file_app_sal_list != null and file_app_sal_list != ''">
+		,	APPRAISALATTACHFILESEQ = #{file_app_sal_list}
+		</if>
+		<if test="file_list1 != null and file_list1 != ''">
+		,	ETCFIRSTSEQ = #{file_list1}
+		</if>
+		<if test="file_list2 != null and file_list2 != ''">
+		,	ETCSECONDSEQ = #{file_list2}
+		</if>
+		<if test="file_list3 != null and file_list3 != ''">
+		,	ETCTHIRDSEQ = #{file_list3}
+		</if>
+		WHERE BRANCHID = #{branchId}
+	</update>
+
+	<select id="selectSharpMailVendorCount" resultType="int">
+		/* organ.selectSharpMailVendorCount */
+		SELECT COUNT(1)
+		FROM( 
+			SELECT *
+			FROM SMPVENDORS WITH(NOLOCK) 
+			WHERE VENDORID = #{borgId}
+			AND (SHARP_MAIL IS NULL OR SHARP_MAIL = '')
+		)A
+	</select>
+	
+	<select id="selectSharpMailBranchCount" resultType="int">
+		/* organ.selectSharpMailBranchCount */
+		SELECT COUNT(1)
+		FROM( 
+			SELECT *
+			FROM SMPBRANCHS WITH(NOLOCK)  
+			WHERE BRANCHID = #{borgId}
+			AND (SHARP_MAIL IS NULL OR SHARP_MAIL = '')
+		)A
+	</select>
+	
+	<update id="updateBranchsSharpMail">
+		UPDATE SMPBRANCHS SET
+			SHARP_MAIL = #{sharpMailAddress}
+		WHERE BRANCHID = #{borgId}
+	</update>
+	
+	<update id="updateVendorSharpMail">
+		UPDATE SMPVENDORS SET
+			SHARP_MAIL = #{sharpMailAddress}
+		WHERE VENDORID = #{borgId}
+	</update>
+	
+	<select id="selectClientNm" resultType="String">
+		/* organ.selectClientNm */
+		SELECT BORGNM
+		FROM SMPBORGS WITH(NOLOCK) 
+		WHERE BORGID = #{clientId}
+	</select>
+	
+	<select id="selectMenuCd" resultType="String">
+		/* organ.selectMenuCd */
+		SELECT MENUCD FROM SMPMENUS  WITH(NOLOCK) WHERE MENUID = #{menuId}
+	</select>
+	
+	<update id="updateReqSmpVendors">
+		/*organ.updateReqSmpVendors*/
+		UPDATE REQSMPVENDORS SET
+			BUSINESSATTACHFILESEQ = #{file_biz_reg_list}
+		,	APPRAISALATTACHFILESEQ = #{file_app_sal_list}
+		,	ETCFIRSTATTACHSEQ = #{file_list1}
+		,	ETCSECONDATTACHSEQ = #{file_list2}
+		,	ETCTHIRDATTACHSEQ = #{file_list3}
+		,	ETCFOURTHATTACHSEQ = #{file_list4}
+		WHERE VENDORID = #{vendorId}
+	</update>
+	
+	<update id="updateAllSmpBranchsPressentNm">
+		/* organ.updateAllSmpBranchsPressentNm*/
+		UPDATE AA SET
+			AA.PRESSENTNM = #{pressentNm}
+		FROM(
+			SELECT	B.PRESSENTNM
+			FROM SMPBRANCHS A WITH(NOLOCK) 
+			INNER JOIN SMPBRANCHS B WITH(NOLOCK) 
+				on A.BUSINESSNUM = B.BUSINESSNUM
+			WHERE A.BRANCHID = #{branchId}
+		)AA
+	</update>
+	
+	
+	
+	
+	
+	<sql id="selectCorporationInfoSql">
+		FROM SMPBORGS A WITH(NOLOCK)  
+		LEFT OUTER JOIN (
+			SELECT B.CLIENTID, A.BUSINESSNUM
+			FROM	SMPBRANCHS A WITH(NOLOCK) 
+			,		SMPBORGS B WITH(NOLOCK) 
+			WHERE 	A.BRANCHID = B.BORGID
+			AND     B.ISKEY = '1'	
+		) B
+		ON A.BORGID = B.CLIENTID 
+		WHERE 1=1
+		AND A.SVCTYPECD = 'BUY'
+		AND A.BORGTYPECD = 'CLT'
+		<if test="srcPressentNm != null and srcPressentNm != ''">
+		AND		EXISTS(
+					SELECT 	1 
+					FROM 	SMPBRANCHS X WITH(NOLOCK)
+					INNER JOIN SMPBORGS Y WITH(NOLOCK)
+						ON	X.BRANCHID = Y.BORGID 
+					WHERE 	Y.CLIENTID=A.BORGID
+					AND		X.PRESSENTNM LIKE '%' + #{srcPressentNm} + '%'
+				)
+		</if>
+		<if test="srcClientNm != null and srcClientNm != ''">
+		AND A.BORGNM LIKE '%' + #{srcClientNm} + '%' 				
+		</if>
+		<if test="srcIsUse != null and srcIsUse != ''">
+		AND A.ISUSE = #{srcIsUse}
+		</if>
+		<if test="srcBusinessNum != null and srcBusinessNum != ''">
+		AND	B.BUSINESSNUM = #{srcBusinessNum}
+		</if>
+	</sql>
+	<!-- 법인 조회 카운트 쿼리 -->
+	<select id="selectCorporationInfo_count" resultType="int">
+		/* system.borg.selectCorporationInfo_count */
+		SELECT 
+			COUNT(1)
+		<include refid="selectCorporationInfoSql"/>
+	</select>
+	
+	<!-- 법인 조회 쿼리 -->
+	<select id="selectCorporationInfo" resultType="java.util.HashMap">
+		/* system.borg.selectCorporationInfo */
+		SELECT 
+			A.BORGNM
+		,	CASE WHEN A.ISUSE = '1' THEN 'Y' ELSE 'N' END AS ISUSE
+		,	CASE WHEN A.ISPREPAY = '1' THEN 'Y' ELSE 'N' END AS ISPREPAY
+		,	CASE WHEN A.ISLIMIT = '1' THEN 'Y' ELSE 'N' END AS ISLIMIT
+		,	B.BUSINESSNUM
+		,	ISNULL(A.LOAN,0) AS LOAN
+		
+		,	A.BORGID
+		,	A.BORGCD
+		<include refid="selectCorporationInfoSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	<sql id="selectCorporationBranchesSql">
+		FROM	SMPBRANCHS A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPWORKINFO A1 WITH(NOLOCK)
+			ON A.WORKID = A1.WORKID
+		LEFT OUTER JOIN SMPCODES A2 WITH(NOLOCK)
+			ON A2.CODETYPECD = 'MEMBERGRADE' 
+			AND A2.CODEVAL1 = A.BRANCHGRAD
+		LEFT OUTER JOIN SMPCODES A3 WITH(NOLOCK)
+			ON A3.CODETYPECD = 'DELI_AREA_CODE' 
+			AND A3.CODEVAL1 = A.AREATYPE
+		,		SMPBORGS B WITH(NOLOCK) 
+		WHERE 	B.CLIENTID = #{clientid}
+		AND A.BRANCHID = B.BORGID
+	</sql>
+	<!-- 법인 사업장 조회 카운트 쿼리 -->
+	<select id="selectCorporationBranches_count" resultType="int">
+		/* organ.selectCorporationBranches_count*/
+		SELECT 
+			COUNT(1)
+		<include refid="selectCorporationBranchesSql"/>
+	</select>
+	
+	<!-- 법인 사업장 조회 쿼리 -->
+	<select id="selectCorporationBranches" resultType="java.util.HashMap">
+		/* organ.selectCorporationBranches */
+		SELECT 
+			A.BRANCHID
+		,	A.BRANCHNM
+		,	A1.WORKNM
+		,	A2.CODENM1 AS BRANCHGRADNM
+		,	CASE WHEN B.ISUSE = '1' THEN 'Y' ELSE 'N' END AS ISUSE
+		,	CASE WHEN A.ISORDERLIMIT = '1' THEN 'Y' ELSE 'N' END AS ISORDERLIMIT
+		,	(SELECT COUNT(1) FROM SMPBORGS_USERS  WITH(NOLOCK) WHERE BORGID = B.BORGID ) AS USERS_COUNT
+		,	A3.CODENM1 AS AREATYPENM
+		
+		,	A.BRANCHGRAD
+		,	A.WORKID
+		,	B.CLIENTID
+		,	CASE	WHEN (
+							SELECT	COUNT(1)
+							FROM	SMPBORGS_USERS AA
+							,		SMPUSERS BB
+							WHERE	A.BRANCHID = AA.BORGID
+							AND		AA.USERID = BB.USERID
+							<![CDATA[
+							AND		CONVERT(DATE, CONVERT(VARCHAR(10), BB.LASTLOGINDATE, 121)) < DATEADD(YEAR, -1, CONVERT(DATE, CONVERT(VARCHAR(10), GETDATE(), 121)))
+							]]>
+						) = (SELECT	COUNT(1) FROM SMPBORGS_USERS AA WHERE A.BRANCHID = AA.BORGID)
+						THEN 'Y'
+					ELSE 'N'
+			END USER_LOGNIN_YN
+		<include refid="selectCorporationBranchesSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	
+	<sql id="selectCorporationBranchesUsersSql">
+		FROM SMPBORGS_USERS A WITH(NOLOCK) 
+		LEFT OUTER JOIN	(
+				SELECT B.ROLENM, A.USERID, A.BORGID
+				FROM SMPBORGS_USERS_ROLES A WITH(NOLOCK)  
+				LEFT OUTER JOIN SMPROLES B WITH(NOLOCK) 
+				ON B.ROLEID = A.ROLEID
+				WHERE ISDEFAULT = '1'
+			) A1
+		ON A.BORGID = A1.BORGID
+		AND A.USERID = A1.USERID
+		,	SMPUSERS B  WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPRECEIVEINFO C WITH(NOLOCK) 
+		ON B.USERID = C.USERID
+		Where a.USERID = b.USERID
+		AND A.BORGID = #{borgid}
+	</sql>
+	
+	<!-- 법인 사업장 사용자 조회 카운트 쿼리 -->
+	<select id="selectCorporationBranchesUsersList_count" resultType="int">
+		/* organ.selectCorporationBranchesUsersList_count*/
+		SELECT COUNT(1)
+		<include refid="selectCorporationBranchesUsersSql"/>
+	</select>
+	
+	<!-- 법인 사업장 사용자 조회 쿼리 -->
+	<select id="selectCorporationBranchesUsersList" resultType="java.util.HashMap">
+		/* organ.selectCorporationBranchesUsersList */
+		SELECT
+			B.USERNM
+		,	B.LOGINID
+		,	CASE WHEN B.ISUSE = '1' THEN 'Y' ELSE 'N' END AS ISUSE
+		,	CASE WHEN B.ISLOGIN = '1' THEN 'Y' ELSE 'N' END AS ISLOGIN
+		,	CASE
+				WHEN (SELECT TOP 1 DIRECTORID FROM SMPDIRECTINFO A1  WITH(NOLOCK) WHERE A1.DIRECTORID = A.USERID) IS NULL THEN 'N'
+				ELSE 'Y'
+			END AS ISDIRECT	
+		,	B.MOBILE
+		,	A1.ROLENM
+		,	CASE WHEN ISNULL(C.ISEMAIL,'0') = '1' THEN 'Y' ELSE 'N' END AS ISEMAIL
+		,	CASE WHEN ISNULL(C.ISSMS,'0') = '1' THEN 'Y' ELSE 'N' END AS ISSMS
+		,	CONVERT(VARCHAR(10), A.CREATEDATE, 121) AS CREATEDATE
+		,	A.USERID
+		,	A.BORGID
+		<![CDATA[
+		,	CASE	WHEN CONVERT(DATE, CONVERT(VARCHAR(10), B.LASTLOGINDATE, 121)) < DATEADD(YEAR, -1, CONVERT(DATE, CONVERT(VARCHAR(10), GETDATE(), 121)))
+						THEN 'Y'
+					ELSE 'N'
+			END USER_LOGNIN_YN
+		]]>
+		<include refid="selectCorporationBranchesUsersSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<!-- 법인 정보 수정 -->
+	<update id="updateCorporationInfo">
+		/* organ.updateCorporationInfo */
+		UPDATE	SMPBORGS
+		SET		BORGNM = #{borgNm}
+		,		ISUSE = #{isUse}
+		,		ISPREPAY = #{isPrepay}
+		,		ISLIMIT = #{isLimit}
+		,		REMOTEIP = #{remoteIp}
+		,		UPDATEDATE = GETDATE()
+		,		UPDATERID = #{updaterId}
+		,		LOAN = #{loan}
+		WHERE	BORGID = #{borgId}
+	</update>
+	
+	<!-- 사업장 종료 시 사용자도 상태 종료 수정 -->
+	<update id="updateUserStatusByUserId">
+		/*organ.updateUserStatusByUserId*/	
+		UPDATE SMPUSERS SET ISUSE = '0'
+		WHERE USERID = #{userId} 	
+	</update>
+	
+	<!-- 법인종료 시 사업장도 상태 종료 수정 -->
+	<update id="updateBranchsClose">
+		/*organ.updateBranchsClose*/	
+		UPDATE SMPBORGS SET ISUSE = '0'
+		<if test="closeReason != null and closeReason != ''">
+		,		CLOSEREASON = #{closeReason}
+		</if>
+		WHERE BORGID = #{BRANCHID}
+	</update>
+	
+	<update id="updateBranchsPrepay">
+		/*organ.updateBranchsPrepay*/	
+		UPDATE SMPBRANCHS SET PREPAY = #{isPrepay}
+		WHERE BRANCHID = #{BRANCHID}
+	</update>
+	
+		
+	<select id="selectBorgCdCnt" resultType="int">
+		/*organ.selectBorgCdCnt*/	
+		SELECT COUNT(1) FROM SMPBORGS WITH(NOLOCK) WHERE BORGCD = #{borgCd}
+	</select>
+	<insert id="insertClientInfo">
+		/*organ.insertClientInfo*/	
+		INSERT INTO SMPBORGS(
+				BORGID
+		,		BORGCD
+		,		BORGNM
+		,		TOPBORGID
+		,		PARBORGID
+		,		BORGLEVEL
+		,		BORGTYPECD
+		,		SVCTYPECD
+		,		GROUPID
+		,		CLIENTID
+		,		BRANCHID
+		,		DEPTID
+		,		REMOTEIP
+		,		CREATEDATE
+		,		CREATORID
+		,		UPDATEDATE
+		,		UPDATERID
+		,		ISUSE
+		
+		,		ISLIMIT
+		,		LOAN
+		,		ISPREPAY
+		) VALUES (
+				#{borgId}
+		,		#{borgCd}
+		,		#{borgNm}
+		,		#{topBorgId}
+		,		#{parBorgId}
+		,		#{borgLevel}
+		,		#{borgTypeCd}
+		,		#{svcTypeCd}
+		,		#{groupId}
+		,		#{clientId}
+		,		#{branchId}
+		,		#{deptId}
+		,		#{remoteIp}
+		,		GETDATE()
+		,		#{creatorId}
+		,		GETDATE()
+		,		#{updaterId}
+		,		#{isUse}
+		
+		,		#{isLimit}
+		,		#{loan}
+		,		#{isPrepay}
+		)
+	</insert>
+	
+	<update id="updateBranchsLimit">
+		/*organ.updateBranchsLimit*/	
+		UPDATE SMPBRANCHS SET ISORDERLIMIT = #{isLimit}
+		WHERE BRANCHID = #{BRANCHID}
+	</update>
+	
+	<select id="selectBranchEndUserList" resultType="java.util.HashMap">
+		/* organ.selectBranchEndUserList */
+		SELECT	USERID
+		FROM(
+			SELECT	USERID
+			,		(
+						SELECT	COUNT(1) AS CNT
+						FROM	SMPBORGS_USERS B1
+						,		SMPUSERS B2
+						,		SMPBORGS B3
+						WHERE	B1.USERID	= B2.USERID
+						AND		A.USERID	= B1.USERID
+						AND		B1.BORGID	= B3.BORGID
+						AND		B2.ISUSE	= 1
+						AND		B3.ISUSE	= 1
+					) AS ISUSE_CNT
+			FROM SMPBORGS_USERS A
+			WHERE A.BORGID = #{borgid}
+		)AA
+		WHERE ISUSE_CNT = 0
+	</select>
+	
+	<update id="updateSmpBorgsNm">
+		/* organ.updateSmpBorgsNm*/
+		UPDATE SMPBORGS SET
+			BORGNM = #{branchNm}
+		,	UPDATEDATE	= GETDATE()
+		,	UPDATERID	= #{userId}
+		WHERE BORGID = #{branchId}
+	</update>
+	
+	<update id="updateSmpBranchsNm">
+		/* organ.updateSmpBranchsNm*/
+		UPDATE SMPBRANCHS SET
+			BRANCHNM = #{branchNm}
+		WHERE BRANCHID = #{branchId}
+	</update>
+	
+	<update id="updateReqBranchsDefer">
+		UPDATE REQSMPBRANCHS SET
+			REGISTERCD = '09'
+		WHERE BRANCHID = #{branchId}
+	</update>
+	
+	<update id="updateReqVendorDefer">
+		UPDATE REQSMPVENDORS SET
+			REGISTERCD = '09'
+		WHERE VENDORID = #{vendorId}
+	</update>
+	<update id="updateReqSmpClientNm">
+		/* organ.updateReqSmpClientNm*/
+		UPDATE REQSMPBRANCHS SET
+			CLIENTNM = #{clientNm}
+		WHERE BRANCHID = #{branchId}
+	</update>
+	
+	<select id="selectVenEvaluationList" resultType="java.util.HashMap">
+		/* organ.selectVenEvaluationList*/
+		SELECT	VENDORNM																	-- 공급사명
+		,		VENDORID																	-- 공급사ID
+		,		BUYI_REQU_AMOU AS BUYI_REQU_AMOU 			-- 매출액
+		<choose>
+			<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+			<![CDATA[
+		,		CASE	WHEN  M_EVAL_DAY IS NULL THEN '-'
+						ELSE CONVERT(VARCHAR,M_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,M_DELI_RATE)+'%'
+				END + '<BR/>('
+				+ CASE	WHEN  EVAL_DAY IS NULL THEN '-'
+						ELSE CONVERT(VARCHAR, EVAL_DAY) + '일 / '+ CONVERT(VARCHAR, DELI_RATE)+'%'
+				END +')' AS DELI_INFO 														-- 평균납기일/납기준수율
+		,		ISNULL(CONVERT(VARCHAR,M_JIJUNG_CNT),0) + '<BR/>('+ISNULL(CONVERT(VARCHAR, dbo.FNS_COMMA_FORMAT(JIJUNG_CNT)),0)+')' AS JIJUNG_CNT	--지정
+		,		ISNULL(CONVERT(VARCHAR,M_ILBAN_CNT),0) + '<BR/>('+ISNULL(CONVERT(VARCHAR, dbo.FNS_COMMA_FORMAT(ILBAN_CNT)),0)+')' AS ILBAN_CNT		-- 일반
+		,		ISNULL(CONVERT(VARCHAR,M_GOOD_CNT),0) +'<BR/>('+ISNULL(CONVERT(VARCHAR, dbo.FNS_COMMA_FORMAT(GOOD_CNT)),0)+')' AS GOOD_CNT			--소계
+		,		ISNULL(CONVERT(VARCHAR,M_IMG_REG_RATE),0)  +'%' + '<BR/>('+ISNULL(CONVERT(VARCHAR, IMG_REG_RATE),0)  +'%' +')' AS IMG_REG_RATE		-- 이미지등록율
+		,		ISNULL(CONVERT(VARCHAR,M_DESC_REG_RATE),0) +'%' +'<BR/>('+ISNULL(CONVERT(VARCHAR, DESC_REG_RATE),0) +'%'+')' AS DESC_REG_RATE		-- 상품설명 등록율
+			]]>
+			</when>
+			<otherwise>
+			<![CDATA[
+		,		CASE	WHEN  Y_EVAL_DAY IS NULL THEN '-'
+						ELSE CONVERT(VARCHAR,Y_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,Y_DELI_RATE)+'%'
+				END + '<BR/>('
+				+CASE	WHEN  EVAL_DAY IS NULL THEN '-'
+						ELSE CONVERT(VARCHAR, EVAL_DAY) + '일 / '+ CONVERT(VARCHAR, DELI_RATE)+'%'
+				END +')' AS DELI_INFO 														-- 평균납기일/납기준수율
+		,		ISNULL(CONVERT(VARCHAR,Y_JIJUNG_CNT),0) + '<BR/>('+ISNULL(CONVERT(VARCHAR, dbo.FNS_COMMA_FORMAT(JIJUNG_CNT)),0)+')' AS JIJUNG_CNT	--지정
+		,		ISNULL(CONVERT(VARCHAR,Y_ILBAN_CNT),0) + '<BR/>('+ISNULL(CONVERT(VARCHAR, dbo.FNS_COMMA_FORMAT(ILBAN_CNT)),0)+')' AS ILBAN_CNT		--일반
+		,		ISNULL(CONVERT(VARCHAR,Y_GOOD_CNT),0) + '<BR/>('+ISNULL(CONVERT(VARCHAR, dbo.FNS_COMMA_FORMAT(GOOD_CNT)),0)+')' AS GOOD_CNT			--소계
+		,		ISNULL(CONVERT(VARCHAR,Y_IMG_REG_RATE),0) + '%' + '<BR/>('+ISNULL(CONVERT(VARCHAR, IMG_REG_RATE),0)  +'%' +')' AS IMG_REG_RATE		--이미지등록율
+		,		ISNULL(CONVERT(VARCHAR,Y_DESC_REG_RATE),0) +'%' + '<BR/>('+ISNULL(CONVERT(VARCHAR, DESC_REG_RATE),0) +'%'+')' AS DESC_REG_RATE		--상품설명 등록율
+			]]>
+			</otherwise>
+		</choose>
+		,		ISNULL(CONVERT(VARCHAR, BMT_UNFIT),'-') AS BMT_UNFIT					-- BMT부적합
+		,		ISNULL(CONVERT(VARCHAR, QUALITY_UNFIT),'-') AS QUALITY_UNFIT			-- 품질검사부적합
+		,		ISNULL(CONVERT(VARCHAR, VOC_CNT),'-') AS VOC_CNT						-- VOC발생
+		,		CASE	WHEN  CNT IS NULL THEN '-' 
+						ELSE CONVERT(VARCHAR, SELECTED_CNT)+'/'+ CONVERT(VARCHAR, CNT) 
+				END AS NEW_MATER_CNT													-- 신규제안사례(채택/등록)
+		,		(CASE	WHEN   SMILE_EVAL IS NULL THEN '-' ELSE CONVERT(VARCHAR, SMILE_EVAL) END ) AS SMILE_EVAL --스마일지수
+		,		(CASE	WHEN  DATEDIFF ( MONTH,  CREATEDATE, GETDATE())/12 > 0 THEN CONVERT(VARCHAR,DATEDIFF ( MONTH,  CREATEDATE, GETDATE())/12)  +'년 '
+						ELSE '' 
+				END) + CONVERT(VARCHAR,DATEDIFF ( MONTH,  CREATEDATE, GETDATE())-DATEDIFF ( MONTH,  CREATEDATE, GETDATE())/12*12 ) + '개월' AS DEAL_YEAR	--거래년수
+		,		ISNULL(CONVERT(VARCHAR, CONTRI_AMOU),'-') AS CONTRI_AMOU			-- 매출이익
+		,		CREDITINFO 															-- 신용평가정보
+		FROM	(
+			<include refid="selectVenEvaluationSql"/>
+		)Z
+		<if test="@MybatisUtils@isNotEmpty(orderString)">
+		ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectVenEvaluationExcel" resultType="java.util.HashMap">
+		/* organ.selectVenEvaluationExcel*/
+		SELECT	VENDORNM																	-- 공급사명
+		,		VENDORID																	-- 공급사ID
+		,		BUYI_REQU_AMOU AS BUYI_REQU_AMOU 			-- 매출액
+			<choose>
+				<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+				<![CDATA[
+			,		CASE	WHEN  M_EVAL_DAY IS NULL
+							THEN '-'
+							ELSE CONVERT(VARCHAR,M_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,M_DELI_RATE)+'%'
+					END
+					+' ('+CASE	WHEN  EVAL_DAY IS NULL
+							THEN '-'
+							ELSE CONVERT(VARCHAR, EVAL_DAY) + '일 / '+ CONVERT(VARCHAR, DELI_RATE)+'%'
+					END +')' AS DELI_INFO 														-- 평균납기일/납기준수율
+			,		ISNULL(CONVERT(VARCHAR,M_JIJUNG_CNT),0)
+					+' ('+ISNULL(CONVERT(VARCHAR, JIJUNG_CNT),0)+')' AS JIJUNG_CNT					--지정
+			,		ISNULL(CONVERT(VARCHAR,M_ILBAN_CNT),0)
+					+' ('+ISNULL(CONVERT(VARCHAR, ILBAN_CNT),0)+')' AS ILBAN_CNT						-- 일반
+			,		ISNULL(CONVERT(VARCHAR,M_GOOD_CNT),0)
+					+' ('+ISNULL(CONVERT(VARCHAR, GOOD_CNT),0)+')' AS GOOD_CNT						--소계
+			,		ISNULL(CONVERT(VARCHAR,M_IMG_REG_RATE),0)  +'%'
+					+' ('+ISNULL(CONVERT(VARCHAR, IMG_REG_RATE),0)  +'%' +')' AS IMG_REG_RATE			-- 이미지등록율
+			,		ISNULL(CONVERT(VARCHAR,M_DESC_REG_RATE),0) +'%'
+					+' ('+ISNULL(CONVERT(VARCHAR, DESC_REG_RATE),0) +'%'+')' AS DESC_REG_RATE		-- 상품설명 등록율
+				 ]]>
+				</when>
+				<otherwise>
+				<![CDATA[
+			,		CASE	WHEN  Y_EVAL_DAY IS NULL
+							THEN '-'
+							ELSE CONVERT(VARCHAR,Y_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,Y_DELI_RATE)+'%'
+					END
+					+' ('+CASE	WHEN  EVAL_DAY IS NULL
+							THEN '-'
+							ELSE CONVERT(VARCHAR, EVAL_DAY) + '일 / '+ CONVERT(VARCHAR, DELI_RATE)+'%'
+					END +')' AS DELI_INFO 														-- 평균납기일/납기준수율
+			,		ISNULL(CONVERT(VARCHAR,Y_JIJUNG_CNT),0)
+					+' ('+ISNULL(CONVERT(VARCHAR, JIJUNG_CNT),0)+')' AS JIJUNG_CNT					--지정
+			,		ISNULL(CONVERT(VARCHAR,Y_ILBAN_CNT),0)
+					+' ('+ISNULL(CONVERT(VARCHAR, ILBAN_CNT),0)+')' AS ILBAN_CNT						-- 일반
+			,		ISNULL(CONVERT(VARCHAR,Y_GOOD_CNT),0)
+					+' ('+ISNULL(CONVERT(VARCHAR, GOOD_CNT),0)+')' AS GOOD_CNT						--소계
+			,		ISNULL(CONVERT(VARCHAR,Y_IMG_REG_RATE),0)  +'%'
+					+' ('+ISNULL(CONVERT(VARCHAR, IMG_REG_RATE),0)  +'%' +')' AS IMG_REG_RATE			-- 이미지등록율
+			,		ISNULL(CONVERT(VARCHAR,Y_DESC_REG_RATE),0) +'%'
+					+' ('+ISNULL(CONVERT(VARCHAR, DESC_REG_RATE),0) +'%'+')' AS DESC_REG_RATE		-- 상품설명 등록율
+				 ]]>
+				</otherwise>
+			</choose>
+			,		ISNULL(CONVERT(VARCHAR, BMT_UNFIT),'') AS BMT_UNFIT					-- BMT부적합
+			,		ISNULL(CONVERT(VARCHAR, QUALITY_UNFIT),'') AS QUALITY_UNFIT			-- 품질검사부적합
+			,		ISNULL(CONVERT(VARCHAR, VOC_CNT),'') AS VOC_CNT						-- VOC발생
+			,		CASE WHEN  CNT IS NULL 
+						THEN '-' 
+						ELSE CONVERT(VARCHAR, SELECTED_CNT)+'/'+ CONVERT(VARCHAR, CNT) 
+					END AS NEW_MATER_CNT													-- 신규제안사례(채택/등록)
+			,		(CASE	WHEN   SMILE_EVAL IS NULL THEN '' ELSE CONVERT(VARCHAR, SMILE_EVAL) END ) AS SMILE_EVAL --스마일지수
+			,		(CASE WHEN  DATEDIFF ( MONTH,  CREATEDATE, GETDATE())/12 > 0 
+						  THEN CONVERT(VARCHAR,DATEDIFF ( MONTH,  CREATEDATE, GETDATE())/12)  +'년 ' ELSE '' END)
+					+ CONVERT(VARCHAR,DATEDIFF ( MONTH,  CREATEDATE, GETDATE())-DATEDIFF ( MONTH,  CREATEDATE, GETDATE())/12*12 )  + '개월'
+					AS DEAL_YEAR															-- 거래년수
+			,		ISNULL(CONVERT(VARCHAR, CONTRI_AMOU),'') AS CONTRI_AMOU				-- 매출이익
+			,		CREDITINFO 															-- 신용평가정보
+		FROM	(
+			<include refid="selectVenEvaluationSql"/>
+		)Z
+		<if test="@MybatisUtils@isNotEmpty(orderString)">
+		ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<sql id="selectVenEvaluationSql">
+				SELECT	B.VENDORNM
+				,		B.VENDORID
+				,		C.BUYI_REQU_AMOU 
+			<choose>
+				<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+				,		EE.EVAL_DAY 	  AS M_EVAL_DAY 	
+				,		EE.DELI_RATE      AS M_DELI_RATE    
+				,		DD.JIJUNG_CNT     AS M_JIJUNG_CNT   
+				,		DD.ILBAN_CNT      AS M_ILBAN_CNT    
+				,		DD.GOOD_CNT       AS M_GOOD_CNT     
+				,		DD.IMG_REG_RATE   AS M_IMG_REG_RATE 
+				,		DD.DESC_REG_RATE  AS M_DESC_REG_RATE
+				</when>
+				<otherwise>
+				,		EE.EVAL_DAY 	  AS Y_EVAL_DAY 	
+				,		EE.DELI_RATE      AS Y_DELI_RATE    
+				,		DD.JIJUNG_CNT     AS Y_JIJUNG_CNT   
+				,		DD.ILBAN_CNT      AS Y_ILBAN_CNT    
+				,		DD.GOOD_CNT       AS Y_GOOD_CNT     
+				,		DD.IMG_REG_RATE   AS Y_IMG_REG_RATE 
+				,		DD.DESC_REG_RATE  AS Y_DESC_REG_RATE
+				</otherwise>
+			</choose>
+				,		E.EVAL_DAY 	
+				,		E.DELI_RATE    
+				,		D.JIJUNG_CNT   
+				,		D.ILBAN_CNT    
+				,		D.GOOD_CNT     
+				,		D.IMG_REG_RATE 
+				,		D.DESC_REG_RATE
+				,		F.BMT_UNFIT
+				,		G.QUALITY_UNFIT
+				,		H.VOC_CNT
+				,		I.CNT 
+				,		I.SELECTED_CNT
+				,		J.SMILE_EVAL
+				,		A.CREATEDATE
+				,		K.CONTRI_AMOU
+				,		B.CREDITINFO
+				FROM	(
+						SELECT	C1.VENDORID
+						,		CONVERT(INT,ROUND(SUM(C1.buyi_requ_amou),-6)* 0.000001) AS buyi_requ_amou
+						FROM	MSBUYM C1 WITH(NOLOCK)
+						WHERE	C1.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME,#{srcYear}+'-01-01') AND convert(datetime,#{srcYear}+'-12-31 23:59:59')       -- SUN SEARCH	
+						GROUP BY C1.VENDORID
+						HAVING	 CONVERT(INT,ROUND(SUM(C1.buyi_requ_amou),-6)* 0.000001) > 0
+				) C 
+				INNER JOIN SMPVENDORS B WITH(NOLOCK)
+					ON	B.VENDORID =  C.VENDORID 
+				<if test="@MybatisUtils@isNotEmpty(srcVendorNm)">
+					AND	B.VENDORNM LIKE '%' + #{srcVendorNm} +'%'
+				</if>
+				INNER JOIN SMPBORGS A WITH(NOLOCK)
+					ON	A.BORGID = B.VENDORID
+				<if test="@MybatisUtils@isNotEmpty(srcVenIsUse)">
+					AND	A.ISUSE = #{srcVenIsUse}                 	
+				</if>
+				LEFT OUTER JOIN (
+						SELECT	D1.VENDORID
+						,		SUM(CASE WHEN D2.good_type = '10' THEN 1 ELSE 0 END) AS ILBAN_CNT
+						,		SUM(CASE WHEN D2.good_type = '20' THEN 1 ELSE 0 END) AS JIJUNG_CNT
+						,		SUM(1) AS GOOD_CNT
+						,		SUM(CASE WHEN LEN(D1.original_img_path) > 10 THEN 1 ELSE 0 END)*100/COUNT(1) AS IMG_REG_RATE
+						,		SUM(CASE WHEN LEN(D1.good_desc) > 15 THEN 1 ELSE 0 END)*100/COUNT(1) AS DESC_REG_RATE
+						FROM	MCGOODVENDOR D1 WITH(NOLOCK)
+						INNER JOIN MCGOOD D2 WITH(NOLOCK)
+							ON	D1.good_iden_numb = D2.good_iden_numb
+							AND	D2.REPRE_GOOD != 'P'
+						INNER JOIN SMPBORGS D3 WITH(NOLOCK)
+							ON	D1.VENDORID = D3.BORGID
+						WHERE	D1.isUse = '1'
+						GROUP BY D1.VENDORID
+				) D 
+					ON	B.VENDORID = D.VENDORID
+				LEFT OUTER JOIN (
+						SELECT	A.VENDORID
+						,		AVG(CASE WHEN A.clin_date-B.deli_degr_date>=0 THEN 0 ELSE	DATEDIFF(DAY, A.clin_date, B.deli_degr_date) END)+1 AS EVAL_DAY
+						,		AVG(CASE WHEN  C.DELI_MINI_DAY -DATEDIFF(DAY, A.CLIN_DATE, B.DELI_DEGR_DATE) >= 0 THEN 100 ELSE 0 END ) AS DELI_RATE
+						FROM	MRPURT A WITH(NOLOCK)
+						INNER JOIN mracpt B WITH(NOLOCK)
+							ON	A.orde_iden_numb = B.orde_iden_numb
+							AND	A.orde_sequ_numb = B.orde_sequ_numb
+							AND	A.purc_iden_numb = B.purc_iden_numb
+						INNER JOIN MRORDT C WITH(NOLOCK)
+							ON	A.orde_iden_numb = C.orde_iden_numb
+							AND	A.orde_sequ_numb = C.orde_sequ_numb
+						WHERE	1 = 1
+						AND		B.deli_stat_flag IN ('60','69','70')
+						GROUP BY A.VENDORID
+				) E 
+					ON	E.VENDORID = B.VENDORID
+				LEFT OUTER JOIN (
+						SELECT	D1.VENDORID
+						,		SUM(CASE WHEN D2.good_type = '10' THEN 1 ELSE 0 END) AS ILBAN_CNT
+						,		SUM(CASE WHEN D2.good_type = '20' THEN 1 ELSE 0 END) AS JIJUNG_CNT
+						,		SUM(1) AS GOOD_CNT
+						,		SUM(CASE WHEN LEN(D1.original_img_path) > 10 THEN 1 ELSE 0 END)*100/COUNT(1) AS IMG_REG_RATE
+						,		SUM(CASE WHEN LEN(D1.good_desc) > 15 THEN 1 ELSE 0 END)*100/COUNT(1) AS DESC_REG_RATE
+						FROM	MCGOODVENDOR D1 WITH(NOLOCK)
+						INNER JOIN MCGOOD D2 WITH(NOLOCK)
+							ON	D1.good_iden_numb = D2.good_iden_numb
+							AND	D2.REPRE_GOOD != 'P'
+						WHERE	D1.isUse = '1'
+				<choose>
+					<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+						AND		D1.regist_date BETWEEN CONVERT(DATETIME, #{srcYear}+#{srcMonth}+'01') AND DATEADD(month,1,convert(DATETIME, #{srcYear}+#{srcMonth}+'01 23:59:59'))-1
+					</when>
+					<otherwise>
+						AND		D1.regist_date BETWEEN CONVERT(DATETIME,#{srcYear}+'-01-01') AND convert(DATETIME,#{srcYear}+'-12-31 23:59:59')
+					</otherwise>
+				</choose>	
+						GROUP BY D1.VENDORID
+				) DD 
+					ON	B.VENDORID = DD.VENDORID
+				LEFT OUTER JOIN (
+						SELECT	E2.VENDORID
+						,		AVG(CASE WHEN E2.clin_date-E1.deli_degr_date>=0 THEN 0 ELSE	DATEDIFF(DAY, E2.clin_date, E1.deli_degr_date) END)+1 AS EVAL_DAY
+						,		AVG(CASE WHEN  E3.DELI_MINI_DAY -DATEDIFF(DAY, E2.CLIN_DATE, E1.DELI_DEGR_DATE) >= 0 THEN 100 ELSE 0 END ) AS DELI_RATE
+						FROM	MRACPT E1 WITH(NOLOCK)
+						INNER JOIN MRPURT E2 WITH(NOLOCK)
+							ON 	E1.ORDE_IDEN_NUMB = E2.ORDE_IDEN_NUMB
+							AND E1.ORDE_SEQU_NUMB = E2.ORDE_SEQU_NUMB
+							AND	E1.purc_iden_numb = E2.PURC_IDEN_NUMB
+						INNER JOIN MRORDT E3 WITH(NOLOCK)
+							ON 	E1.orde_iden_numb = E3.ORDE_IDEN_NUMB
+							AND E1.ORDE_SEQU_NUMB = E3.ORDE_SEQU_NUMB
+						WHERE	E1.DELI_STAT_FLAG IN ('60','69','70')
+				<choose>
+					<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+						AND		E1.DELI_DEGR_DATE BETWEEN CONVERT(DATETIME, #{srcYear}+#{srcMonth}+'01') AND DATEADD(month,1,convert(DATETIME, #{srcYear}+#{srcMonth}+'01 23:59:59'))-1
+					</when>
+					<otherwise>
+						AND		E1.DELI_DEGR_DATE BETWEEN CONVERT(DATETIME,#{srcYear}+'-01-01') AND convert(DATETIME,#{srcYear}+'-12-31 23:59:59')
+					</otherwise>
+				</choose>
+						GROUP BY E2.VENDORID
+				) EE 
+					ON	EE.VENDORID = B.VENDORID
+				LEFT OUTER JOIN(
+						SELECT	F1.BUSINESSNUM
+						,		COUNT(1)	AS BMT_UNFIT
+						FROM	SMPSOURCINGVENDOR F1 WITH(NOLOCK)
+						WHERE	F1.FINAL_YN='99'
+						AND		F1.FINAL_REQKIND = '90'
+						GROUP BY F1.BUSINESSNUM		
+				) F 
+					ON	B.BUSINESSNUM = F.BUSINESSNUM
+				LEFT OUTER JOIN(
+						SELECT	AA.BUSINESSNUM
+						,		SUM(AA.QUALITY_UNFIT) AS QUALITY_UNFIT
+						FROM	(
+								SELECT	G1.BUSINESSNUM
+								, 		(
+										SELECT	COUNT(1) 
+										FROM	SMPQUALITYCHECK B WITH(NOLOCK)
+										WHERE	B.QUALITY_PART_SEQ IN 
+													(QUARTER1, QUARTER2, QUARTER3, QUARTER4, FIRSTHALF, SECONDHALF,
+													M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, M12)
+										 AND	B.QUALITYYN = '99'
+										 AND	B.REQKIND = '90'
+								) AS QUALITY_UNFIT
+								FROM	SMPQUALITYVENDOR G1 WITH(NOLOCK)
+								WHERE	G1.QUALITYYYYY = #{srcYear}				--SUN SEARCH
+						) AA
+						GROUP BY AA.BUSINESSNUM
+				)G 
+					ON	B.BUSINESSNUM = G.BUSINESSNUM
+				LEFT OUTER JOIN (
+						SELECT	BUSINESSNUM
+						,		COUNT(1)	AS VOC_CNT
+						FROM	SMPVOC H1 WITH(NOLOCK)
+						WHERE	H1.QUALITYYYYY = #{srcYear}				--SUN SEARCH
+						GROUP BY H1.BUSINESSNUM
+				)H 
+					ON  B.BUSINESSNUM = H.BUSINESSNUM
+				LEFT OUTER JOIN(
+						SELECT	I1.BUSINESSNUM
+						,		COUNT(1) as CNT
+						,		SUM(CASE WHEN I1.FINALPROCSTATFLAG ='41' THEN 1 ELSE 0 END ) AS SELECTED_CNT
+						FROM	SMPNEW_MATERSUGGEST I1 WITH(NOLOCK)
+						WHERE	I1.ACCEPTDATE  BETWEEN CONVERT(DATETIME,#{srcYear}+'-01-01') AND convert(DATETIME,#{srcYear}+'-12-31 23:59:59')   	--SUN SEARCH
+						GROUP BY I1.BUSINESSNUM
+				)I 
+					ON	B.BUSINESSNUM = I.BUSINESSNUM
+				LEFT OUTER JOIN (
+						SELECT	J2.TARGET_BORGID 
+						,		AVG(J2.EVAL) AS SMILE_EVAL
+						FROM	SMILE_MANAGE J1 WITH(NOLOCK)
+						INNER JOIN SMILE_EVAL J2 WITH(NOLOCK)
+							ON	J1.SMILE_ID = J2.SMILE_ID
+						WHERE	J1.TARGET_SVCTYPECD ='VEN'
+						AND		J1.ISUSE ='1'
+						AND		J2.CREATE_DATE BETWEEN CONVERT(DATETIME,#{srcYear}+'-01-01') AND convert(DATETIME,#{srcYear}+'-12-31 23:59:59')   	--SUN SEARCH
+						GROUP BY J2.TARGET_BORGID
+				)J 
+					ON	B.VENDORID = J.TARGET_BORGID
+				LEFT OUTER JOIN(
+						SELECT	K1.VENDORID
+						,		CONVERT(INT,ROUND( SUM( K2.SALE_PROD_AMOU - K2.PURC_PROD_AMOU ),-6)* 0.000001) AS CONTRI_AMOU
+						FROM	MSBUYM	K1 WITH(NOLOCK)
+						INNER JOIN MRORDTLIST K2 WITH(NOLOCK) ON K1.BUYI_SEQU_NUMB = K2.BUYI_SEQU_NUMB
+						WHERE K1.clos_buyi_date BETWEEN CONVERT(DATETIME, #{srcYear}+'-01-01') AND convert(DATETIME,#{srcYear}+'-12-31 23:59:59')   	--SUN SEARCH
+						GROUP BY K1.VENDORID
+				)K
+					ON	B.VENDORID = K.VENDORID
+	</sql>
+	
+	<select id="selectVenEvaluationStatsExcel" resultType="java.util.HashMap">
+		/* organ.selectVenEvaluationStatsExcel */
+		WITH	TEMP	AS (
+				SELECT	SUM ( X.BUYI_REQU_AMOU )	AS SUM_BUYI_REQU_AMOU
+				,		SUM ( X.JIJUNG_CNT      )   AS SUM_JIJUNG_CNT      
+				,		SUM ( X.ILBAN_CNT       )   AS SUM_ILBAN_CNT       
+				,		SUM ( X.GOOD_CNT        )   AS SUM_GOOD_CNT        
+				,		SUM ( X.CNT             )   AS SUM_CNT             
+				,		SUM ( X.SELECTED_CNT    )   AS SUM_SELECTED_CNT    
+				,		SUM ( X.CONTRI_AMOU     )   AS SUM_CONTRI_AMOU     
+				
+				,		AVG ( X.BUYI_REQU_AMOU )	AS AVG_BUYI_REQU_AMOU
+				,		AVG ( X.EVAL_DAY 	    )   AS AVG_EVAL_DAY 	    
+				,		AVG ( X.DELI_RATE       )   AS AVG_DELI_RATE  
+				     
+				,		SUM ( X.JIJUNG_CNT      )/COUNT(1)   AS AVG_JIJUNG_CNT      
+				,		SUM ( X.ILBAN_CNT       )/COUNT(1)   AS AVG_ILBAN_CNT       
+				,		SUM ( X.GOOD_CNT        )/COUNT(1)   AS AVG_GOOD_CNT        
+				,		SUM ( X.IMG_REG_RATE    )/COUNT(1)   AS AVG_IMG_REG_RATE    
+				,		SUM ( X.DESC_REG_RATE   )/COUNT(1)   AS AVG_DESC_REG_RATE  
+				,		AVG ( X.SMILE_EVAL      )   AS AVG_SMILE_EVAL      
+				,		AVG ( X.CONTRI_AMOU     )   AS AVG_CONTRI_AMOU     
+				,		SUM(DATEDIFF ( MONTH, X.CREATEDATE, GETDATE()))/COUNT(1) AS AVG_CREATEDATE
+		<choose>
+			<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+				,		SUM ( X.M_JIJUNG_CNT    )   AS SUM_M_JIJUNG_CNT   
+				,		SUM ( X.M_ILBAN_CNT     )   AS SUM_M_ILBAN_CNT    
+				,		SUM ( X.M_GOOD_CNT      )   AS SUM_M_GOOD_CNT     
+				
+				,		AVG ( X.M_EVAL_DAY 	    )   AS AVG_M_EVAL_DAY 	   
+				,		AVG ( X.M_DELI_RATE     )   AS AVG_M_DELI_RATE    
+				,		SUM ( X.M_JIJUNG_CNT    )/COUNT(1)   AS AVG_M_JIJUNG_CNT   
+				,		SUM ( X.M_ILBAN_CNT     )/COUNT(1)   AS AVG_M_ILBAN_CNT    
+				,		SUM ( X.M_GOOD_CNT      )/COUNT(1)   AS AVG_M_GOOD_CNT     
+				,		SUM ( X.M_IMG_REG_RATE  )/COUNT(1)   AS AVG_M_IMG_REG_RATE 
+				,		SUM ( X.M_DESC_REG_RATE )/COUNT(1)   AS AVG_M_DESC_REG_RATE
+			</when>
+			<otherwise>
+				,		SUM ( X.Y_JIJUNG_CNT    )            AS SUM_Y_JIJUNG_CNT   
+				,		SUM ( X.Y_ILBAN_CNT     )            AS SUM_Y_ILBAN_CNT    
+				,		SUM ( X.Y_GOOD_CNT      )            AS SUM_Y_GOOD_CNT     
+				                                             
+				,		AVG ( X.Y_EVAL_DAY 	    )            AS AVG_Y_EVAL_DAY 	   
+				,		AVG ( X.Y_DELI_RATE     )            AS AVG_Y_DELI_RATE    
+				,		SUM ( X.Y_JIJUNG_CNT    )/COUNT(1)   AS AVG_Y_JIJUNG_CNT   
+				,		SUM ( X.Y_ILBAN_CNT     )/COUNT(1)   AS AVG_Y_ILBAN_CNT    
+				,		SUM ( X.Y_GOOD_CNT      )/COUNT(1)   AS AVG_Y_GOOD_CNT     
+				,		SUM ( X.Y_IMG_REG_RATE  )/COUNT(1)   AS AVG_Y_IMG_REG_RATE 
+				,		SUM ( X.Y_DESC_REG_RATE )/COUNT(1)   AS AVG_Y_DESC_REG_RATE
+			</otherwise>
+		</choose>
+				FROM (
+					<include refid="selectVenEvaluationSql"/>
+				)X
+		)
+
+		SELECT '평 균'				  AS VENDORNM	
+		,		A.AVG_BUYI_REQU_AMOU  AS BUYI_REQU_AMOU 
+		<choose>
+			<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+			<![CDATA[
+		,		CASE	WHEN  A.AVG_M_EVAL_DAY IS NULL THEN ''
+						ELSE CONVERT(VARCHAR,A.AVG_M_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,A.AVG_M_DELI_RATE)+'%'
+				END 
+				+' ('+
+				CASE	WHEN  A.AVG_EVAL_DAY IS NULL
+						THEN ''
+						ELSE CONVERT(VARCHAR,A.AVG_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,A.AVG_DELI_RATE)+'%'
+				END +')' AS DELI_INFO 																-- 평균납기일/납기준수율
+				
+		,		CONVERT(VARCHAR , ISNULL(A.AVG_M_JIJUNG_CNT,'-') ) 
+				+ ' ('+ CONVERT(VARCHAR ,ISNULL(A.AVG_JIJUNG_CNT,'-')) + ')'  AS JIJUNG_CNT    
+		,		CONVERT(VARCHAR ,ISNULL(A.AVG_M_ILBAN_CNT,'-'))         
+				+ ' ('+ CONVERT(VARCHAR ,ISNULL(A.AVG_ILBAN_CNT,'-')) + ')'  AS ILBAN_CNT     
+		,		CONVERT(VARCHAR , ISNULL(A.AVG_M_GOOD_CNT,'-'))         
+		 		+ ' ('+ CONVERT(VARCHAR ,ISNULL(A.AVG_GOOD_CNT,'-')) + ')'  AS GOOD_CNT
+		,		CASE WHEN A.AVG_IMG_REG_RATE  IS NULL THEN '' 
+					ELSE CONVERT(VARCHAR,A.AVG_IMG_REG_RATE ) + '%'	 END
+				+' ('+
+				CASE WHEN A.AVG_IMG_REG_RATE  IS NULL THEN '' 
+					ELSE CONVERT(VARCHAR,A.AVG_IMG_REG_RATE ) + '%)' END AS IMG_REG_RATE				-- 이미지등록율
+		,		CASE WHEN A.AVG_M_DESC_REG_RATE IS NULL THEN '' 
+						ELSE CONVERT(VARCHAR,A.AVG_M_DESC_REG_RATE) + '%' END
+				+' ('+
+				CASE WHEN A.AVG_DESC_REG_RATE IS NULL THEN '' 
+						ELSE CONVERT(VARCHAR,A.AVG_DESC_REG_RATE) + '%)' END AS DESC_REG_RATE			-- 상품설명 등록율  
+			]]>
+			</when>
+			<otherwise>
+			<![CDATA[
+		,		CASE	WHEN  A.AVG_Y_EVAL_DAY IS NULL
+						THEN ''
+						ELSE CONVERT(VARCHAR,A.AVG_Y_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,A.AVG_Y_DELI_RATE)+'%'
+				END 
+				+' ('+
+				CASE	WHEN  A.AVG_EVAL_DAY IS NULL
+						THEN ''
+						ELSE CONVERT(VARCHAR,A.AVG_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,A.AVG_DELI_RATE)+'%'
+				END +')' AS DELI_INFO 																-- 평균납기일/납기준수율     
+		,		CONVERT(VARCHAR , ISNULL(A.AVG_Y_JIJUNG_CNT,'-') ) 
+				+ ' ('+ CONVERT(VARCHAR ,ISNULL(A.AVG_JIJUNG_CNT,'-')) + ')'  AS JIJUNG_CNT    
+		,		CONVERT(VARCHAR ,ISNULL(A.AVG_Y_ILBAN_CNT,'-'))         
+				+ ' ('+ CONVERT(VARCHAR ,ISNULL(A.AVG_ILBAN_CNT,'-')) + ')'  AS ILBAN_CNT     
+		,		CONVERT(VARCHAR , ISNULL(A.AVG_Y_GOOD_CNT,'-'))         
+		 		+ ' ('+ CONVERT(VARCHAR ,ISNULL(A.AVG_GOOD_CNT,'-')) + ')'  AS GOOD_CNT
+		,		CASE WHEN A.AVG_IMG_REG_RATE  IS NULL THEN '' 
+					ELSE CONVERT(VARCHAR,A.AVG_IMG_REG_RATE ) + '%'	 END
+				+' ('+
+				CASE WHEN A.AVG_IMG_REG_RATE  IS NULL THEN '' 
+					ELSE CONVERT(VARCHAR,A.AVG_IMG_REG_RATE ) + '%)' END AS IMG_REG_RATE				-- 이미지등록율
+		,		CASE WHEN A.AVG_Y_DESC_REG_RATE IS NULL THEN '' 
+						ELSE CONVERT(VARCHAR,A.AVG_Y_DESC_REG_RATE) + '%' END
+				+' ('+
+				CASE WHEN A.AVG_DESC_REG_RATE IS NULL THEN '' 
+						ELSE CONVERT(VARCHAR,A.AVG_DESC_REG_RATE) + '%)' END AS DESC_REG_RATE			-- 상품설명 등록율  
+			]]>
+			</otherwise>
+		</choose>  
+	  	,		''                    AS BMT_UNFIT        
+	  	,		''                    AS QUALITY_UNFIT    
+	  	,		''                    AS VOC_CNT          
+	  	,		''                    AS NEW_MATER_CNT    
+	  	,		ISNULL(CONVERT(VARCHAR,A.AVG_SMILE_EVAL) ,'')      AS SMILE_EVAL       
+	  	,		(CASE WHEN  A.AVG_CREATEDATE/12 > 0 
+						  THEN CONVERT(VARCHAR,A.AVG_CREATEDATE/12)  +'년 ' ELSE '' END)
+					+ CONVERT(VARCHAR, A.AVG_CREATEDATE - A.AVG_CREATEDATE/12*12 )  + '개월'
+					AS DEAL_YEAR		
+	  	,		A.AVG_CONTRI_AMOU     AS CONTRI_AMOU      
+	  	,		''                    AS CREDITINFO       
+		FROM	TEMP A
+			
+		UNION ALL
+		
+			SELECT	'총 계'					AS VENDORNM
+		,		A.SUM_BUYI_REQU_AMOU    AS BUYI_REQU_AMOU
+		,		''			 	        AS DELI_INFO
+		<choose>
+			<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+			<![CDATA[
+		,		CONVERT(VARCHAR, ISNULL(A.SUM_M_JIJUNG_CNT,'-')) 
+				+ ' ('+ CONVERT(VARCHAR,ISNULL(A.SUM_JIJUNG_CNT,'-')) + ')'  AS JIJUNG_CNT    
+		,		CONVERT(VARCHAR,ISNULL(A.SUM_M_ILBAN_CNT,'-'))         
+				+ ' ('+ CONVERT(VARCHAR,ISNULL(A.SUM_ILBAN_CNT,'-')) + ')'  AS ILBAN_CNT     
+		,		CONVERT(VARCHAR,ISNULL(A.SUM_M_GOOD_CNT,'-'))         
+		 		+ ' ('+ CONVERT(VARCHAR,ISNULL(A.SUM_GOOD_CNT,'-')) + ')'  AS GOOD_CNT
+			]]>
+			</when>
+			<otherwise>
+			<![CDATA[
+		,		CONVERT(VARCHAR, ISNULL(A.SUM_Y_JIJUNG_CNT,'-')) 
+				+ ' ('+ CONVERT(VARCHAR,ISNULL(A.SUM_JIJUNG_CNT,'-')) + ')'  AS JIJUNG_CNT    
+		,		CONVERT(VARCHAR,ISNULL(A.SUM_Y_ILBAN_CNT,'-'))         
+				+ ' ('+ CONVERT(VARCHAR,ISNULL(A.SUM_ILBAN_CNT,'-')) + ')'  AS ILBAN_CNT     
+		,		CONVERT(VARCHAR,ISNULL(A.SUM_Y_GOOD_CNT,'-'))         
+		 		+ ' ('+ CONVERT(VARCHAR,ISNULL(A.SUM_GOOD_CNT,'-')) + ')'  AS GOOD_CNT
+			]]>
+			</otherwise>
+		</choose>  
+		,		''     				AS IMG_REG_RATE  
+		,		''						AS DESC_REG_RATE 
+		,		''				        AS BMT_UNFIT     
+		,		''     				AS QUALITY_UNFIT 
+		,		''           			AS VOC_CNT       
+		,		CASE WHEN A.SUM_CNT IS NULL 
+					THEN '' 
+					ELSE CONVERT(VARCHAR,A.SUM_SELECTED_CNT)+'/'+ CONVERT(VARCHAR,A.SUM_CNT) 
+				END AS NEW_MATER_CNT															-- 신규제안사례(채택/등록)
+		 
+		,		''       				AS SMILE_EVAL    
+		,		''        				AS DEAL_YEAR    
+		,		A.SUM_CONTRI_AMOU       AS CONTRI_AMOU   
+		,		''        				AS CREDITINFO    
+		FROM	TEMP A
+		
+		
+		
+	</select>
+	
+	
+			
+	
+	<select id="selectVenEvaluationStats" resultType="java.util.HashMap">
+		/* organ.selectVenEvaluationStats*/
+		WITH	TEMP	AS (
+				SELECT	SUM ( X.BUYI_REQU_AMOU )	AS SUM_BUYI_REQU_AMOU
+				,		SUM ( X.JIJUNG_CNT      )   AS SUM_JIJUNG_CNT      
+				,		SUM ( X.ILBAN_CNT       )   AS SUM_ILBAN_CNT       
+				,		SUM ( X.GOOD_CNT        )   AS SUM_GOOD_CNT        
+				,		SUM ( X.CNT             )   AS SUM_CNT             
+				,		SUM ( X.SELECTED_CNT    )   AS SUM_SELECTED_CNT    
+				,		SUM ( X.CONTRI_AMOU     )   AS SUM_CONTRI_AMOU     
+				
+				,		AVG ( X.BUYI_REQU_AMOU )	AS AVG_BUYI_REQU_AMOU
+				,		ROUND( AVG ( X.EVAL_DAY),1) AS AVG_EVAL_DAY 	    
+				,		AVG ( X.DELI_RATE       )   AS AVG_DELI_RATE  
+				     
+				,		SUM ( X.JIJUNG_CNT      )/COUNT(1)   AS AVG_JIJUNG_CNT      
+				,		SUM ( X.ILBAN_CNT       )/COUNT(1)   AS AVG_ILBAN_CNT       
+				,		SUM ( X.GOOD_CNT        )/COUNT(1)   AS AVG_GOOD_CNT        
+				,		SUM ( X.IMG_REG_RATE    )/COUNT(1)   AS AVG_IMG_REG_RATE    
+				,		SUM ( X.DESC_REG_RATE   )/COUNT(1)   AS AVG_DESC_REG_RATE  
+				,		AVG ( X.SMILE_EVAL      )   AS AVG_SMILE_EVAL      
+				,		AVG ( X.CONTRI_AMOU     )   AS AVG_CONTRI_AMOU     
+				,		SUM(DATEDIFF ( MONTH, X.CREATEDATE, GETDATE()))/COUNT(1) AS AVG_CREATEDATE
+			
+		<if test="@MybatisUtils@isNotEmpty(srcMonth)">
+				,		SUM ( X.M_JIJUNG_CNT    )   AS SUM_M_JIJUNG_CNT   
+				,		SUM ( X.M_ILBAN_CNT     )   AS SUM_M_ILBAN_CNT    
+				,		SUM ( X.M_GOOD_CNT      )   AS SUM_M_GOOD_CNT     
+				
+				,		ROUND( AVG ( X.M_EVAL_DAY ),1)   AS AVG_M_EVAL_DAY 	   
+				,		AVG ( X.M_DELI_RATE     )   AS AVG_M_DELI_RATE    
+				,		SUM ( X.M_JIJUNG_CNT    )/COUNT(1)   AS AVG_M_JIJUNG_CNT   
+				,		SUM ( X.M_ILBAN_CNT     )/COUNT(1)   AS AVG_M_ILBAN_CNT    
+				,		SUM ( X.M_GOOD_CNT      )/COUNT(1)   AS AVG_M_GOOD_CNT     
+				,		SUM ( X.M_IMG_REG_RATE  )/COUNT(1)   AS AVG_M_IMG_REG_RATE 
+				,		SUM ( X.M_DESC_REG_RATE )/COUNT(1)   AS AVG_M_DESC_REG_RATE
+		</if>
+		<if test="@MybatisUtils@isEmpty(srcMonth)">
+				,		SUM ( X.Y_JIJUNG_CNT    )   AS SUM_Y_JIJUNG_CNT   
+				,		SUM ( X.Y_ILBAN_CNT     )   AS SUM_Y_ILBAN_CNT    
+				,		SUM ( X.Y_GOOD_CNT      )   AS SUM_Y_GOOD_CNT     
+				
+				,		ROUND( AVG ( X.Y_EVAL_DAY ),1)       AS AVG_Y_EVAL_DAY 	   
+				,		AVG ( X.Y_DELI_RATE     )            AS AVG_Y_DELI_RATE    
+				,		SUM ( X.Y_JIJUNG_CNT    )/COUNT(1)   AS AVG_Y_JIJUNG_CNT   
+				,		SUM ( X.Y_ILBAN_CNT     )/COUNT(1)   AS AVG_Y_ILBAN_CNT    
+				,		SUM ( X.Y_GOOD_CNT      )/COUNT(1)   AS AVG_Y_GOOD_CNT     
+				,		SUM ( X.Y_IMG_REG_RATE  )/COUNT(1)   AS AVG_Y_IMG_REG_RATE 
+				,		SUM ( X.Y_DESC_REG_RATE )/COUNT(1)   AS AVG_Y_DESC_REG_RATE
+		</if>
+			FROM (
+					<include refid="selectVenEvaluationSql"/>
+				)X
+		)  -- END OF WITH (TEMP TABLE)
+		
+
+		SELECT '평 균'				  AS VENDORNM	
+		,		A.AVG_BUYI_REQU_AMOU  AS BUYI_REQU_AMOU 
+		<choose>
+			<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+			<![CDATA[
+		,		CASE	WHEN  A.AVG_M_EVAL_DAY IS NULL
+						THEN '-'
+						ELSE CONVERT(VARCHAR,A.AVG_M_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,A.AVG_M_DELI_RATE)+'%'
+				END 
+				+'<br/>('+
+				CASE	WHEN  A.AVG_EVAL_DAY IS NULL
+						THEN '-'
+						ELSE CONVERT(VARCHAR,A.AVG_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,A.AVG_DELI_RATE)+'%'
+				END +')' AS DELI_INFO 																-- 평균납기일/납기준수율     
+		,		CONVERT(VARCHAR , ISNULL(A.AVG_M_JIJUNG_CNT,'-') ) 
+				+ '<BR>('+ CONVERT(VARCHAR ,ISNULL(dbo.FNS_COMMA_FORMAT(A.AVG_JIJUNG_CNT),'-')) + ')'  AS JIJUNG_CNT    
+		,		CONVERT(VARCHAR ,ISNULL(A.AVG_M_ILBAN_CNT,'-'))         
+				+ '<BR>('+ CONVERT(VARCHAR ,ISNULL(dbo.FNS_COMMA_FORMAT(A.AVG_ILBAN_CNT),'-')) + ')'  AS ILBAN_CNT     
+		,		CONVERT(VARCHAR , ISNULL(A.AVG_M_GOOD_CNT,'-'))         
+		 		+ '<BR>('+ CONVERT(VARCHAR ,ISNULL(dbo.FNS_COMMA_FORMAT(A.AVG_GOOD_CNT),'-')) + ')'  AS GOOD_CNT
+		,		CASE WHEN A.AVG_IMG_REG_RATE  IS NULL THEN '-' 
+					ELSE CONVERT(VARCHAR,A.AVG_IMG_REG_RATE ) + '%'	 END
+				+'<br/>('+
+				CASE WHEN A.AVG_IMG_REG_RATE  IS NULL THEN '-' 
+					ELSE CONVERT(VARCHAR,A.AVG_IMG_REG_RATE ) + '%)' END AS IMG_REG_RATE				-- 이미지등록율
+		,		CASE WHEN A.AVG_M_DESC_REG_RATE IS NULL THEN '-' 
+						ELSE CONVERT(VARCHAR,A.AVG_M_DESC_REG_RATE) + '%' END
+				+'<br/>('+
+				CASE WHEN A.AVG_DESC_REG_RATE IS NULL THEN '-' 
+						ELSE CONVERT(VARCHAR,A.AVG_DESC_REG_RATE) + '%)' END AS DESC_REG_RATE			-- 상품설명 등록율  
+			]]>
+			</when>
+			<otherwise>
+			<![CDATA[
+		,		CASE	WHEN  A.AVG_Y_EVAL_DAY IS NULL
+						THEN '-'
+						ELSE CONVERT(VARCHAR,A.AVG_Y_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,A.AVG_Y_DELI_RATE)+'%'
+				END 
+				+'<br/>('+
+				CASE	WHEN  A.AVG_EVAL_DAY IS NULL
+						THEN '-'
+						ELSE CONVERT(VARCHAR,A.AVG_EVAL_DAY) + '일 / '+ CONVERT(VARCHAR,A.AVG_DELI_RATE)+'%'
+				END +')' AS DELI_INFO 																-- 평균납기일/납기준수율     
+		,		CONVERT(VARCHAR , ISNULL(A.AVG_Y_JIJUNG_CNT,'-') ) 
+				+ '<BR>('+ CONVERT(VARCHAR ,ISNULL(dbo.FNS_COMMA_FORMAT(A.AVG_JIJUNG_CNT),'-')) + ')'  AS JIJUNG_CNT    
+		,		CONVERT(VARCHAR ,ISNULL(A.AVG_Y_ILBAN_CNT,'-'))         
+				+ '<BR>('+ CONVERT(VARCHAR ,ISNULL(dbo.FNS_COMMA_FORMAT(A.AVG_ILBAN_CNT),'-')) + ')'  AS ILBAN_CNT     
+		,		CONVERT(VARCHAR , ISNULL(A.AVG_Y_GOOD_CNT,'-'))         
+		 		+ '<BR>('+ CONVERT(VARCHAR ,ISNULL(dbo.FNS_COMMA_FORMAT(A.AVG_GOOD_CNT),'-')) + ')'  AS GOOD_CNT
+		,		CASE WHEN A.AVG_IMG_REG_RATE  IS NULL THEN '-' 
+					ELSE CONVERT(VARCHAR,A.AVG_IMG_REG_RATE ) + '%'	 END
+				+'<br/>('+
+				CASE WHEN A.AVG_IMG_REG_RATE  IS NULL THEN '-' 
+					ELSE CONVERT(VARCHAR,A.AVG_IMG_REG_RATE ) + '%)' END AS IMG_REG_RATE				-- 이미지등록율
+		,		CASE WHEN A.AVG_Y_DESC_REG_RATE IS NULL THEN '-' 
+						ELSE CONVERT(VARCHAR,A.AVG_Y_DESC_REG_RATE) + '%' END
+				+'<br/>('+
+				CASE WHEN A.AVG_DESC_REG_RATE IS NULL THEN '-' 
+						ELSE CONVERT(VARCHAR,A.AVG_DESC_REG_RATE) + '%)' END AS DESC_REG_RATE			-- 상품설명 등록율  
+			]]>
+			</otherwise>
+		</choose>  
+	  	,		'-'                    AS BMT_UNFIT        
+	  	,		'-'                    AS QUALITY_UNFIT    
+	  	,		'-'                    AS VOC_CNT          
+	  	,		'-'                    AS NEW_MATER_CNT    
+	  	,		ISNULL(CONVERT(VARCHAR,A.AVG_SMILE_EVAL),'-')      AS SMILE_EVAL       
+	  	,		(CASE WHEN  A.AVG_CREATEDATE/12 > 0 
+						  THEN CONVERT(VARCHAR,A.AVG_CREATEDATE/12)  +'년 ' ELSE '-' END)
+					+ CONVERT(VARCHAR, A.AVG_CREATEDATE - A.AVG_CREATEDATE/12*12 )  + '개월'
+					AS DEAL_YEAR		
+	  	,		A.AVG_CONTRI_AMOU     AS CONTRI_AMOU      
+	  	,		'-'                    AS CREDITINFO       
+		FROM	TEMP A
+			
+		UNION ALL
+		
+			SELECT	'총 계'					AS VENDORNM
+		,		A.SUM_BUYI_REQU_AMOU    AS BUYI_REQU_AMOU
+		,		'-'			 	        AS DELI_INFO
+		<choose>
+			<when test="@MybatisUtils@isNotEmpty(srcMonth)">
+			<![CDATA[
+		,		CONVERT(VARCHAR, ISNULL(A.SUM_M_JIJUNG_CNT,'-')) 
+				+ '<BR>('+ CONVERT(VARCHAR,ISNULL(dbo.FNS_COMMA_FORMAT(A.SUM_JIJUNG_CNT),'-')) + ')'  AS JIJUNG_CNT    
+		,		CONVERT(VARCHAR,ISNULL(A.SUM_M_ILBAN_CNT,'-'))         
+				+ '<BR>('+ CONVERT(VARCHAR,ISNULL(dbo.FNS_COMMA_FORMAT(A.SUM_ILBAN_CNT),'-')) + ')'  AS ILBAN_CNT     
+		,		CONVERT(VARCHAR,ISNULL(A.SUM_M_GOOD_CNT,'-'))         
+		 		+ '<BR>('+ CONVERT(VARCHAR,ISNULL(dbo.FNS_COMMA_FORMAT(A.SUM_GOOD_CNT),'-')) + ')'  AS GOOD_CNT
+			]]>
+			</when>
+			<otherwise>
+			<![CDATA[
+		,		CONVERT(VARCHAR, ISNULL(A.SUM_Y_JIJUNG_CNT,'-')) 
+				+ '<BR>('+ CONVERT(VARCHAR,ISNULL(dbo.FNS_COMMA_FORMAT(A.SUM_JIJUNG_CNT),'-')) + ')'  AS JIJUNG_CNT    
+		,		CONVERT(VARCHAR,ISNULL(A.SUM_Y_ILBAN_CNT,'-'))         
+				+ '<BR>('+ CONVERT(VARCHAR,ISNULL(dbo.FNS_COMMA_FORMAT(A.SUM_ILBAN_CNT),'-')) + ')'  AS ILBAN_CNT     
+		,		CONVERT(VARCHAR,ISNULL(A.SUM_Y_GOOD_CNT,'-'))         
+		 		+ '<BR>('+ CONVERT(VARCHAR,ISNULL(dbo.FNS_COMMA_FORMAT(A.SUM_GOOD_CNT),'-')) + ')'  AS GOOD_CNT
+			]]>
+			</otherwise>
+		</choose>  
+		,		'-'     				AS IMG_REG_RATE  
+		,		'-'						AS DESC_REG_RATE 
+		,		'-'				        AS BMT_UNFIT     
+		,		'-'     				AS QUALITY_UNFIT 
+		,		'-'           			AS VOC_CNT       
+		,		CASE WHEN A.SUM_CNT IS NULL 
+					THEN '-' 
+					ELSE CONVERT(VARCHAR,A.SUM_SELECTED_CNT)+'/'+ CONVERT(VARCHAR,A.SUM_CNT) 
+				END AS NEW_MATER_CNT															-- 신규제안사례(채택/등록)
+		 
+		,		'-'       				AS SMILE_EVAL    
+		,		'-'        				AS DEAL_YEAR    
+		,		A.SUM_CONTRI_AMOU       AS CONTRI_AMOU   
+		,		'-'        				AS CREDITINFO    
+		FROM	TEMP A
+		
+	</select>
+	
+	
+	<update id="updateCreditInfo">
+		/* organ.updateCreditInfo */
+		UPDATE	SMPVENDORS
+		SET		CREDITINFO = #{CREDITINFO}
+		WHERE	VENDORID = #{VENDORID}
+	</update>		
+</mapper>

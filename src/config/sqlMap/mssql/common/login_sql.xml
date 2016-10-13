@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="common.login">
+	
+	<select id="selectUserInfo" resultType="kr.co.bitcube.common.dto.LoginUserDto">
+		/*common.login.selectUserInfo*/
+		SELECT
+		        A.USERID
+		,       A.LOGINID
+		,       A.EMPNO
+		,       A.USERNM
+		,       A.GRADENM
+		,       A.TEL
+		,       A.MOBILE
+		,       A.EMAIL
+		,       C.BORGID
+		,       C.BORGCD
+		,       C.BORGNM
+		,       C.TOPBORGID
+		,       C.PARBORGID
+		,       C.BORGLEVEL
+		,       C.BORGTYPECD
+		,       C.SVCTYPECD
+		,       C.GROUPID
+		,       C.CLIENTID
+		,       C.BRANCHID
+		,       C.DEPTID
+		,		C.ISKEY
+		,		dbo.FNS_BORG_STRING(C.BORGID) AS BORGNMS
+		,		(SELECT BORGCD FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID = C.CLIENTID) AS CLIENTCD
+		,		(CASE 	WHEN (SELECT COUNT(1) FROM SMPBRANCHS Z  WITH(NOLOCK) WHERE Z.BRANCHID = C.BORGID AND Z.ISORDERLIMIT=1)>0 THEN 1
+						WHEN (SELECT COUNT(1) FROM SMPBORGS Z  WITH(NOLOCK) WHERE Z.BORGID = C.CLIENTID AND Z.ISLIMIT=1)>0 THEN 1
+						ELSE 0
+				END) AS ISLIMIT
+		,		(CASE WHEN (SELECT COUNT(1) FROM SMPDIRECTINFO  WITH(NOLOCK) WHERE BRANCHID = C.BORGID AND DIRECTORID = A.USERID)>0 THEN 'True'
+					ELSE 'False'
+				END) AS isDirectMan
+				<![CDATA[
+		,		(CASE	WHEN (C.SVCTYPECD='BUY' OR C.SVCTYPECD='VEN') AND DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,A.LASTLOGINDATE)+1,0)) < GETDATE() THEN 'True'
+						ELSE 'False'
+				END) AS isEvaluate
+				]]>
+        ,       (CASE   WHEN C.SVCTYPECD = 'BUY' THEN (SELECT COUNT(1) FROM SMPBORGS Z  WITH(NOLOCK) WHERE Z.BORGID=C.CLIENTID AND Z.ISUSE = '1')
+                        ELSE 1
+                END) AS isUseClient
+		,		(SELECT Z.WORKID FROM SMPBRANCHS Z  WITH(NOLOCK) WHERE Z.BRANCHID = C.BORGID) AS WORKID
+		FROM    SMPUSERS A WITH(NOLOCK)
+		,       SMPBORGS_USERS B WITH(NOLOCK)
+		,       SMPBORGS C WITH(NOLOCK)
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="loginId != null and loginId != ''">
+				A.LOGINID = #{loginId}
+			AND	A.PWD = #{password}
+			AND	B.ISDEFAULT = 1
+			</if>
+			<if test="userId != null and userId != ''">
+				A.USERID = #{userId}
+			AND	C.BORGID = #{belongBorgId}
+			</if>
+		</trim>
+		AND     A.ISUSE = '1'
+		AND     A.ISLOGIN = '1'
+		AND     A.USERID = B.USERID
+		AND     B.BORGID = C.BORGID
+		AND     C.ISUSE = '1'
+	</select>
+	
+	<select id="selectLoginRoleList" parameterType="kr.co.bitcube.common.dto.LoginUserDto" 
+			resultType="kr.co.bitcube.common.dto.LoginRoleDto">
+		/*common.login.selectLoginRoleList*/
+		SELECT  
+		        A.ROLEID
+		,       A.ISDEFAULT
+		,       A.BORGSCOPECD
+		,       B.ROLECD
+		,       B.ROLENM
+		,		A.USERID
+		,		A.BORGID
+		,		B.SVCTYPECD
+		FROM    SMPBORGS_USERS_ROLES A WITH(NOLOCK)
+		,       SMPROLES B WITH(NOLOCK)
+		WHERE   A.ROLEID = B.ROLEID
+		AND     A.USERID = #{userId}
+		AND     A.BORGID = #{borgId}
+		AND     B.ISUSE = '1'
+	</select>
+	
+	<update id="updateIsNotDefaultSmpborgsUsersRoles">
+		/*common.login.updateIsNotDefaultSmpborgsUsersRoles*/
+		UPDATE	SMPBORGS_USERS_ROLES
+		SET		ISDEFAULT = '0'
+		WHERE	BORGID = #{borgId}
+		AND		USERID = #{userId}
+	</update>
+	
+	<update id="updateIsDefaultSmpborgsUsersRoles">
+		/*common.login.updateIsDefaultSmpborgsUsersRoles*/
+		UPDATE	SMPBORGS_USERS_ROLES
+		SET		ISDEFAULT = '1'
+		WHERE	BORGID = #{borgId}
+		AND		USERID = #{userId}
+		AND		ROLEID = #{roleId}
+	</update>
+	
+	<select id="selectSrcBorgScopeByRole" parameterType="kr.co.bitcube.common.dto.LoginRoleDto" 
+			resultType="kr.co.bitcube.common.dto.SrcBorgScopeByRoleDto">
+		/*common.login.selectSrcBorgScopeByRole*/
+		<if test="borgScopeCd != null and borgScopeCd == '7000'">
+			SELECT	#{roleId} AS roleId
+			,		#{borgScopeCd} AS borgScopeCd
+			,		dbo.FNS_BORG_STRING(A.BORGID) AS srcBorgNms
+			,		A.BORGID AS srcGroupId
+			,		'' AS srcClientId
+			,		'' AS srcBranchId
+			FROM	SMPBORGS A WITH(NOLOCK) 
+			WHERE	A.BORGID = (SELECT GROUPID FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID = #{borgId})
+		</if>
+		<if test="borgScopeCd != null and borgScopeCd == '6000'">
+			SELECT	#{roleId} AS roleId
+			,		#{borgScopeCd} AS borgScopeCd
+			,		dbo.FNS_BORG_STRING(A.BORGID) AS srcBorgNms
+			,		A.GROUPID AS srcGroupId
+			,		A.BORGID AS srcClientId
+			,		'' AS srcBranchId
+			FROM	SMPBORGS A WITH(NOLOCK) 
+			WHERE	A.BORGID = (SELECT CLIENTID FROM SMPBORGS  WITH(NOLOCK) WHERE BORGID = #{borgId})
+		</if>
+		<if test="borgScopeCd != null and (borgScopeCd == '5000' or borgScopeCd == '1000')">
+			SELECT	#{roleId} AS roleId
+			,		#{borgScopeCd} AS borgScopeCd
+			,		dbo.FNS_BORG_STRING(A.BORGID) AS srcBorgNms
+			,		A.GROUPID AS srcGroupId
+			,		A.CLIENTID AS srcClientId
+			,		A.BORGID AS srcBranchId
+			FROM	SMPBORGS A WITH(NOLOCK) 
+			WHERE	A.BORGID = #{borgId}
+		</if>
+	</select>
+	
+	<select id="selectUserListByRoleScope" parameterType="kr.co.bitcube.common.dto.LoginRoleDto" 
+			resultType="kr.co.bitcube.common.dto.UserDto">
+		/*common.login.selectUserListByRoleScope*/
+		SELECT	DISTINCT
+				A.USERID
+		,		A.USERNM
+		FROM	SMPUSERS A WITH(NOLOCK) 
+		,		SMPBORGS_USERS B WITH(NOLOCK) 
+		WHERE	A.USERID = B.USERID
+		<if test="borgScopeCd != null and borgScopeCd == '6000'">
+		AND		B.BORGID IN (SELECT	AA.BORGID FROM SMPBORGS AA WITH(NOLOCK) , SMPBORGS BB WITH(NOLOCK)  WHERE AA.CLIENTID = BB.CLIENTID AND BB.BORGID = #{borgId})
+		</if>
+		<if test="borgScopeCd != null and borgScopeCd == '5000'">
+		AND		B.BORGID = #{borgId}
+		</if>
+		<if test="borgScopeCd != null and borgScopeCd == '1000'">
+		AND		A.USERID = #{userId}
+		</if>
+		AND		A.ISUSE = '1'
+	</select>
+	
+	<select id="selectLoginMenuList" resultType="kr.co.bitcube.common.dto.LoginMenuDto">
+		/*common.login.selectLoginMenuList*/
+		SELECT  DISTINCT
+		        A.MENUID
+		,       A.MENUCD
+		,       A.MENUNM
+		,       A.TOPMENUID
+		,       A.PARMENUID
+		,       A.MENULEVEL
+		,       A.DISORDER
+		,       A.ISFIXED
+		,		A.FWDPATH
+		FROM    SMPMENUS A WITH(NOLOCK)
+		,       SMPMENUS_ACTIVITIES B WITH(NOLOCK)
+		,       SMPACTIVITIES C WITH(NOLOCK)
+		,       SMPSCOPES_ACTIVITIES D WITH(NOLOCK)
+		,       SMPSCOPES E WITH(NOLOCK)
+		,       SMPROLES_SCOPES F WITH(NOLOCK)
+		,       SMPROLES G WITH(NOLOCK)
+		WHERE   A.MENUID = B.MENUID
+		AND     B.ACTIVITYID = C.ACTIVITYID
+		AND     B.MENUID = D.MENUID
+		AND     B.ACTIVITYID = D.ACTIVITYID
+		AND     D.SCOPEID = E.SCOPEID
+		AND     E.SCOPEID = F.SCOPEID
+		AND     F.ROLEID = G.ROLEID
+		AND     A.ISUSE = '1'
+		AND     C.ISUSE = '1'
+		AND     E.ISUSE = '1'
+		AND     G.ISUSE = '1'
+		AND		A.ISFIXED = #{isFixed}
+		AND     A.MENULEVEL = #{menuLevel}
+		AND     A.SVCTYPECD = #{svcTypeCd}
+		<foreach item="item" collection="roleId" open=" AND G.ROLEID IN (" separator="," close=")">
+				#{item.roleId}
+		</foreach>
+		ORDER BY A.DISORDER
+	</select>
+	
+	<select id="selectStaticMenuList" resultType="kr.co.bitcube.common.dto.LoginMenuDto">
+		/*common.login.selectLoginMenuList*/
+		SELECT  DISTINCT
+		        A.MENUID
+		,       A.MENUCD
+		,       A.MENUNM
+		,       A.TOPMENUID
+		,       A.PARMENUID
+		,       A.MENULEVEL
+		,       A.DISORDER
+		,       A.ISFIXED
+		,		A.FWDPATH
+		FROM    SMPMENUS A WITH(NOLOCK)
+		,       SMPMENUS_ACTIVITIES B WITH(NOLOCK)
+		,       SMPACTIVITIES C WITH(NOLOCK)
+		WHERE   A.MENUID = B.MENUID
+		AND     B.ACTIVITYID = C.ACTIVITYID
+		AND     A.ISUSE = '1'
+		AND     C.ISUSE = '1'
+		AND		A.ISFIXED = #{isFixed}
+		AND     A.SVCTYPECD = #{svcTypeCd}
+		ORDER BY A.DISORDER
+	</select>
+	
+	<select id="selectUseActivityList" resultType="kr.co.bitcube.common.dto.ActivitiesDto">
+		/*common.login.selectUseActivityList*/
+		SELECT  DISTINCT
+	            C.ACTIVITYID
+	    ,       C.ACTIVITYCD
+	    ,       C.ACTIVITYNM
+	    ,		A.MENUNM
+		FROM    SMPMENUS A WITH(NOLOCK)
+		,       SMPMENUS_ACTIVITIES B WITH(NOLOCK)
+		,       SMPACTIVITIES C WITH(NOLOCK)
+		,       SMPSCOPES_ACTIVITIES D WITH(NOLOCK)
+		,       SMPSCOPES E WITH(NOLOCK)
+		,       SMPROLES_SCOPES F WITH(NOLOCK)
+		,       SMPROLES G WITH(NOLOCK)
+		WHERE   A.MENUID = B.MENUID
+		AND     B.ACTIVITYID = C.ACTIVITYID
+		AND     B.MENUID = D.MENUID
+		AND     B.ACTIVITYID = D.ACTIVITYID
+		AND     D.SCOPEID = E.SCOPEID
+		AND     E.SCOPEID = F.SCOPEID
+		AND     F.ROLEID = G.ROLEID
+		--AND     A.ISUSE = '1'
+		AND     C.ISUSE = '1'
+		AND     E.ISUSE = '1'
+		AND     G.ISUSE = '1'
+		AND     A.MENUID = #{menuId}
+		<foreach item="item" collection="roleList" open=" AND G.ROLEID IN (" separator="," close=")">
+				#{item.roleId}
+		</foreach>
+	</select>
+	
+	<select id="selectSubMenuIdByMenuId" resultType="String">
+		/*common.login.selectSubMenuIdByMenuId*/
+		select aa.menuId
+		from
+		(
+		      select a.menuId,
+		      		ROW_NUMBER() OVER    (order by a.disorder) rownum
+		      from   smpmenus a WITH(NOLOCK)
+		      where  a.parmenuid = #{menuId}
+		      --and    a.isuse = 1
+		) aa
+		where rownum = 1
+	</select>
+	
+	<select id="selectBelongBorgList" resultType="kr.co.bitcube.common.dto.BorgDto">
+		/*common.login.selectBelongBorgList*/
+		SELECT	B.BORGID
+		,		B.BORGNM
+		,		B.SVCTYPECD
+		FROM	SMPBORGS_USERS A WITH(NOLOCK) 
+		,		SMPBORGS B WITH(NOLOCK) 
+		WHERE	A.BORGID = B.BORGID
+		AND		B.ISUSE = 1
+		AND		A.USERID = #{userId}
+	</select>
+	
+	<insert id="updateLoginCount">
+		/*common.login.updateLoginCount*/
+		UPDATE	SMPUSERS
+		SET		LOGINCNT = LOGINCNT + 1
+		,		LASTLOGINDATE = GETDATE()
+		,		USERNM_ETC = null
+		WHERE	USERID = #{userId}
+	</insert>
+	
+	<select id="selectIsAreaModify" resultType="string">
+		/*common.login.selectIsAreaModify*/
+		SELECT	AREATYPE
+		FROM	SMPBRANCHS WITH(NOLOCK) 
+		WHERE	BRANCHID = #{BORGID}
+		<![CDATA[
+		AND		(AREA_MOD_DATE IS NULL OR YEAR(AREA_MOD_DATE) < YEAR(GETDATE()))
+		]]>
+	</select>
+	
+	<update id="updateBranchArea">
+		/*common.login.updateBranchArea*/
+		UPDATE	SMPBRANCHS
+		SET		AREATYPE = #{srcAreaType}
+		,		AREA_MOD_DATE = GETDATE()
+		WHERE	BRANCHID = #{srcBorgId}
+	</update>
+	
+</mapper>

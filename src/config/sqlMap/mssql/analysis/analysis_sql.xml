@@ -1,0 +1,2303 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="analysis">
+	<select id="selectAnalysisSummaryList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisSummaryList */
+		SELECT	A.CLOS_YEAR
+		,		CASE WHEN B.TYPE = 1 THEN 'SALE' WHEN B.TYPE = 2 THEN 'BUYI' WHEN B.TYPE = 3 THEN 'PROF' END AS GUBUN 
+		, 		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 1 AND A.CLOS_MONTH = 1 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				) AS M1
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 2 AND A.CLOS_MONTH = 2 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				) AS M2
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 3 AND A.CLOS_MONTH = 3 THEN  
+			 			CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M3
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 4 AND A.CLOS_MONTH = 4 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M4
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 5 AND A.CLOS_MONTH = 5 THEN  
+			 			CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M5
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 6 AND A.CLOS_MONTH = 6 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M6
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 7 AND A.CLOS_MONTH = 7 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M7
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 8 AND A.CLOS_MONTH = 8 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M8
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 9 AND A.CLOS_MONTH = 9 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M9
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 10 AND A.CLOS_MONTH = 10 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M10
+		,		CONVERT( INT, ROUND(	
+					SUM(CASE WHEN C.MONTH = 11 AND A.CLOS_MONTH = 11 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M11
+		,		CONVERT( INT, ROUND(
+					SUM(CASE WHEN C.MONTH = 12 AND A.CLOS_MONTH = 12 THEN  
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END  
+					END ),-6) * 0.000001
+				)AS M12
+		,		CONVERT( INT, ROUND(	
+					SUM(CASE WHEN C.MONTH = A.CLOS_MONTH THEN 
+						CASE WHEN TYPE = 1 THEN A.SALE_REQU_AMOU WHEN TYPE = 2 THEN A.BUYI_REQU_AMOU WHEN TYPE =3 THEN A.SUMMARYAMOUNT  END
+					END ),-6) * 0.000001
+				)AS SUMMARY_TOTA_AMOU
+		FROM ( 
+				SELECT CLOS_YEAR    
+					 , CLOS_MONTH
+					 , SUM(SALE_REQU_AMOU ) AS SALE_REQU_AMOU
+					 , SUM(BUYI_REQU_AMOU ) AS BUYI_REQU_AMOU
+					 , SUM(SALE_REQU_AMOU ) - SUM(BUYI_REQU_AMOU ) AS SUMMARYAMOUNT  
+				  FROM ( 
+							SELECT SUM(B.SALE_PROD_AMOU) AS SALE_REQU_AMOU  
+								 , 0  AS BUYI_REQU_AMOU
+								 , DATEPART(YEAR, A.CLOS_SALE_DATE) AS CLOS_YEAR 
+								 , DATEPART(MONTH, A.CLOS_SALE_DATE) AS CLOS_MONTH
+							  FROM MSSALM A WITH(NOLOCK)
+							  INNER JOIN MRORDTLIST B WITH(NOLOCK)
+								ON	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+							 WHERE sap_jour_numb IS NOT NULL                      
+							   AND A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultToYear} + '0101') AND CONVERT(DATETIME, #{srcResultToYear} + '1231 23:59')
+		<if test="@MybatisUtils@isNotEmpty(loginUserDto.skMngFlag)">
+							   AND EXISTS(
+									SELECT	1
+									FROM		SMPBRANCHS Z WITH(NOLOCK)
+									INNER JOIN SMPWORKINFO Z1 WITH(NOLOCK)
+										ON	Z.WORKID = Z1.WORKID
+									INNER JOIN SMPCODES Z2 WITH(NOLOCK)
+										ON	Z2.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+										AND	Z1.MAT_KIND = Z2.CODEVAL1
+									WHERE	Z.BRANCHID = B.BRANCHID
+									AND		Z2.CODEVAL2 = #{loginUserDto.skMngFlag}
+							   )
+		</if>
+							 GROUP BY DATEPART(YEAR, A.CLOS_SALE_DATE) , DATEPART(MONTH, A.CLOS_SALE_DATE)  
+							UNION ALL 
+							SELECT 0 
+								 , SUM(B.PURC_PROD_AMOU)
+								 , DATEPART(YEAR, A.CLOS_BUYI_DATE  )  
+								 , DATEPART(MONTH, A.CLOS_BUYI_DATE ) 
+							  FROM MSBUYM A WITH(NOLOCK)
+							  INNER JOIN MRORDTLIST B WITH(NOLOCK)
+								ON	A.BUYI_SEQU_NUMB = B.BUYI_SEQU_NUMB
+							 WHERE A.sap_jour_numb IS NOT NULL
+							   AND A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultToYear} + '0101') AND CONVERT(DATETIME, #{srcResultToYear} + '1231 23:59')
+		<if test="@MybatisUtils@isNotEmpty(loginUserDto.skMngFlag)">
+							   AND EXISTS(
+									SELECT	1
+									FROM		SMPBRANCHS Z WITH(NOLOCK)
+									INNER JOIN SMPWORKINFO Z1 WITH(NOLOCK)
+										ON	Z.WORKID = Z1.WORKID
+									INNER JOIN SMPCODES Z2 WITH(NOLOCK)
+										ON	Z2.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+										AND	Z1.MAT_KIND = Z2.CODEVAL1
+									WHERE	Z.BRANCHID = B.BRANCHID
+									AND		Z2.CODEVAL2 = #{loginUserDto.skMngFlag}
+							   )
+		</if>
+							 GROUP BY DATEPART(YEAR, A.CLOS_BUYI_DATE) , DATEPART(MONTH, A.CLOS_BUYI_DATE)
+						) TBL 
+						GROUP BY TBL.CLOS_YEAR   , TBL.CLOS_MONTH  
+			   ) A CROSS JOIN  
+			   (
+			    SELECT 1 AS TYPE UNION ALL 
+			    SELECT 2 UNION ALL
+				SELECT 3 
+				) B CROSS JOIN  
+				(
+				SELECT 1 AS MONTH UNION ALL 
+				SELECT 2 UNION ALL
+				SELECT 3 UNION ALL
+				SELECT 4 UNION ALL
+				SELECT 5 UNION ALL
+				SELECT 6 UNION ALL
+				SELECT 7 UNION ALL
+				SELECT 8 UNION ALL
+				SELECT 9 UNION ALL
+				SELECT 10 UNION ALL
+				SELECT 11 UNION ALL
+				SELECT 12 
+				) C
+		GROUP BY A.CLOS_YEAR , B.TYPE 
+		ORDER BY B.TYPE
+	</select>
+	
+	<select id="selectAnalysisSalesListCnt" resultType="java.util.HashMap">
+		/* analysis.selectAnalysisSalesListCnt */
+		SELECT	CONVERT(INT, ISNULL ( ROUND( SUM(DTLIST.SALE_PROD_AMOU),-3), 0)*0.001) AS TOTAL_AMOU
+		FROM		MSSALM SALM  WITH(NOLOCK) 
+			INNER JOIN	MRORDTLIST DTLIST	 WITH(NOLOCK) ON	SALM.SALE_SEQU_NUMB = DTLIST.SALE_SEQU_NUMB 
+			INNER JOIN SMPBORGS BORGS	 WITH(NOLOCK) 	ON SALM.CLIENTID = BORGS.BORGID  
+		WHERE	BORGS.BORGTYPECD = 'CLT'
+			AND SALM.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultToYear} + '0101')
+			AND CONVERT(DATETIME, #{srcResultToYear}+'1231 23:59')
+		<if test="(srcGroupId neq '0'.toString()) and (srcClientId neq '0'.toString()) and (srcBranchId eq '0'.toString())">
+	 		AND BORGS.BORGID = #{srcClientId} 
+		</if>
+		<if test="@MybatisUtils@isNotEmpty(loginUserDto.skMngFlag)">
+			AND EXISTS(
+				SELECT	1
+				FROM		SMPBRANCHS Z WITH(NOLOCK)
+				INNER JOIN SMPWORKINFO Z1 WITH(NOLOCK)
+					ON	Z.WORKID = Z1.WORKID
+				INNER JOIN SMPCODES Z2 WITH(NOLOCK)
+					ON	Z2.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+					AND	Z1.MAT_KIND = Z2.CODEVAL1
+				WHERE	Z.BRANCHID = DTLIST.BRANCHID
+				AND		Z2.CODEVAL2 = #{loginUserDto.skMngFlag}
+			)
+		</if>
+		AND SALM.SAP_JOUR_NUMB IS NOT NULL
+	</select>
+	
+	<select id="selectAnalysisSalesList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisSalesList */
+		SELECT BORGID
+		     , BORGNM
+			 , BUSINESSNUM
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 1 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M1
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 2 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M2
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 3 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M3
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 4 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M4
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 5 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M5
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 6 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M6
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 7 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M7
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 8 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M8
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 9 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END)  ,-3)*0.001) AS M9
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 10 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M10
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 11 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M11
+			 , CONVERT(INT, ROUND( SUM(CASE WHEN CLOS_MONTH = 12 AND CLOS_MONTH = CP.CPMON   THEN  SALE_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M12
+			 , CONVERT(INT, ROUND( SUM(SALE_REQU_AMOU) / 12 ,-3)*0.001) AS SUMMARY_TOTA_AMOU
+			 , CONVERT(INT, ROUND( #{totalAmou} , -3)*0.001) AS sum_sale_prod_amou
+			 , CLIENTID
+		  FROM (
+				   (	 
+					SELECT BORGS.BORGID
+						 , BORGS.BORGNM
+						 , DATEPART(MONTH, CLOS_SALE_DATE) AS CLOS_MONTH
+						 , ISNULL ( SUM(DTLIST.SALE_PROD_AMOU), 0) AS SALE_REQU_AMOU 
+						 , BORGS.BORGID AS CLIENTID
+						 , (select t.businessnum from smpbranchs t  WITH(NOLOCK)  where t.branchid = SALM.branchid) as BUSINESSNUM
+					FROM MSSALM SALM  WITH(NOLOCK) 
+					INNER JOIN MRORDTLIST DTLIST  WITH(NOLOCK) ON SALM.SALE_SEQU_NUMB = DTLIST.SALE_SEQU_NUMB 
+					INNER JOIN SMPBORGS BORGS WITH(NOLOCK)  ON SALM.CLIENTID = BORGS.BORGID 
+					 WHERE BORGS.BORGTYPECD = 'CLT'
+					   AND SALM.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultToYear}+'0101') AND CONVERT(DATETIME, #{srcResultToYear}+'1231 23:59')
+					   AND SALM.SAP_JOUR_NUMB IS NOT NULL
+	 				<if test="(srcGroupId neq '0'.toString()) and (srcClientId neq '0'.toString()) and (srcBranchId eq '0'.toString())">
+	 				   AND BORGS.BORGID = #{srcClientId} 
+					</if>
+					<if test="@MybatisUtils@isNotEmpty(loginUserDto.skMngFlag)">
+						AND EXISTS(
+							SELECT	1
+							FROM		SMPBRANCHS Z WITH(NOLOCK)
+							INNER JOIN SMPWORKINFO Z1 WITH(NOLOCK)
+								ON	Z.WORKID = Z1.WORKID
+							INNER JOIN SMPCODES Z2 WITH(NOLOCK)
+								ON	Z2.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+								AND	Z1.MAT_KIND = Z2.CODEVAL1
+							WHERE	Z.BRANCHID = DTLIST.BRANCHID
+							AND		Z2.CODEVAL2 = #{loginUserDto.skMngFlag}
+						)
+					</if>
+					 GROUP BY BORGS.BORGID , BORGS.BORGNM  ,DATEPART(MONTH, CLOS_SALE_DATE), SALM.branchid
+				   ) XX CROSS JOIN 
+				   (
+					SELECT 1 AS CPMON UNION ALL 
+					SELECT 2 UNION ALL
+					SELECT 3 UNION ALL
+					SELECT 4 UNION ALL
+					SELECT 5 UNION ALL
+					SELECT 6 UNION ALL
+					SELECT 7 UNION ALL
+					SELECT 8 UNION ALL
+					SELECT 9 UNION ALL
+					SELECT 10 UNION ALL
+					SELECT 11 UNION ALL
+					SELECT 12 
+				   )  CP
+			   )
+		 GROUP BY BORGID, BORGNM, CLIENTID, BUSINESSNUM
+		 order by SUMMARY_TOTA_AMOU desc
+	</select>
+	
+	<select id="selectAnalysisBuyList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisBuyList */
+		SELECT BORGID
+		     , BORGNM
+		     , BUSINESSNUM
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 1 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M1
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 2 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M2
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 3 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M3
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 4 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M4
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 5 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M5
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 6 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M6
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 7 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M7
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 8 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M8
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 9 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END) ,-3)*0.001) AS M9
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 10 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END),-3)*0.001) AS M10
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 11 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END),-3)*0.001) AS M11
+			 , CONVERT(INT,ROUND( SUM(CASE WHEN CLOS_MONTH = 12 AND CLOS_MONTH = CP.CPMON   THEN  BUYI_REQU_AMOU ELSE 0 END),-3)*0.001) AS M12
+			 , CONVERT(INT,ROUND( SUM(BUYI_REQU_AMOU) / 12,-3)*0.001)  AS SUMMARY_TOTA_AMOU
+		  FROM (
+				   (	 
+					SELECT BUYM.VENDORID AS BORGID      
+					     , VENDOR.VENDORNM  AS BORGNM            
+						 , DATEPART(MONTH, CLOS_BUYI_DATE) AS CLOS_MONTH
+						 , SUM(BUYM.BUYI_REQU_AMOU) AS BUYI_REQU_AMOU     
+						 , VENDOR.BUSINESSNUM          
+					  FROM MSBUYM BUYM  WITH(NOLOCK) 
+					  left outer join SMPVENDORS VENDOR WITH(NOLOCK) 
+					  		on BUYM.vendorid = VENDOR.VENDORID     
+					 WHERE BUYM.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultToYear} + '0101') AND CONVERT(DATETIME, #{srcResultToYear} + '1231 23:59')                      
+					   AND BUYM.SAP_JOUR_NUMB IS NOT NULL   
+					   <if test="srcVendorId != null and srcVendorId neq ''">
+						AND VENDOR.VENDORID = #{srcVendorId}	
+						</if>
+					 GROUP BY BUYM.VENDORID , VENDOR.VENDORNM , DATEPART(MONTH, CLOS_BUYI_DATE), BUSINESSNUM
+				   ) XX CROSS JOIN 
+				   (
+					SELECT 1 AS CPMON UNION ALL 
+					SELECT 2 UNION ALL
+					SELECT 3 UNION ALL
+					SELECT 4 UNION ALL
+					SELECT 5 UNION ALL
+					SELECT 6 UNION ALL
+					SELECT 7 UNION ALL
+					SELECT 8 UNION ALL
+					SELECT 9 UNION ALL
+					SELECT 10 UNION ALL
+					SELECT 11 UNION ALL
+					SELECT 12 
+				   )  CP
+			   )  
+		 GROUP BY BORGID, BORGNM, BUSINESSNUM 
+		 ORDER BY SUMMARY_TOTA_AMOU DESC
+	</select>
+	
+	<select id="selectAnalysisCustomerList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisCustomerList */  
+		 SELECT AA.CLIENTID
+			 , AA.BORGNM
+			 , SUM(SALE_REQU_AMOU) AS SALE_REQU_AMOU   
+			 , SUM(PURC_PROD_AMOU) AS PURC_PROD_AMOU  
+			 , SUM(SALE_REQU_AMOU) - SUM(PURC_PROD_AMOU) AS PROF_AMOU
+			 , AA.BUSINESSNUM
+		FROM ( 
+			SELECT AA.CLIENTID 
+			     , BORGS.BORGNM
+				 , AA.SALE_SEQU_NUMB 
+				 --, AA.SALE_REQU_AMOU
+				 , ISNULL ( SUM(DTLIST.SALE_PROD_AMOU), 0) AS SALE_REQU_AMOU
+				 , ISNULL ( SUM(DTLIST.PURC_PROD_AMOU), 0) AS PURC_PROD_AMOU  
+				 , AA.BUSINESSNUM
+			  FROM ( 
+					SELECT A.CLIENTID                    
+						 , A.SALE_SEQU_NUMB AS SALE_SEQU_NUMB                    
+						 , SUM(A.SALE_REQU_AMOU) AS SALE_REQU_AMOU
+						 , (select t.businessnum from smpbranchs t  WITH(NOLOCK) where t.branchid = A.branchid) as BUSINESSNUM
+					  FROM MSSALM A      WITH(NOLOCK)            
+					 WHERE A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))
+					 <if test="(srcClientId neq '0'.toString())"> 
+		 				AND A.CLIENTID = #{srcClientId}
+		 			</if> 			
+					   AND A.SAP_JOUR_NUMB IS NOT NULL
+					GROUP BY A.CLIENTID , A.SALE_SEQU_NUMB, A.branchid 
+				   ) AA LEFT OUTER JOIN  MRORDTLIST DTLIST  WITH(NOLOCK) ON AA.SALE_SEQU_NUMB  = DTLIST.SALE_SEQU_NUMB
+				        INNER JOIN SMPBORGS BORGS  WITH(NOLOCK) ON AA.clientid = BORGS.BORGID 				 						        
+			GROUP BY AA.CLIENTID , BORGS.BORGNM , AA.SALE_SEQU_NUMB , AA.SALE_REQU_AMOU, AA.BUSINESSNUM  
+		) AA 
+		GROUP BY AA.CLIENTID , AA.BORGNM, AA.BUSINESSNUM
+		 <if test="srcSaleProdAmouFrom != null and srcSaleProdAmouFrom != ''">
+		 	<if test="srcSaleProdAmouEnd != null and srcSaleProdAmouEnd != ''">
+			HAVING SUM(SALE_REQU_AMOU) BETWEEN #{srcSaleProdAmouFrom} AND #{srcSaleProdAmouEnd}
+		</if>
+		<if test="srcSaleProdAmouEnd == null or srcSaleProdAmouEnd == ''">
+					<![CDATA[
+		 			HAVING SUM(SALE_REQU_AMOU) >= #{srcSaleProdAmouFrom}  
+		 		]]> 
+		 	</if>
+		 </if>
+		 <if test="srcSaleProdAmouEnd != null and srcSaleProdAmouEnd != ''">
+		 <if test="srcSaleProdAmouFrom == null or srcSaleProdAmouFrom == ''">
+		 		<![CDATA[
+					HAVING SUM(SALE_REQU_AMOU) <= #{srcSaleProdAmouEnd}  
+			]]>  
+		</if>
+		 </if>
+		order by SALE_REQU_AMOU desc
+	</select>
+	
+	<select id="selectAnalysisCustomerListDetail" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisCustomerListDetail */
+			SELECT AA.branchID
+			     , AA.BORGNM
+			     , CONVERT(INT, ROUND(SUM(SALE_REQU_AMOU),-3)*0.001) AS SALE_REQU_AMOU   
+				 , CONVERT(INT, ROUND(SUM(PURC_PROD_AMOU),-3)*0.001) AS PURC_PROD_AMOU  
+				 , CONVERT(INT, ROUND(SUM(SALE_REQU_AMOU) - SUM(PURC_PROD_AMOU),-3)*0.001) AS PROF_AMOU
+			  FROM ( 
+					SELECT AA.branchID 
+					     , BORGS.BORGNM
+						 , AA.SALE_SEQU_NUMB 
+						 , AA.SALE_REQU_AMOU
+						 , ISNULL ( SUM(DTLIST.PURC_PROD_AMOU), 0) AS PURC_PROD_AMOU  
+					  FROM ( 
+							SELECT A.branchID                    
+								 , A.SALE_SEQU_NUMB AS SALE_SEQU_NUMB                    
+								 , SUM(A.SALE_REQU_AMOU) AS SALE_REQU_AMOU                    
+							  FROM MSSALM A WITH(NOLOCK) 
+							 WHERE A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))                      
+							   AND A.SAP_JOUR_NUMB IS NOT NULL
+							   AND A.CLIENTID = #{srcClientId}
+							GROUP BY A.branchID , A.SALE_SEQU_NUMB 
+						   ) AA 
+						   LEFT OUTER JOIN  MRORDTLIST DTLIST  WITH(NOLOCK) ON AA.SALE_SEQU_NUMB  = DTLIST.SALE_SEQU_NUMB
+						   INNER JOIN SMPBORGS BORGS WITH(NOLOCK)  ON AA.branchID = BORGS.BORGID 
+					GROUP BY AA.branchID , BORGS.BORGNM , AA.SALE_SEQU_NUMB , AA.SALE_REQU_AMOU 
+				) AA 
+			  GROUP BY AA.branchID , AA.BORGNM
+			  order by SALE_REQU_AMOU desc
+	</select>
+	
+	
+	<sql id="selectAnalysisCustomerProductListSql">
+		FROM	MSSALM A WITH(NOLOCK) 
+		,		MRORDTLIST B WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPVENDORS C  WITH(NOLOCK) ON B.VENDORID = C.VENDORID
+		WHERE	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))
+		AND	A.SAP_JOUR_NUMB IS NOT NULL
+		AND	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+		<if test="clientid != null and clientid neq ''">
+		AND	A.CLIENTID = #{clientid}
+		</if>
+		<if test="branchid != null and branchid neq ''">
+		AND	A.BRANCHID = #{branchid}
+		</if>
+	</sql>
+	<select id="selectAnalysisCustomerProductListCnt" resultType="int">
+		/* analysis.selectAnalysisCustomerProductListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectAnalysisCustomerProductListSql"/>
+	</select>
+	<select id="selectAnalysisCustomerProductList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisCustomerProductList */
+		SELECT	B.GOOD_NAME
+		,		DBO.FNS_BORGNAMEBYBORGID(B.VENDORID) AS VENDORNM
+		,		C.BUSINESSNUM
+		,		CONVERT(INT,ROUND(B.SALE_PROD_AMOU,-3)*0.001) AS SALE_PROD_AMOU
+		,		CONVERT(INT,ROUND(B.PURC_PROD_AMOU,-3)*0.001) AS PURC_PROD_AMOU
+		,		CONVERT(INT,ROUND(B.SALE_PROD_AMOU - B.PURC_PROD_AMOU,-3)*0.001) AS PROF_AMOU
+		<include refid="selectAnalysisCustomerProductListSql"/>
+		ORDER BY B.SALE_PROD_AMOU DESC
+	</select>
+	
+	<select id="selectAnalysisVendorList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisVendorList */
+		SELECT AA.vendorid  AS VENDORID 
+		     , VENDOR.VENDORNM AS BORGNM  
+			 , ISNULL ( SUM(DTLIST.sale_prod_amou), 0) AS sale_prod_amou   
+			 , ISNULL ( SUM(DTLIST.PURC_PROD_AMOU), 0) AS PURC_PROD_AMOU    
+			 , ISNULL ( SUM(DTLIST.sale_prod_amou), 0) - ISNULL ( SUM(DTLIST.PURC_PROD_AMOU), 0) AS PROF_AMOU     
+		     , RANK() OVER (ORDER BY SUM(DTLIST.purc_prod_amou ) DESC) AS RANK 
+		     , VENDOR.BUSINESSNUM
+		  FROM ( 
+				SELECT A.vendorid
+					 , A.BUYI_SEQU_NUMB 
+				  FROM MSBUYM A  WITH(NOLOCK) 
+				 WHERE A.clos_buyi_date BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))                      
+				   AND A.SAP_JOUR_NUMB IS NOT NULL
+				 GROUP BY A.vendorid , A.BUYI_SEQU_NUMB
+		 		) AA LEFT OUTER JOIN MRORDTLIST DTLIST  WITH(NOLOCK) ON AA.BUYI_SEQU_NUMB  = DTLIST.BUYI_SEQU_NUMB
+				     INNER JOIN SMPVENDORS VENDOR WITH(NOLOCK)  ON AA.VENDORID = VENDOR.VENDORID
+				<if test="srcVendorId != null and srcVendorId neq ''">
+					 AND VENDOR.vendorid = #{srcVendorId}
+				</if>
+		 GROUP BY AA.vendorid , VENDOR.VENDORNM, VENDOR.BUSINESSNUM
+	</select>
+	
+	<select id="selectAnalysisVendorProductList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisVendorProductList */
+		SELECT	A.BUYI_SEQU_NUMB
+		,		B.GOOD_NAME
+		,		CONVERT(INT, ROUND(B.sale_prod_amou,-3)*0.001) AS sale_prod_amou
+		,		CONVERT(INT, ROUND(B.purc_prod_AMOU,-3)*0.001) AS purc_prod_AMOU
+		,		CONVERT(INT, ROUND(B.sale_prod_amou - B.purc_prod_AMOU, -3)*0.001) AS PROF_AMOU
+		FROM	MSBUYM A WITH(NOLOCK) 
+		,		MRORDTLIST B WITH(NOLOCK) 
+		WHERE	A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))
+		AND	A.sap_jour_numb IS NOT NULL
+		AND	A.BUYI_SEQU_NUMB = B.BUYI_SEQU_NUMB
+		AND	A.VENDORID = #{vendorid}
+	</select>
+	
+	<select id="selectAnalysisAreaList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisAreaList */
+		SELECT	AREATYPE
+		,		ISNULL(dbo.FNS_CODENM1BYCODEVAL1('DELI_AREA_CODE',AREATYPE), 'X') AS AREATYPENM
+		,		SUM(SALE) AS SALE_REQU_AMOU
+		,		SUM(BUYI) AS PURC_REQU_AMOU
+		,		SUM(SALE) - SUM(BUYI) AS PROF_AMOU
+		FROM	(	SELECT	'SALE' AS GUBUN
+					,		ISNULL(C.AREATYPE, '0') AS AREATYPE
+					,		A.SALE_REQU_AMOU AS SUM_AMOU
+					,		A.SALE_SEQU_NUMB
+					FROM	MSSALM A WITH(NOLOCK) 
+					,		SMPBORGS B WITH(NOLOCK) 
+					,		SMPBRANCHS C WITH(NOLOCK) 
+					WHERE	A.SAP_JOUR_NUMB IS NOT NULL
+					AND	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))
+					AND	A.CLIENTID = (	CASE
+													WHEN DBO.FNS_BORGTYPECD_BY_BORGID(A.CLIENTID)='CLT'
+													THEN B.CLIENTID
+													ELSE B.BORGID
+												END)
+					AND	B.ISKEY = (	CASE
+												WHEN DBO.FNS_BORGTYPECD_BY_BORGID(A.CLIENTID)='CLT'
+												THEN '1'
+												ELSE B.ISKEY
+											END)
+					AND	B.BORGID = C.BRANCHID
+					UNION ALL
+					SELECT	'BUYI' AS GUBUN
+					,		ISNULL(B.AREATYPE, '0') AS AREATYPE
+					,		A.BUYI_REQU_AMOU AS SUM_AMOU
+					,		A.BUYI_SEQU_NUMB
+					FROM	MSBUYM A WITH(NOLOCK) 
+					,		SMPVENDORS B WITH(NOLOCK) 
+					WHERE	A.SAP_JOUR_NUMB IS NOT NULL
+					AND	A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))
+					AND	A.VENDORID = B.VENDORID
+		) XX
+		PIVOT(SUM (SUM_AMOU)FOR GUBUN IN(SALE, BUYI)) AS PVT
+		GROUP BY AREATYPE
+	</select>
+	
+	<select id="selectAnalysisAreaProductList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisAreaProductList */
+		SELECT	AREATYPE
+		,		GOOD_NAME
+		,		DBO.FNS_BORGNAMEBYBORGID(VENDORID) AS VENDORNM
+		,		ISNULL(SALE, 0) AS SALE_PROD_AMOU
+		,		ISNULL(PURC, 0) AS PURC_PROD_AMOU
+		,		ISNULL(SALE, 0) - ISNULL(PURC, 0) AS PROF_AMOU
+		FROM	(	SELECT	'SALE' AS GUBUN
+					,		D.good_iden_numb
+					,		MAX(D.good_name) AS GOOD_NAME
+					,		MAX(D.VENDORID) AS VENDORID
+					,		ISNULL(C.AREATYPE, '0') AS AREATYPE
+					,		SUM(D.SALE_PROD_AMOU) AS PROD_AMOU
+					FROM	MSSALM A WITH(NOLOCK) 
+					,		MRORDTLIST D WITH(NOLOCK) 
+					,		SMPBORGS B WITH(NOLOCK) 
+					,		SMPBRANCHS C WITH(NOLOCK) 
+					WHERE	A.SAP_JOUR_NUMB IS NOT NULL
+					AND	A.SALE_SEQU_NUMB = D.SALE_SEQU_NUMB
+					AND	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))
+					AND	A.CLIENTID = (	CASE
+													WHEN DBO.FNS_BORGTYPECD_BY_BORGID(A.CLIENTID)='CLT'
+													THEN B.CLIENTID
+													ELSE B.BORGID
+												END)
+					AND	B.ISKEY = (	CASE
+												WHEN DBO.FNS_BORGTYPECD_BY_BORGID(A.CLIENTID)='CLT'
+												THEN '1'
+												ELSE B.ISKEY
+											END)
+					AND	B.BORGID = C.BRANCHID
+					GROUP BY D.good_iden_numb, C.AREATYPE
+					UNION ALL
+					SELECT	'PURC' AS GUBUN
+					,		D.good_iden_numb
+					,		MAX(D.good_name) AS GOOD_NAME
+					,		MAX(D.VENDORID) AS VENDORID
+					,		ISNULL(B.AREATYPE, '0') AS AREATYPE
+					,		SUM(D.PURC_PROD_AMOU) AS PROD_AMOU
+					FROM	MSBUYM A WITH(NOLOCK) 
+					,		MRORDTLIST D WITH(NOLOCK) 
+					,		SMPVENDORS B WITH(NOLOCK) 
+					WHERE	A.SAP_JOUR_NUMB IS NOT NULL
+					AND	A.BUYI_SEQU_NUMB = D.buyi_sequ_numb
+					AND	A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))
+					AND	A.VENDORID = B.VENDORID
+					GROUP BY D.good_iden_numb, B.AREATYPE
+		)XX
+		PIVOT (SUM (PROD_AMOU) FOR GUBUN IN (SALE, PURC))AS PVT
+		<if test="areatype != null and areatype neq ''">
+		WHERE	AREATYPE = #{areatype}
+		</if>
+	</select>
+	
+	<select id="selectAnalysisProductListCnt" resultType="java.util.HashMap">
+		/* analysis.selectAnalysisProductListCnt */
+		WITH TMP_TABLE(
+				CATE_ID 
+			,	MAJO_CODE_NAME 
+			,	LEV 
+			,	CATE_NAME1
+			,	CATE_NAME2 
+			,	CATE_NAME3  
+		)AS(
+			SELECT	CATE_ID
+			,		MAJO_CODE_NAME
+			,		CONVERT(INT, CATE_LEVEL) AS LEV
+			,		CONVERT(VARCHAR(255),'')
+			,		CONVERT(VARCHAR(255),'')
+			,		CONVERT(VARCHAR(255),'')
+			FROM MCCATEGORYMASTER MASTERCATE WITH(NOLOCK) 
+			WHERE CATE_ID = 0
+			UNION ALL
+			SELECT	OL.CATE_ID
+			,		OL.MAJO_CODE_NAME
+			,		CTE.LEV+1
+			,		CONVERT(VARCHAR(255), (CASE WHEN CTE.LEV+1 = 1 THEN OL.MAJO_CODE_NAME
+												ELSE CTE.CATE_NAME1	
+											END)
+					)
+			,		CONVERT(VARCHAR(255), (CASE WHEN CTE.LEV+1 = 2 THEN OL.MAJO_CODE_NAME
+												ELSE CTE.CATE_NAME2	
+											END)
+					)
+			,		CONVERT(VARCHAR(255), (CASE WHEN CTE.LEV+1 = 3 THEN OL.MAJO_CODE_NAME
+												ELSE CTE.CATE_NAME3	
+											END)
+					)
+			FROM MCCATEGORYMASTER OL WITH(NOLOCK) 
+			INNER JOIN TMP_TABLE CTE
+				ON OL.REF_CATE_SEQ = CTE.CATE_ID
+		)
+		SELECT	COUNT(1) AS CNT
+		,	SUM(SALE_PROD_AMOU) AS SUM_SALE_PROD_AMOU
+		,	SUM(ORDE_QUAN) AS SUM_ORDE_QUAN
+		FROM (
+			SELECT 1 AS CNT
+		,	SALE_PROD_AMOU
+		,	ORDE_QUAN
+		,	AA.GOOD_IDEN_NUMB
+		,	AA.GOOD_NAME
+		,	AA.VENDORID
+		,	AA.GOOD_SPEC
+			<include refid="selectAnalysisProductListSql"/>
+		) A
+		LEFT OUTER JOIN MCGOODVENDOR BB WITH(NOLOCK) 
+			ON A.GOOD_IDEN_NUMB = BB.GOOD_IDEN_NUMB
+			AND A.VENDORID = BB.VENDORID
+		LEFT OUTER JOIN MCGOOD CC WITH(NOLOCK) 
+			ON BB.GOOD_IDEN_NUMB = CC.GOOD_IDEN_NUMB
+		LEFT OUTER JOIN TMP_TABLE DD
+			ON CC.cate_id = DD.cate_id
+			AND DD.LEV = '3'
+		LEFT OUTER JOIN SMPCODES EE WITH(NOLOCK) 
+			ON 	CC.GOOD_TYPE = EE.CODEVAL1
+			AND EE.CODETYPECD = 'ORDERGOODSTYPE'
+			AND EE.ISUSE = '1'
+		LEFT OUTER JOIN SMPUSERS FF WITH(NOLOCK) 
+			ON CC.PRODUCT_MANAGER = FF.USERID
+		WHERE 1=1
+		<if test="srcGoodName != null and srcGoodName != ''">
+		AND (
+			 A.GOOD_NAME LIKE '%'+ #{srcGoodName} +'%'
+			 OR A.good_spec LIKE '%'+ #{srcGoodName} +'%' 
+			 OR BB.good_same_word LIKE '%'+ #{srcGoodName} +'%'
+			 OR CC.GOOD_IDEN_NUMB LIKE '%'+ #{srcGoodName} +'%'
+			 <!-- 상품규격, 동의어, 상품코드도 검색이 되도록 조건추가 -->
+		)
+		</if>
+		<if test="srcCateId != null and srcCateId != ''">
+		AND CC.CATE_ID  IN (SELECT CATE_ID FROM FNS_CATEGORYIDS_BY_PARENTCATEID(#{srcCateId})) 
+		</if>
+		<if test="srcProductManager != null and srcProductManager != ''">
+		AND CC.PRODUCT_MANAGER =#{srcProductManager} 
+		</if>
+		<if test="srcGoodRegYear != null and srcGoodRegYear != ''">
+		AND CC.GOOD_REG_YEAR = #{srcGoodRegYear}
+		</if>		
+	</select>
+	
+	<select id="selectAnalysisProductList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisProductList */
+		WITH TMP_TABLE( 
+				CATE_ID 
+			,	MAJO_CODE_NAME 
+			,	LEV 
+			,	CATE_NAME1
+			,	CATE_NAME2 
+			,	CATE_NAME3  
+		) AS (
+			SELECT  CATE_ID 
+			,		MAJO_CODE_NAME 
+			,		CONVERT (INT , CATE_LEVEL ) AS LEV 
+			,		CONVERT (VARCHAR(255) , '' )
+			,		CONVERT (VARCHAR(255) , '' )
+			,		CONVERT (VARCHAR(255) , '' ) 
+			FROM    MCCATEGORYMASTER MASTERCATE WITH(NOLOCK) 
+			WHERE   CATE_ID = 0
+			UNION ALL 
+			SELECT	OL.CATE_ID 
+			,		OL.MAJO_CODE_NAME 
+			,		CTE.LEV+1 
+			,		CONVERT(VARCHAR(255), (CASE	WHEN CTE.LEV+1 = 1 THEN OL.MAJO_CODE_NAME 
+													ELSE CTE.CATE_NAME1
+											END))
+			,		CONVERT(VARCHAR(255), (CASE	WHEN CTE.LEV+1 = 2 THEN OL.MAJO_CODE_NAME 
+												ELSE CTE.CATE_NAME2 
+											END))
+			,		CONVERT(VARCHAR(255), (CASE	WHEN CTE.LEV+1 = 3 THEN OL.MAJO_CODE_NAME 
+												ELSE CTE.CATE_NAME3 
+											END))
+			FROM	MCCATEGORYMASTER OL  WITH(NOLOCK) 
+			,		TMP_TABLE CTE 
+			WHERE	OL.REF_CATE_SEQ = CTE.CATE_ID
+		)
+		SELECT	AA.GROUPID
+		,		AA.CLIENTID
+		,		AA.BRANCHID
+		,		AA.GOOD_IDEN_NUMB
+		,		AA.VENDORID
+		,		AA.VENDORNM
+		,		AA.GOOD_NAME
+		,		AA.ORDE_CNT
+		,		AA.ORDE_QUAN
+		,		AA.SALE_PROD_AMOU
+		,		AA.PURC_PROD_AMOU
+		,		AA.PROF_AMOU
+		,		AA.BUSINESSNUM
+		,		DD.CATE_NAME1
+		,		DD.CATE_NAME2
+		,		DD.CATE_NAME3
+		,		#{sum_sale_prod_amou} AS SUM_SALE_PROD_AMOU
+		,		#{sum_orde_quan} AS SUM_ORDE_QUAN
+		,		EE.CODENM1 AS goodClasCode
+		,		AA.GOOD_SPEC AS good_Spec
+		,		FF.USERNM AS productManager
+		<include refid="selectAnalysisProductListSql"/>
+		LEFT OUTER JOIN MCGOODVENDOR BB WITH(NOLOCK) 
+			ON AA.GOOD_IDEN_NUMB = BB.GOOD_IDEN_NUMB
+			AND AA.VENDORID = BB.VENDORID
+		LEFT OUTER JOIN MCGOOD CC WITH(NOLOCK) 
+			ON BB.GOOD_IDEN_NUMB = CC.GOOD_IDEN_NUMB
+		LEFT OUTER JOIN TMP_TABLE DD
+			ON CC.cate_id = DD.cate_id
+			AND DD.LEV = '3'
+		LEFT OUTER JOIN SMPCODES EE WITH(NOLOCK) 
+			ON 	CC.GOOD_TYPE = EE.CODEVAL1
+			AND EE.CODETYPECD = 'ORDERGOODSTYPE'
+			AND EE.ISUSE = '1'
+		LEFT OUTER JOIN SMPUSERS FF WITH(NOLOCK) 
+			ON CC.PRODUCT_MANAGER = FF.USERID
+		WHERE 1=1
+		<if test="srcGoodName != null and srcGoodName != ''">
+		AND (
+			AA.GOOD_NAME LIKE '%'+ #{srcGoodName} +'%'
+			OR AA.good_spec LIKE '%'+ #{srcGoodName} +'%' 
+			OR BB.good_same_word LIKE '%'+ #{srcGoodName} +'%'
+			OR AA.GOOD_IDEN_NUMB LIKE '%'+ #{srcGoodName} +'%'
+			<!-- 상품규격, 동의어, 상품코드도 검색이 되도록 조건추가 -->
+			)
+		</if>
+		<if test="srcCateId != null and srcCateId != ''">
+		AND CC.CATE_ID  IN (SELECT CATE_ID FROM FNS_CATEGORYIDS_BY_PARENTCATEID(#{srcCateId})) 
+		</if>
+		<if test="srcProductManager != null and srcProductManager != ''">
+		AND CC.PRODUCT_MANAGER = #{srcProductManager}
+		</if>
+		<if test="srcGoodRegYear != null and srcGoodRegYear != ''">
+		AND CC.GOOD_REG_YEAR = #{srcGoodRegYear}
+		</if>
+		ORDER BY ${orderString}
+	</select>
+	
+	<sql id="selectAnalysisProductListSql">/*123*/
+	FROM	(	SELECT	MAX(B.GROUPID) AS GROUPID
+				,		MAX(B.CLIENTID) AS CLIENTID
+				,		MAX(B.BRANCHID) AS BRANCHID
+				,		B.GOOD_IDEN_NUMB
+				,		B.VENDORID
+				,		dbo.FNS_BorgNameByBorgID(B.VENDORID) AS VENDORNM
+				,		B.GOOD_NAME
+				,		COUNT(B.ORDE_IDEN_NUMB)	AS ORDE_CNT
+				,		SUM(B.SALE_PROD_QUAN)	AS ORDE_QUAN
+				,		SUM(B.SALE_PROD_AMOU)	AS SALE_PROD_AMOU
+				,		SUM(B.PURC_PROD_AMOU)	AS PURC_PROD_AMOU
+				,		SUM(SALE_PROD_AMOU) - SUM(PURC_PROD_AMOU) AS PROF_AMOU
+				,		MAX(C.BUSINESSNUM) AS BUSINESSNUM 
+				,		MAX(B.GOOD_SPEC) AS GOOD_SPEC
+				FROM	MSSALM A WITH(NOLOCK) 
+				,		MRORDTLIST B WITH(NOLOCK) 
+				LEFT OUTER JOIN 
+					SMPVENDORS C WITH(NOLOCK) 
+				ON B.VENDORID = C.VENDORID 
+				WHERE	A.sap_jour_numb IS NOT NULL
+				AND	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+				AND	A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom} + '01') AND DATEADD(DAY, -1, DATEADD(MONTH, 1, CONVERT(DATETIME, #{srcResultTo} + '01 23:59')))
+				<if test="(srcGroupId neq '0'.toString()) and (srcClientId eq '0'.toString()) and (srcBranchId eq '0'.toString())">
+					AND	B.GROUPID = #{srcGroupId}
+				</if>
+				<if test="(srcGroupId neq '0'.toString()) and (srcClientId neq '0'.toString()) and (srcBranchId eq '0'.toString())">
+					AND	B.CLIENTID = #{srcClientId}
+				</if>
+				<if test="(srcGroupId neq '0'.toString()) and (srcClientId neq '0'.toString()) and (srcBranchId neq '0'.toString())">
+					AND	B.BRANCHID = #{srcBranchId}
+				</if>
+				<if test="srcVendorId != null and srcVendorId neq ''">
+					AND	B.VENDORID = #{srcVendorId}
+				</if>
+				<if test="@MybatisUtils@isNotEmpty(loginUserDto.skMngFlag)">
+					AND EXISTS(
+						SELECT	1
+						FROM		SMPBRANCHS Z WITH(NOLOCK)
+						INNER JOIN SMPWORKINFO Z1 WITH(NOLOCK)
+							ON	Z.WORKID = Z1.WORKID
+						INNER JOIN SMPCODES Z2 WITH(NOLOCK)
+							ON	Z2.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+							AND	Z1.MAT_KIND = Z2.CODEVAL1
+						WHERE	Z.BRANCHID = B.BRANCHID
+						AND		Z2.CODEVAL2 = #{loginUserDto.skMngFlag}
+					)
+			</if>
+				GROUP BY B.GOOD_IDEN_NUMB, B.VENDORID, B.GOOD_NAME
+	) AA
+	</sql>
+	
+	<select id="selectWorkInfoList" resultType="java.util.HashMap">
+	/* analysis.selectWorkInfoList */
+		SELECT	WORKID
+		,		USERID
+		,		WORKNM
+		,		IS_SKTS_MANAGE
+		FROM	SMPWORKINFO WITH(NOLOCK) 
+	</select>
+	
+	<select id="selectAnalysisGoodRegYearList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisGoodRegYearList */
+		SELECT	A.*
+		FROM(
+			SELECT	AAAA.codeNmTop
+			,		AAAA.codeNmMid
+			,		CASE WHEN AAAA.WORKNM IS NULL THEN '소계' 
+						 ELSE AAAA.WORKNM
+					END WORKNM
+			,		CASE WHEN AAAA.WORKID IS NULL THEN 99999
+						 ELSE AAAA.WORKID
+					END WORKID
+			,		AAAA.MAT_KIND
+			,		AAAA.M1
+			,		AAAA.N1
+			,		AAAA.PROFIT1
+			,		AAAA.PROFITRATE1
+			,		AAAA.M2
+			,		AAAA.N2
+			,		AAAA.PROFIT2
+			,		AAAA.PROFITRATE2
+			,		AAAA.M3
+			,		AAAA.N3
+			,		AAAA.PROFIT3
+			,		AAAA.PROFITRATE3
+			,		AAAA.M4
+			,		AAAA.N4
+			,		AAAA.PROFIT4
+			,		AAAA.PROFITRATE4
+			,		AAAA.M5
+			,		AAAA.N5
+			,		AAAA.PROFIT5
+			,		AAAA.PROFITRATE5
+			,		AAAA.M6
+			,		AAAA.N6
+			,		AAAA.PROFIT6
+			,		AAAA.PROFITRATE6
+			,		AAAA.M7
+			,		AAAA.N7
+			,		AAAA.PROFIT7
+			,		AAAA.PROFITRATE7
+			,		AAAA.M8
+			,		AAAA.N8
+			,		AAAA.PROFIT8
+			,		AAAA.PROFITRATE8
+			,		AAAA.M9
+			,		AAAA.N9
+			,		AAAA.PROFIT9
+			,		AAAA.PROFITRATE9
+			,		AAAA.M10
+			,		AAAA.N10
+			,		AAAA.PROFIT10
+			,		AAAA.PROFITRATE10
+			,		AAAA.M11
+			,		AAAA.N11
+			,		AAAA.PROFIT11
+			,		AAAA.PROFITRATE11
+			,		AAAA.M12
+			,		AAAA.N12
+			,		AAAA.PROFIT12
+			,		AAAA.PROFITRATE12
+			,		AAAA.MSUMMARY_TOTA_AMOU
+			,		AAAA.NSUMMARY_TOTA_AMOU
+			,		AAAA.TOTA_PROFIT
+			,		AAAA.TOTA_PROFITRATE
+			,		AAAA.DISORDER
+			,		AAAA.TOPDISORDER
+			FROM
+			(
+				SELECT	AAA.codeNmTop
+				,		AAA.codeNmMid
+				,		AAA.MAT_KIND
+				,		AAA.WORKNM
+				,		AAA.WORKID
+				,		SUM(AAA.M1) AS M1
+				,		SUM(AAA.N1) AS N1
+				,		SUM(AAA.PROFIT1) AS PROFIT1
+				,		MAX(AAA.PROFITRATE1) AS PROFITRATE1
+				,		SUM(AAA.M2) AS M2
+				,		SUM(AAA.N2) AS N2
+				,		SUM(AAA.PROFIT2) AS PROFIT2
+				,		MAX(AAA.PROFITRATE2) AS PROFITRATE2
+				,		SUM(AAA.M3) AS M3
+				,		SUM(AAA.N3) AS N3
+				,		SUM(AAA.PROFIT3) AS PROFIT3
+				,		MAX(AAA.PROFITRATE3) AS PROFITRATE3
+				,		SUM(AAA.M4) AS M4
+				,		SUM(AAA.N4) AS N4
+				,		SUM(AAA.PROFIT4) AS PROFIT4
+				,		MAX(AAA.PROFITRATE4) AS PROFITRATE4
+				,		SUM(AAA.M5) AS M5
+				,		SUM(AAA.N5) AS N5
+				,		SUM(AAA.PROFIT5) AS PROFIT5
+				,		MAX(AAA.PROFITRATE5) AS PROFITRATE5
+				,		SUM(AAA.M6) AS M6
+				,		SUM(AAA.N6) AS N6
+				,		SUM(AAA.PROFIT6) AS PROFIT6
+				,		MAX(AAA.PROFITRATE6) AS PROFITRATE6
+				,		SUM(AAA.M7) AS M7
+				,		SUM(AAA.N7) AS N7
+				,		SUM(AAA.PROFIT7) AS PROFIT7
+				,		MAX(AAA.PROFITRATE7) AS PROFITRATE7
+				,		SUM(AAA.M8) AS M8
+				,		SUM(AAA.N8) AS N8
+				,		SUM(AAA.PROFIT8) AS PROFIT8
+				,		MAX(AAA.PROFITRATE8) AS PROFITRATE8
+				,		SUM(AAA.M9) AS M9
+				,		SUM(AAA.N9) AS N9
+				,		SUM(AAA.PROFIT9) AS PROFIT9
+				,		MAX(AAA.PROFITRATE9) AS PROFITRATE9
+				,		SUM(AAA.M10) AS M10
+				,		SUM(AAA.N10) AS N10
+				,		SUM(AAA.PROFIT10) AS PROFIT10
+				,		MAX(AAA.PROFITRATE10) AS PROFITRATE10
+				,		SUM(AAA.M11) AS M11
+				,		SUM(AAA.N11) AS N11
+				,		SUM(AAA.PROFIT11) AS PROFIT11
+				,		MAX(AAA.PROFITRATE11) AS PROFITRATE11
+				,		SUM(AAA.M12) AS M12
+				,		SUM(AAA.N12) AS N12
+				,		SUM(AAA.PROFIT12) AS PROFIT12
+				,		MAX(AAA.PROFITRATE12) AS PROFITRATE12
+				,		SUM(AAA.MSUMMARY_TOTA_AMOU) AS MSUMMARY_TOTA_AMOU
+				,		SUM(AAA.NSUMMARY_TOTA_AMOU) AS NSUMMARY_TOTA_AMOU
+				,		SUM(AAA.TOTA_PROFIT) AS TOTA_PROFIT
+				,		MAX(AAA.TOTA_PROFITRATE) AS TOTA_PROFITRATE
+				,		MAX(AAA.DISORDER) AS DISORDER
+				,		MAX(AAA.TOPDISORDER) AS TOPDISORDER
+				FROM
+				(
+					SELECT	MAX(BB.CODENM1) AS codeNmTop
+					,		MAX(AA.CODENM1) AS codeNmMid
+					,		WORKNM
+					,		WORKID
+					,		MAX(MAT_KIND) AS MAT_KIND
+					,		SUM(M1) AS M1
+					,		SUM(N1) AS N1
+					,		SUM(M1) - SUM(P1) AS PROFIT1
+					,		CASE WHEN SUM(M1) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M1)-SUM(P1))/SUM(M1))*100,0)))+'%' ELSE '0%' END PROFITRATE1
+					,		SUM(M2) AS M2
+					,		SUM(N2) AS N2
+					,		SUM(M2) - SUM(P2) AS PROFIT2
+					,		CASE WHEN SUM(M2) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M2)-SUM(P2))/SUM(M2))*100,0)))+'%' ELSE '0%' END PROFITRATE2
+					,		SUM(M3) AS M3
+					,		SUM(N3) AS N3
+					,		SUM(M3) - SUM(P3) AS PROFIT3
+					,		CASE WHEN SUM(M3) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M3)-SUM(P3))/SUM(M3))*100,0)))+'%' ELSE '0%' END PROFITRATE3
+					,		SUM(M4) AS M4
+					,		SUM(N4) AS N4
+					,		SUM(M4) - SUM(P4) AS PROFIT4
+					,		CASE WHEN SUM(M4) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M4)-SUM(P4))/SUM(M4))*100,0)))+'%' ELSE '0%' END PROFITRATE4
+					,		SUM(M5) AS M5
+					,		SUM(N5) AS N5
+					,		SUM(M5) - SUM(P5) AS PROFIT5
+					,		CASE WHEN SUM(M5) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M5)-SUM(P5))/SUM(M5))*100,0)))+'%' ELSE '0%' END PROFITRATE5
+					,		SUM(M6) AS M6
+					,		SUM(N6) AS N6
+					,		SUM(M6) - SUM(P6) AS PROFIT6
+					,		CASE WHEN SUM(M6) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M6)-SUM(P6))/SUM(M6))*100,0)))+'%' ELSE '0%' END PROFITRATE6
+					,		SUM(M7) AS M7
+					,		SUM(N7) AS N7
+					,		SUM(M7) - SUM(P7) AS PROFIT7
+					,		CASE WHEN SUM(M7) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M7)-SUM(P7))/SUM(M7))*100,0)))+'%' ELSE '0%' END PROFITRATE7
+					,		SUM(M8) AS M8
+					,		SUM(N8) AS N8
+					,		SUM(M8) - SUM(P8) AS PROFIT8
+					,		CASE WHEN SUM(M8) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M8)-SUM(P8))/SUM(M8))*100,0)))+'%' ELSE '0%' END PROFITRATE8
+					,		SUM(M9) AS M9
+					,		SUM(N9) AS N9
+					,		SUM(M9) - SUM(P9) AS PROFIT9
+					,		CASE WHEN SUM(M9) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M9)-SUM(P9))/SUM(M9))*100,0)))+'%' ELSE '0%' END PROFITRATE9
+					,		SUM(M10) AS M10
+					,		SUM(N10) AS N10
+					,		SUM(M10) - SUM(P10) AS PROFIT10
+					,		CASE WHEN SUM(M10) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M10)-SUM(P10))/SUM(M10))*100,0)))+'%' ELSE '0%' END PROFITRATE10
+					,		SUM(M11) AS M11
+					,		SUM(N11) AS N11
+					,		SUM(M11) - SUM(P11) AS PROFIT11
+					,		CASE WHEN SUM(M11) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M11)-SUM(P11))/SUM(M11))*100,0)))+'%' ELSE '0%' END PROFITRATE11
+					,		SUM(M12) AS M12
+					,		SUM(N12) AS N12
+					,		SUM(M12) - SUM(P12) AS PROFIT12
+					,		CASE WHEN SUM(M12) > 0 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(M12)-SUM(P12))/SUM(M12))*100,0)))+'%' ELSE '0%' END PROFITRATE12
+					,		SUM(MSUMMARY_TOTA_AMOU) AS MSUMMARY_TOTA_AMOU
+					,		SUM(NSUMMARY_TOTA_AMOU) AS NSUMMARY_TOTA_AMOU
+					,		SUM(MSUMMARY_TOTA_AMOU) - SUM(BSUMMARY_TOTA_AMOU) AS TOTA_PROFIT
+					,		CASE WHEN SUM(MSUMMARY_TOTA_AMOU) > 0 
+								 THEN CONVERT(VARCHAR, CONVERT(INT, ROUND(((SUM(MSUMMARY_TOTA_AMOU)-SUM(BSUMMARY_TOTA_AMOU))/SUM(MSUMMARY_TOTA_AMOU))*100,0)))+'%'
+								 ELSE '0%'
+							END TOTA_PROFITRATE
+					,		MAX(AA.DISORDER) AS DISORDER
+					,		MAX(BB.DISORDER) AS TOPDISORDER
+					FROM(
+							SELECT	WORKID
+							,		WORKNM
+							,		MAX(MAT_KIND) AS MAT_KIND
+							,		SUM(CASE WHEN CLOS_MONTH = 1 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N1
+							,		0 AS M1
+							,		0 AS P1
+							,		SUM(CASE WHEN CLOS_MONTH = 2 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N2
+							,		0 AS M2
+							,		0 AS P2
+							,		SUM(CASE WHEN CLOS_MONTH = 3 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N3
+							,		0 AS M3
+							,		0 AS P3
+							,		SUM(CASE WHEN CLOS_MONTH = 4 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N4
+							,		0 AS M4
+							,		0 AS P4
+							,		SUM(CASE WHEN CLOS_MONTH = 5 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N5
+							,		0 AS M5
+							,		0 AS P5
+							,		SUM(CASE WHEN CLOS_MONTH = 6 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N6
+							,		0 AS M6
+							,		0 AS P6
+							,		SUM(CASE WHEN CLOS_MONTH = 7 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N7
+							,		0 AS M7
+							,		0 AS P7
+							,		SUM(CASE WHEN CLOS_MONTH = 8 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N8
+							,		0 AS M8
+							,		0 AS P8
+							,		SUM(CASE WHEN CLOS_MONTH = 9 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N9
+							,		0 AS M9
+							,		0 AS P9
+							,		SUM(CASE WHEN CLOS_MONTH = 10 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N10
+							,		0 AS M10
+							,		0 AS P10
+							,		SUM(CASE WHEN CLOS_MONTH = 11 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N11
+							,		0 AS M11
+							,		0 AS P11
+							,		SUM(CASE WHEN CLOS_MONTH = 12 AND CLOS_MONTH = CP.CPMON   THEN  sale_requ_amou ELSE 0 END) AS N12
+							,		0 AS M12
+							,		0 AS P12
+							,		SUM(sale_requ_amou) / 12  AS NSUMMARY_TOTA_AMOU
+							,		0 AS MSUMMARY_TOTA_AMOU
+							,		0 AS BSUMMARY_TOTA_AMOU
+							FROM
+							(
+								(
+									SELECT	W.WORKID
+									,		W.WORKNM
+									,		MAX(W.MAT_KIND) AS MAT_KIND
+									,		DATEPART(MONTH, M.clos_sale_date) AS CLOS_MONTH
+									,		SUM(A.sale_prod_amou) AS  sale_requ_amou
+									FROM mrordtlist A WITH(NOLOCK) 
+									LEFT OUTER JOIN mssalm M WITH(NOLOCK)
+										ON A.sale_sequ_numb = M.sale_sequ_numb
+									LEFT OUTER JOIN SMPBRANCHS S WITH(NOLOCK) 
+										ON M.BRANCHID = S.BRANCHID
+									LEFT OUTER JOIN SMPWORKINFO W WITH(NOLOCK) 
+										ON  S.WORKID = W.WORKID
+									INNER JOIN MCGOODVENDOR V WITH(NOLOCK) 
+										ON A.good_iden_numb = V.good_iden_numb
+										AND A.vendorid = V.vendorid
+									WHERE W.IS_SKTS_MANAGE = '1' --SKTS 관리여부가 '예'인것만
+									AND M.sap_jour_numb IS NOT NULL
+									<if test="srcResultYear != null and srcResultYear neq ''">
+									AND M.clos_sale_date BETWEEN CONVERT(DATETIME, #{srcResultYear} + '0101') AND CONVERT(DATETIME, #{srcResultYear} + '1231 23:59')
+									</if>
+									AND V.good_reg_year = #{srcResultYear}
+									GROUP BY W.WORKID, W.WORKNM, DATEPART(MONTH, M.clos_sale_date)
+								) XX
+								CROSS JOIN
+								(
+									SELECT 1 AS CPMON UNION ALL
+									SELECT 2 UNION ALL
+									SELECT 3 UNION ALL
+									SELECT 4 UNION ALL
+									SELECT 5 UNION ALL
+									SELECT 6 UNION ALL
+									SELECT 7 UNION ALL
+									SELECT 8 UNION ALL
+									SELECT 9 UNION ALL
+									SELECT 10 UNION ALL
+									SELECT 11 UNION ALL
+									SELECT 12
+								)  CP
+							)
+							GROUP BY WORKID, WORKNM
+							UNION ALL
+							SELECT	WORKID
+							,		WORKNM
+							,		MAX(MAT_KIND) AS MAT_KIND
+							,		0 AS N1
+							,		SUM(CASE WHEN CLOS_MONTH = 1 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M1
+							,		SUM(CASE WHEN CLOS_MONTH2 = 1 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P1
+							,		0 AS N2
+							,		SUM(CASE WHEN CLOS_MONTH = 2 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M2
+							,		SUM(CASE WHEN CLOS_MONTH2 = 2 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P2
+							,		0 AS N3
+							,		SUM(CASE WHEN CLOS_MONTH = 3 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M3
+							,		SUM(CASE WHEN CLOS_MONTH2 = 3 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P3
+							,		0 AS N4
+							,		SUM(CASE WHEN CLOS_MONTH = 4 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M4
+							,		SUM(CASE WHEN CLOS_MONTH2 = 4 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P4
+							,		0 AS N5
+							,		SUM(CASE WHEN CLOS_MONTH = 5 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M5
+							,		SUM(CASE WHEN CLOS_MONTH2 = 5 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P5
+							,		0 AS N6
+							,		SUM(CASE WHEN CLOS_MONTH = 6 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M6
+							,		SUM(CASE WHEN CLOS_MONTH2 = 6 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P6
+							,		0 AS N7
+							,		SUM(CASE WHEN CLOS_MONTH = 7 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M7
+							,		SUM(CASE WHEN CLOS_MONTH2 = 7 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P7
+							,		0 AS N8
+							,		SUM(CASE WHEN CLOS_MONTH = 8 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M8
+							,		SUM(CASE WHEN CLOS_MONTH2 = 8 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P8
+							,		0 AS N9
+							,		SUM(CASE WHEN CLOS_MONTH = 9 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M9
+							,		SUM(CASE WHEN CLOS_MONTH2 = 9 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P9
+							,		0 AS N10
+							,		SUM(CASE WHEN CLOS_MONTH = 10 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M10
+							,		SUM(CASE WHEN CLOS_MONTH2 = 10 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P10
+							,		0 AS N11
+							,		SUM(CASE WHEN CLOS_MONTH = 11 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M11
+							,		SUM(CASE WHEN CLOS_MONTH2 = 11 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P11
+							,		0 AS N12
+							,		SUM(CASE WHEN CLOS_MONTH = 12 AND CLOS_MONTH = CP.CPMON   THEN  SALE_PROD_AMOU ELSE 0 END) AS M12
+							,		SUM(CASE WHEN CLOS_MONTH2 = 12 AND CLOS_MONTH2 = CP.CPMON   THEN  PURC_PROD_AMOU ELSE 0 END) AS P12
+							,		0 AS NSUMMARY_TOTA_AMOU
+							,		SUM(SALE_PROD_AMOU) / 12 AS MSUMMARY_TOTA_AMOU
+							,		SUM(PURC_PROD_AMOU) / 12 AS BSUMMARY_TOTA_AMOU
+							FROM (
+									(		
+										SELECT	SUM(A.SALE_PROD_AMOU) AS SALE_PROD_AMOU
+										,		MAX(C.MAT_KIND) AS MAT_KIND
+										,		C.WORKID AS WORKID
+										,		C.WORKNM AS WORKNM
+										,		DATEPART(MONTH, D.CLOS_SALE_DATE) AS CLOS_MONTH
+										,		DATEPART(MONTH, D.CLOS_SALE_DATE) AS CLOS_MONTH2
+										,		SUM(A.PURC_PROD_AMOU) AS PURC_PROD_AMOU
+										FROM  MRORDTLIST A WITH(NOLOCK) 
+										LEFT OUTER JOIN MSSALM D WITH(NOLOCK) 
+											ON A.SALE_SEQU_NUMB = D.SALE_SEQU_NUMB
+										LEFT OUTER JOIN SMPBRANCHS B WITH(NOLOCK) 
+											ON A.BRANCHID = B.BRANCHID
+										LEFT OUTER JOIN SMPWORKINFO C WITH(NOLOCK) 
+											ON B.WORKID = C.WORKID
+										WHERE  D.sale_sequ_numb IS NOT NULL
+										AND D.SAP_JOUR_NUMB IS NOT NULL
+										<if test="srcResultYear != null and srcResultYear neq ''">
+										AND D.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear} + '0101') AND CONVERT(DATETIME, #{srcResultYear} + '1231 23:59')
+										</if>
+										GROUP BY DATEPART(MONTH, D.CLOS_SALE_DATE), C.WORKID, C.WORKNM
+									
+<!-- 										UNION ALL -->
+<!-- 										SELECT	0 AS SALE_PROD_AMOU -->
+<!-- 										,		MAX(C.MAT_KIND) AS MAT_KIND -->
+<!-- 										,		C.WORKID AS WORKID -->
+<!-- 										,		C.WORKNM AS WORKNM -->
+<!-- 										,		0 AS CLOS_MONTH -->
+<!-- 										,		DATEPART(MONTH, D.CLOS_BUYI_DATE) AS CLOS_MONTH2 -->
+<!-- 										,		SUM(A.PURC_PROD_AMOU) AS PURC_PROD_AMOU -->
+<!-- 										FROM  MRORDTLIST A -->
+<!-- 										LEFT OUTER JOIN MSBUYM D -->
+<!-- 											ON A.BUYI_SEQU_NUMB = D.BUYI_SEQU_NUMB -->
+<!-- 										LEFT OUTER JOIN SMPBRANCHS B -->
+<!-- 											ON A.BRANCHID = B.BRANCHID -->
+<!-- 										LEFT OUTER JOIN SMPWORKINFO C -->
+<!-- 											ON B.WORKID = C.WORKID -->
+<!-- 										WHERE  D.BUYI_SEQU_NUMB IS NOT NULL -->
+<!-- 										AND D.SAP_JOUR_NUMB IS NOT NULL  -->
+<!-- 										<if test="srcResultYear != null and srcResultYear neq ''"> -->
+<!-- 										AND D.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear} + '0101') AND CONVERT(DATETIME, #{srcResultYear} + '1231 23:59') -->
+<!-- 										</if> -->
+<!-- 										GROUP BY DATEPART(MONTH, D.CLOS_BUYI_DATE), C.WORKID, C.WORKNM -->
+										
+										UNION ALL
+										SELECT	0 AS SALE_PROD_AMOU
+										,		MAT_KIND
+										,		WORKID
+										,		WORKNM
+										,		0 AS CLOS_MONTH
+										,		0 AS CLOS_MONTH2
+										,		0 AS PURC_PROD_AMOU
+										FROM SMPWORKINFO A WITH(NOLOCK) 
+										WHERE MAT_KIND IS NOT NULL
+									) XX CROSS JOIN 
+									(
+										SELECT 1 AS CPMON UNION ALL 
+										SELECT 2 UNION ALL
+										SELECT 3 UNION ALL
+										SELECT 4 UNION ALL
+										SELECT 5 UNION ALL
+										SELECT 6 UNION ALL
+										SELECT 7 UNION ALL
+										SELECT 8 UNION ALL
+										SELECT 9 UNION ALL
+										SELECT 10 UNION ALL
+										SELECT 11 UNION ALL
+										SELECT 12 
+									)CP
+								)
+							GROUP BY WORKID, WORKNM
+					)DD
+					LEFT OUTER JOIN SMPCODES AA WITH(NOLOCK) 
+						ON DD.MAT_KIND = AA.CODEVAL1
+					LEFT OUTER JOIN SMPCODES BB WITH(NOLOCK) 
+						ON AA.CODEVAL2 = BB.CODEVAL1
+					WHERE AA.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+					AND BB.CODETYPECD = 'SMPWORKINFO_CODE_TOP'
+					GROUP BY WORKID, WORKNM, AA.DISORDER
+				) AAA
+				GROUP BY AAA.codeNmTop, AAA.codeNmMid, AAA.MAT_KIND, AAA.WORKNM, AAA.WORKID WITH ROLLUP
+			) AAAA
+			WHERE	(
+							AAAA.codeNmTop IS NOT NULL
+					AND		AAAA.codeNmMid IS NOT NULL
+					AND		AAAA.MAT_KIND IS NOT NULL
+					AND		AAAA.WORKNM IS NOT NULL
+					AND		AAAA.WORKID IS NOT NULL
+			) OR	(
+							AAAA.codeNmTop IS NOT NULL
+					AND		AAAA.codeNmMid IS NOT NULL
+					AND		AAAA.MAT_KIND IS NOT NULL
+					AND		AAAA.WORKNM IS NULL
+					AND		AAAA.WORKID IS NULL
+			)
+		)A
+		ORDER BY A.TOPDISORDER, A.DISORDER, CONVERT(INT, A.MAT_KIND), A.WORKID 
+	</select>
+	
+	<select id="selectAnalysisGoodRegMonthList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisGoodRegMonthList */
+		SELECT	AAA.*
+		FROM(	
+			SELECT	AA.codeNmTop
+			,		AA.codeNmMid
+			,		AA.MAT_KIND
+			,		CASE WHEN AA.WORKNM IS NULL THEN '소계'
+						 ELSE AA.WORKNM
+					END WORKNM
+			,		CASE WHEN AA.WORKID IS NULL THEN 99999
+						 ELSE AA.WORKID
+					END WORKID
+			,		AA.LAST_MONTH
+			,		AA.NEW_LAST_MONTH
+			,		AA.LAST_PROFIT
+			,		AA.LAST_PROFITRATE
+			,		AA.SPOT_MONTH
+			,		AA.NEW_SPOT_MONTH
+			,		AA.SPOT_PROFIT
+			,		AA.SPOT_PROFITRATE
+			,		AA.TOTAL_MONTH
+			,		AA.NEW_TOTAL_MONTH
+			,		AA.TOTAL_PROFIT
+			,		AA.TOTAL_PROFITRATE
+			,		AA.DISORDER
+			,		AA.TOPDISORDER
+			FROM(		
+					SELECT	A.codeNmTop
+					,		A.codeNmMid
+					,		A.MAT_KIND
+					,		A.WORKNM
+					,		A.WORKID
+					,		SUM(A.LAST_MONTH) AS LAST_MONTH			--전월실적
+					,		SUM(A.NEW_LAST_MONTH) AS NEW_LAST_MONTH	--전월신규실적
+					,		SUM(A.LAST_PROFIT) AS LAST_PROFIT 	--전월매출이익
+					,		MAX(A.LAST_PROFITRATE) AS LAST_PROFITRATE	--전월매출이익률
+					,		SUM(A.SPOT_MONTH) AS SPOT_MONTH		--당월실적
+					,		SUM(A.NEW_SPOT_MONTH) AS NEW_SPOT_MONTH	--당월신규실적
+					,		SUM(A.SPOT_PROFIT) AS SPOT_PROFIT	--당월매출이익
+					,		MAX(A.SPOT_PROFITRATE) AS SPOT_PROFITRATE	--당월매출이익률
+					,		SUM(A.TOTAL_MONTH) AS TOTAL_MONTH		--연누계실적
+					,		SUM(A.NEW_TOTAL_MONTH) AS NEW_TOTAL_MONTH		--연누계신규실적
+					,		SUM(A.TOTAL_PROFIT) AS TOTAL_PROFIT		--연누계매출이익
+					,		MAX(A.TOTAL_PROFITRATE) AS TOTAL_PROFITRATE		--연누계매출이익률
+					,		MAX(A.DISORDER) AS DISORDER
+					,		MAX(A.TOPDISORDER) AS TOPDISORDER
+					FROM(
+							SELECT	CC.CODENM1 AS codeNmTop
+							,		BB.CODENM1 AS codeNmMid
+							,		AA.MAT_KIND
+							,		AA.WORKID
+							,		AA.WORKNM
+							,		AA.LAST_MONTH		--전월실적
+							,		AA.NEW_LAST_MONTH	--전월신규실적
+							,		AA.LAST_PROFIT		--전월매출이익
+							,		CASE WHEN AA.LAST_MONTH > 0 THEN CONVERT(VARCHAR, CONVERT(NUMERIC(18,1),(ROUND((AA.LAST_PROFIT/AA.LAST_MONTH) * 100, 1, 0))))+'%' 
+										 ELSE '0%'
+									END LAST_PROFITRATE
+							,		AA.SPOT_MONTH		--당월실적
+							,		AA.NEW_SPOT_MONTH	--당월신규실적
+							,		AA.SPOT_PROFIT		--당월매출이익
+							,		CASE WHEN AA.SPOT_MONTH > 0 THEN CONVERT(VARCHAR, CONVERT(NUMERIC(18,1), (ROUND((AA.SPOT_PROFIT/AA.SPOT_MONTH) * 100, 1))))+'%' 
+										 ELSE '0%'
+									END SPOT_PROFITRATE
+							,		AA.TOTAL_MONTH		--연누계실적
+							,		AA.NEW_TOTAL_MONTH	--연누계신규실적
+							,		AA.LAST_PROFIT + AA.SPOT_PROFIT AS TOTAL_PROFIT
+							,		CASE WHEN AA.TOTAL_MONTH > 0 THEN CONVERT(VARCHAR, CONVERT(NUMERIC(18,1), (ROUND((((AA.LAST_PROFIT + AA.SPOT_PROFIT)/AA.TOTAL_MONTH)) * 100, 1))))+'%' 
+										 ELSE '0%'
+									END TOTAL_PROFITRATE
+							,		BB.DISORDER
+							,		CC.DISORDER AS TOPDISORDER
+							FROM(	
+									SELECT	MAX(A.MAT_KIND) AS MAT_KIND
+									,		A.WORKID AS WORKID
+									,		A.WORKNM AS WORKNM
+									,		SUM(A.LAST_MONTH) AS LAST_MONTH
+									,		SUM(A.NEW_LAST_MONTH) AS NEW_LAST_MONTH
+									,		SUM(A.LAST_MONTH) - SUM(A.LAST_PURC_PROD_AMOU) AS LAST_PROFIT
+									,		SUM(A.SPOT_MONTH) AS SPOT_MONTH
+									,		SUM(A.NEW_SPOT_MONTH) AS NEW_SPOT_MONTH
+									,		SUM(A.SPOT_MONTH) - REPLACE(SUM(A.SPOT_PURC_PROD_AMOU),'-','') AS SPOT_PROFIT
+									,		SUM(A.LAST_MONTH) + SUM(A.SPOT_MONTH) AS TOTAL_MONTH
+									,		SUM(A.NEW_LAST_MONTH) + SUM(A.NEW_SPOT_MONTH) AS NEW_TOTAL_MONTH
+									FROM(	
+										------------당월 매출세금계산서 발행된것---------------
+										SELECT	C.WORKID
+										,		C.WORKNM
+										,		C.MAT_KIND
+										,		SUM(CASE WHEN A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, '2014'+'0101') AND CONVERT(DATETIME, #{srcResultFrom}+'01') AND D.GOOD_REG_YEAR = #{srcResultYear}
+														 THEN AA.SALE_PROD_AMOU 
+													ELSE 0
+													END)AS NEW_LAST_MONTH
+										<choose>
+											<when test="srcResultMonth eq '01'.toString()">
+										,		0 AS LAST_MONTH
+											</when>
+											<otherwise>
+										,		SUM(CASE WHEN A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'0101') AND CONVERT(DATETIME, #{srcResultFrom}+'01') 
+														 THEN AA.SALE_PROD_AMOU 
+													ELSE 0
+													END)AS LAST_MONTH
+											</otherwise>
+										</choose>
+										,		SUM(CASE WHEN A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59'))) AND D.GOOD_REG_YEAR = #{srcResultYear}
+														 THEN AA.SALE_PROD_AMOU
+													ELSE 0
+													END)AS NEW_SPOT_MONTH
+										,		SUM(CASE WHEN A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+														 THEN AA.SALE_PROD_AMOU
+													ELSE 0
+													END)AS SPOT_MONTH
+										,		0 AS LAST_PURC_PROD_AMOU
+										--매출을 먼저 잡아야 되는 케이스가 있어서 매출을 잡으면 해당월의 매입도 포함되게 케이스 처리
+										,		SUM(CASE WHEN (A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME, #{srcResultFrom}+'01 23:59:59')))) AND (AA.BUYI_SEQU_NUMB IS NULL OR AA.BUYI_SEQU_NUMB = '')
+														 THEN AA.PURC_PROD_AMOU
+													ELSE 0
+													END) AS SPOT_PURC_PROD_AMOU
+										FROM MRORDTLIST AA WITH(NOLOCK) 
+										LEFT OUTER JOIN MSSALM A WITH(NOLOCK) 
+											ON AA.SALE_SEQU_NUMB = A.SALE_SEQU_NUMB
+										LEFT OUTER JOIN SMPBRANCHS B WITH(NOLOCK) 
+											ON AA.BRANCHID = B.BRANCHID
+										LEFT OUTER JOIN SMPWORKINFO C WITH(NOLOCK) 
+											ON B.WORKID = C.WORKID
+										LEFT OUTER JOIN mcgoodvendor D WITH(NOLOCK) 
+											ON AA.GOOD_IDEN_NUMB = D.GOOD_IDEN_NUMB
+											AND AA.VENDORID = D.VENDORID
+										WHERE A.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'0101') AND CONVERT(DATETIME, #{srcResultYear}+'1231 23:59')
+										AND C.IS_SKTS_MANAGE = '1'
+										GROUP BY C.WORKID, C.WORKNM, C.MAT_KIND
+										--------------------------매입금액----------------------------
+										UNION ALL
+										SELECT	D.WORKID
+										,		D.WORKNM
+										,		D.MAT_KIND
+										,		0 AS NEW_LAST_MONTH
+										,		0 AS LAST_MONTH
+										,		0 AS NEW_SPOT_MONTH
+										,		0 AS SPOT_MONTH
+										<choose>
+											<when test="srcResultMonth eq '01'.toString()">
+										,		0 AS LAST_MONTH
+											</when>
+											<otherwise>
+										,		SUM(CASE WHEN A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'0101') AND CONVERT(DATETIME, #{srcResultFrom}+'01')
+														 THEN B.PURC_PROD_AMOU
+													ELSE 0
+												END) AS LAST_PURC_PROD_AMOU
+											</otherwise>
+										</choose>
+										,		SUM(CASE WHEN A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME, #{srcResultFrom}+'01 23:59:59')))
+														 THEN B.PURC_PROD_AMOU
+													ELSE 0
+												END) AS SPOT_PURC_PROD_AMOU
+										FROM MSBUYM A WITH(NOLOCK) 
+										INNER JOIN MRORDTLIST B WITH(NOLOCK) 
+											ON A.BUYI_SEQU_NUMB = B.BUYI_SEQU_NUMB
+										INNER JOIN SMPBRANCHS C WITH(NOLOCK) 
+											ON B.BRANCHID = C.BRANCHID
+										LEFT OUTER JOIN SMPWORKINFO D WITH(NOLOCK) 
+											ON C.WORKID = D.WORKID
+										WHERE A.CLOS_BUYI_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'0101') AND CONVERT(DATETIME, #{srcResultYear}+'1231 23:59')
+										GROUP BY D.WORKID, D.WORKNM, D.MAT_KIND
+										
+										UNION ALL
+										------------------------인수내역------------------------------
+										SELECT	MAX(E.WORKID) AS WORKID
+										,		F.WORKNM
+										,		F.MAT_KIND
+										,		0 AS NEW_LAST_MONTH
+										,		0 AS LAST_MONTH
+										,		SUM(CASE 
+														WHEN C.DELI_STAT_FLAG = '70' AND (D.SALE_SEQU_NUMB IS NULL OR D.SALE_SEQU_NUMB = '' ) AND J.good_reg_year = #{srcResultYear}
+														THEN c.deli_prod_quan * b.orde_requ_pric 
+														ELSE 0 
+													END) +
+												SUM(CASE 
+														WHEN C.DELI_STAT_FLAG = '80' AND (C.RETU_IDEN_NUM IS NOT NULL OR C.RETU_IDEN_NUM !='') AND H.RETU_STAT_FLAG = '1' AND J.good_reg_year = #{srcResultYear}
+															 AND (D.sale_sequ_numb IS NULL OR D.sale_sequ_numb = '')
+														THEN B.ORDE_REQU_PRIC * H.RETU_PROD_QUAN *-1
+														ELSE 0 
+														END)AS NEW_SPOT_MONTH 
+										,		SUM(CASE 
+														WHEN C.DELI_STAT_FLAG = '70' AND (D.SALE_SEQU_NUMB IS NULL OR D.SALE_SEQU_NUMB = '' ) 
+														THEN c.deli_prod_quan * b.orde_requ_pric ELSE 0 
+													END) +
+												SUM(CASE 
+														WHEN C.DELI_STAT_FLAG = '80' AND (C.RETU_IDEN_NUM IS NOT NULL OR C.RETU_IDEN_NUM !='') AND H.RETU_STAT_FLAG = '1'
+															 AND (D.sale_sequ_numb IS NULL OR D.sale_sequ_numb = '')
+														THEN B.ORDE_REQU_PRIC * H.RETU_PROD_QUAN *-1
+														ELSE 0 
+														END)AS SPOT_MONTH
+										,		0 AS LAST_PURC_PROD_AMOU
+										-- 매입날짜는 없는것
+										,		SUM(CASE WHEN C.DELI_STAT_FLAG = '70' AND (D.BUYI_SEQU_NUMB IS NULL OR D.BUYI_SEQU_NUMB = '') AND (D.SALE_SEQU_NUMB IS NULL OR D.SALE_SEQU_NUMB = '')
+														 THEN c.deli_prod_quan * b.sale_unit_pric ELSE 0 
+													END)+
+												SUM(CASE WHEN C.DELI_STAT_FLAG = '80' AND (C.RETU_IDEN_NUM IS NOT NULL OR C.RETU_IDEN_NUM !='') AND H.RETU_STAT_FLAG = '1'  AND (D.BUYI_SEQU_NUMB IS NULL OR D.BUYI_SEQU_NUMB = '') AND (D.SALE_SEQU_NUMB IS NULL OR D.SALE_SEQU_NUMB = '')
+														 THEN B.sale_unit_pric * H.RETU_PROD_QUAN *-1 ELSE 0 
+													END) SPOT_PURC_PROD_AMOU
+										FROM MRORDM mrordm WITH(NOLOCK) 
+										LEFT OUTER JOIN MRORDT A WITH(NOLOCK) 
+											ON mrordm.orde_iden_numb = A.ORDE_IDEN_NUMB
+										LEFT OUTER JOIN MRPURT B WITH(NOLOCK) 
+											ON A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+											AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+											--------예외사항(해당주문만 매입상태에서 제거)
+											AND NOT(B.ORDE_IDEN_NUMB = 'GEN1311010095' and (B.ORDE_SEQU_NUMB = '1' or B.ORDE_SEQU_NUMB = '3' ))
+										LEFT OUTER JOIN MRACPT C WITH(NOLOCK) 
+											ON B.ORDE_IDEN_NUMB = C.ORDE_IDEN_NUMB
+											AND B.ORDE_SEQU_NUMB = C.ORDE_SEQU_NUMB
+											AND B.PURC_IDEN_NUMB = C.PURC_IDEN_NUMB
+										LEFT OUTER JOIN MRORDTLIST D WITH(NOLOCK) 
+											ON C.ORDE_IDEN_NUMB = D.ORDE_IDEN_NUMB
+											AND C.ORDE_SEQU_NUMB = D.ORDE_SEQU_NUMB
+											AND C.PURC_IDEN_NUMB = D.PURC_IDEN_NUMB
+											AND C.DELI_IDEN_NUMB = D.DELI_IDEN_NUMB
+										LEFT OUTER JOIN SMPBRANCHS E WITH(NOLOCK) 
+											ON mrordm.BRANCHID = E.BRANCHID
+										LEFT OUTER JOIN SMPWORKINFO F WITH(NOLOCK) 
+											ON E.WORKID = F.WORKID
+										LEFT OUTER JOIN SMPUSERS G WITH(NOLOCK) 
+											ON F.USERID = G.USERID
+										LEFT OUTER JOIN MRAREM H WITH(NOLOCK) 
+											ON C.ORDE_IDEN_NUMB = H.ORDE_IDEN_NUMB
+											AND C.ORDE_SEQU_NUMB = H.ORDE_SEQU_NUMB
+											AND C.PURC_IDEN_NUMB = H.PURC_IDEN_NUMB
+										LEFT OUTER JOIN mcgoodvendor J WITH(NOLOCK) 
+											ON D.vendorid = J.vendorid
+											AND D.good_iden_numb = j.good_iden_numb
+										WHERE 1=1
+										AND (MAT_KIND IS NOT NULL OR MAT_KIND != '')
+										<![CDATA[
+										--AND mrordm.REGI_DATE_TIME > CONVERT(DATETIME, '2014-01-01')
+										AND mrordm.REGI_DATE_TIME BETWEEN DATEADD(DAY, -90, CONVERT(DATETIME, CONVERT(VARCHAR(10), GETDATE(), 120))) AND GETDATE()
+										]]>
+										GROUP BY E.WORKID, F.WORKNM,MAT_KIND
+										UNION ALL
+										SELECT	WORKID
+										,		WORKNM
+										,		MAT_KIND
+										,		0 AS NEW_LAST_MONTH
+										,		0 AS LAST_MONTH
+										,		0 AS NEW_SPOT_MONTH
+										,		0 AS SPOT_MONTH
+										,		0 AS LAST_PURC_PROD_AMOU
+										,		0 AS SPOT_PURC_PROD_AMOU
+										FROM SMPWORKINFO WITH(NOLOCK) 
+										WHERE (MAT_KIND IS NOT NULL OR MAT_KIND != '')
+										AND IS_SKTS_MANAGE = '1'
+								)A
+								GROUP BY MAT_KIND, WORKID, WORKNM
+							)AA
+							INNER JOIN SMPCODES BB WITH(NOLOCK) 
+								ON AA.MAT_KIND = BB.CODEVAL1
+								AND BB.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+							INNER JOIN SMPCODES CC WITH(NOLOCK) 
+								ON BB.CODEVAL2 = CC.CODEVAL1
+								AND CC.CODETYPECD = 'SMPWORKINFO_CODE_TOP'
+					)A
+					GROUP BY A.codeNmTop, A.codeNmMid, A.MAT_KIND, A.WORKID, A.WORKNM WITH ROLLUP
+			)AA
+			WHERE(AA.codeNmTop IS NOT NULL AND AA.codeNmMid IS NOT NULL	AND AA.MAT_KIND IS NOT NULL	AND	AA.WORKNM IS NOT NULL AND AA.WORKID IS NOT NULL) 
+			OR(AA.codeNmTop IS NOT NULL	AND	AA.codeNmMid IS NOT NULL AND AA.MAT_KIND IS NOT NULL AND AA.WORKNM IS NULL AND AA.WORKID IS NULL)
+		)AAA
+		ORDER BY AAA.TOPDISORDER, AAA.DISORDER, AAA.WORKID
+	</select>
+	<select id="selectAnalysisGoodRegMonthList1" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisGoodRegMonthList1 */
+		SELECT	AAA.*
+		,		(CASE	WHEN AAA.CODENMTOP='무선자재' THEN 1
+						WHEN AAA.CODENMTOP='유선자재' THEN 2
+						WHEN AAA.CODENMTOP='개통자재' THEN 3
+						WHEN AAA.CODENMTOP='사급' THEN 4
+						WHEN AAA.CODENMTOP='신규사업' THEN 5
+						WHEN AAA.CODENMTOP='신규 ITEM' THEN 6
+						ELSE 10
+				END) AS SORT
+		FROM
+		(
+				SELECT	(CASE	WHEN AA.CODENMTOP IS NULL AND AA.CODENMMID IS NULL THEN '합계'
+								WHEN AA.CODENMTOP = '원부자재 등' THEN '신규사업'
+								ELSE AA.CODENMTOP
+						END) AS CODENMTOP
+				,		(CASE	WHEN AA.CODENMTOP IS NOT NULL AND AA.CODENMMID IS NULL THEN '소계'
+								ELSE AA.CODENMMID
+						END) AS CODENMMID
+				,		SUM(SPOT_MONTH) AS SPOT_MONTH
+				,		SUM(SPOT_PROFIT) AS SPOT_PROFIT
+				,		CONVERT(VARCHAR,CONVERT(numeric(18,1), (CASE WHEN SUM(SPOT_MONTH)=0 THEN 0 ELSE CONVERT(FLOAT,ROUND(SUM(SPOT_PROFIT)*100/SUM(SPOT_MONTH),1)) END))) + ' %' AS SPOT_PROFITRATE
+				,		SUM(TOTAL_MONTH) AS TOTAL_MONTH
+				,		SUM(TOTAL_PROFIT) AS TOTAL_PROFIT
+				,		CONVERT(VARCHAR,CONVERT(numeric(18,1), (CASE WHEN SUM(TOTAL_MONTH)=0 THEN 0 ELSE CONVERT(FLOAT,ROUND(SUM(TOTAL_PROFIT)*100/SUM(TOTAL_MONTH),1)) END))) + ' %' AS TOTAL_PROFITRATE
+				FROM
+				(
+						SELECT	(CASE	WHEN G.GOOD_REG_YEAR = #{srcResultYear} THEN '신규 ITEM'
+										ELSE E.CODENM2
+								END) AS CODENMTOP
+						,		(CASE	WHEN G.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL1 = '20' THEN 'SKT 무선지입'
+										WHEN G.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL1 = '10' THEN 'SKT 사급'
+										WHEN G.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL1 = '30' THEN 'SKT 유선지입'
+										WHEN G.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL2 = '2' THEN 'SKB'
+										WHEN G.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL2 = '3' THEN '신규사업'
+										ELSE E.CODENM1
+								END) AS CODENMMID
+						,		(CASE	WHEN B.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+#{srcResultMonth}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultYear}+#{srcResultMonth}+'01 23:59:59'))) THEN A.SALE_PROD_AMOU 
+										ELSE 0 
+								END) AS SPOT_MONTH
+						,		(CASE	WHEN B.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+#{srcResultMonth}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultYear}+#{srcResultMonth}+'01 23:59:59'))) THEN A.SALE_PROD_AMOU - A.PURC_PROD_AMOU
+										ELSE 0 
+								END) AS SPOT_PROFIT
+						,		(CASE	WHEN B.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'0101') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultYear}+#{srcResultMonth}+'01 23:59:59'))) THEN A.SALE_PROD_AMOU
+										ELSE 0 
+								END) AS TOTAL_MONTH
+						,		(CASE	WHEN B.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'0101') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultYear}+#{srcResultMonth}+'01 23:59:59'))) THEN A.SALE_PROD_AMOU - A.PURC_PROD_AMOU
+										ELSE 0 
+								END) AS TOTAL_PROFIT
+						FROM	MRORDTLIST A WITH(NOLOCK) 
+						INNER JOIN MSSALM B WITH(NOLOCK) 
+							ON	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB
+						INNER JOIN SMPBRANCHS C WITH(NOLOCK) 
+							ON	C.BRANCHID = B.BRANCHID
+						INNER JOIN SMPWORKINFO D WITH(NOLOCK) 
+							ON	D.WORKID = C.WORKID
+							AND	D.IS_SKTS_MANAGE = '1'
+						INNER JOIN SMPCODES E WITH(NOLOCK) 
+							ON	E.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+							AND	E.CODEVAL1 = D.MAT_KIND
+						LEFT OUTER JOIN MCGOODVENDOR F WITH(NOLOCK) 
+							ON	F.VENDORID = A.VENDORID
+							AND	F.GOOD_IDEN_NUMB = A.GOOD_IDEN_NUMB
+						LEFT OUTER JOIN MCGOOD G WITH(NOLOCK) 
+							ON	G.GOOD_IDEN_NUMB = A.GOOD_IDEN_NUMB							
+						WHERE	B.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'01'+'01') AND CONVERT(DATETIME, #{srcResultYear}+'1231 23:59')
+				) AA
+				GROUP BY AA.CODENMTOP, AA.CODENMMID WITH ROLLUP
+		) AAA
+		ORDER BY SORT
+	</select>
+	<select id="selectAnalysisGoodRegMonthList2" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisGoodRegMonthList2 */
+		SELECT	AAA.*
+		,		(CASE	WHEN AAA.CODENMTOP='무선자재' THEN 1
+						WHEN AAA.CODENMTOP='유선자재' THEN 2
+						WHEN AAA.CODENMTOP='개통자재' THEN 3
+						WHEN AAA.CODENMTOP='사급' THEN 4
+						WHEN AAA.CODENMTOP='신규사업' THEN 5
+						WHEN AAA.CODENMTOP='신규 ITEM' THEN 6
+						ELSE 10
+				END) AS SORT
+		FROM
+		(
+				SELECT	(CASE	WHEN AA.CODENMTOP IS NULL AND AA.CODENMMID IS NULL THEN '합계'
+								WHEN AA.CODENMTOP = '원부자재 등' THEN '신규사업'
+								ELSE AA.CODENMTOP
+						END) AS CODENMTOP
+				,		(CASE	WHEN AA.CODENMTOP IS NOT NULL AND AA.CODENMMID IS NULL THEN '소계'
+								ELSE AA.CODENMMID
+						END) AS CODENMMID
+				,		SUM(SPOT_MONTH) AS SPOT_MONTH
+				,		SUM(SPOT_PROFIT) AS SPOT_PROFIT
+				,		CONVERT(VARCHAR,CONVERT(numeric(18,1), (CASE WHEN SUM(SPOT_MONTH)=0 THEN 0 ELSE CONVERT(FLOAT,ROUND(SUM(SPOT_PROFIT)*100/SUM(SPOT_MONTH),1)) END))) + ' %' AS SPOT_PROFITRATE
+				,		SUM(TOTAL_MONTH) AS TOTAL_MONTH
+				,		SUM(TOTAL_PROFIT) AS TOTAL_PROFIT
+				,		CONVERT(VARCHAR,CONVERT(numeric(18,1), (CASE WHEN SUM(TOTAL_MONTH)=0 THEN 0 ELSE CONVERT(FLOAT,ROUND(SUM(TOTAL_PROFIT)*100/SUM(TOTAL_MONTH),1)) END))) + ' %' AS TOTAL_PROFITRATE
+				FROM
+				(
+						SELECT	(CASE	WHEN F.GOOD_REG_YEAR = #{srcResultYear} THEN '신규 ITEM'
+										ELSE E.CODENM2
+								END) AS CODENMTOP
+						,		(CASE	WHEN F.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL1 = '20' THEN 'SKT 무선지입'
+										WHEN F.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL1 = '10' THEN 'SKT 사급'
+										WHEN F.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL1 = '30' THEN 'SKT 유선지입'
+										WHEN F.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL2 = '2' THEN 'SKB'
+										WHEN F.GOOD_REG_YEAR=#{srcResultYear} AND E.CODEVAL2 = '3' THEN '신규사업'
+										ELSE E.CODENM1
+								END) AS CODENMMID
+						,		(CASE	WHEN A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+#{srcResultMonth}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultYear}+#{srcResultMonth}+'01 23:59:59'))) THEN A.SALE_PROD_AMOU 
+										ELSE 0 
+								END) AS SPOT_MONTH
+						,		(CASE	WHEN A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+#{srcResultMonth}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultYear}+#{srcResultMonth}+'01 23:59:59'))) THEN A.SALE_PROD_AMOU - A.PURC_PROD_AMOU
+										ELSE 0 
+								END) AS SPOT_PROFIT
+						,		(CASE	WHEN A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'0101') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultYear}+#{srcResultMonth}+'01 23:59:59'))) THEN A.SALE_PROD_AMOU
+										ELSE 0 
+								END) AS TOTAL_MONTH
+						,		(CASE	WHEN A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'0101') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultYear}+#{srcResultMonth}+'01 23:59:59'))) THEN A.SALE_PROD_AMOU - A.PURC_PROD_AMOU
+										ELSE 0 
+								END) AS TOTAL_PROFIT
+						FROM	MRORDTLIST A WITH(NOLOCK) 
+						INNER JOIN SMPBRANCHS C WITH(NOLOCK) 
+							ON	C.BRANCHID = A.BRANCHID
+						INNER JOIN SMPWORKINFO D WITH(NOLOCK) 
+							ON	D.WORKID = C.WORKID
+							AND	D.IS_SKTS_MANAGE = '1'
+						INNER JOIN SMPCODES E WITH(NOLOCK) 
+							ON	E.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+							AND	E.CODEVAL1 = D.MAT_KIND
+						LEFT OUTER JOIN MCGOODVENDOR F WITH(NOLOCK) 
+							ON	F.VENDORID = A.VENDORID
+							AND	F.GOOD_IDEN_NUMB = A.GOOD_IDEN_NUMB
+						WHERE	A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcResultYear}+'01'+'01') AND CONVERT(DATETIME, #{srcResultYear}+'1231 23:59')
+				) AA
+				GROUP BY AA.CODENMTOP, AA.CODENMMID WITH ROLLUP
+		) AAA
+		ORDER BY SORT
+	</select>
+	
+	<select id="selectAnalysisWorkInfoExpectationSalesCnt" resultType="java.util.HashMap">
+		/* analysis.selectAnalysisWorkInfoExpectationSalesCnt */
+		SELECT	COUNT(1) AS CNT
+		,		SUM(A.RECEIVE_LIST) AS RECEIVE_LIST_SUM
+		,		SUM(A.RECEIVE_RETURN) AS RECEIVE_RETURN_SUM
+		,		SUM(A.RECEIVE_PREORDER) AS RECEIVE_PREORDER_SUM
+		,		SUM(A.CONSIGNMENT) AS CONSIGNMENT_SUM
+		,		SUM(A.CONSIGNMENT_PREPARATION) AS CONSIGNMENT_PREPARATION_SUM
+		,		SUM(A.PURCHASE_ORDER) AS PURCHASE_ORDER_SUM
+		,		SUM(A.PURCHASE_REQUEST) AS PURCHASE_REQUEST_SUM
+		,		SUM(A.ORDER_REQUEST) AS ORDER_REQUEST_SUM
+		,		SUM(A.APPROVAL_REQUEST) AS APPROVAL_REQUEST_SUM
+		,		SUM(A.SUMMARY_TOTA_AMOU) AS SUMMARY_TOTA_AMOU_SUM
+		,		SUM(A.ASSUME) AS ASSUME_SUM
+		FROM(
+			SELECT	MAX(A.CODENM1) AS codeNmTop
+			,		MAX(B.CODENM1) AS codeNmMid
+			,		MAX(C.MAT_KIND) AS MAT_KIND
+			,		C.WORKNM AS WORKNM
+			,		C.WORKID AS WORKID
+			,		SUM(C.RECEIVE_LIST) AS RECEIVE_LIST
+			,		SUM(C.RECEIVE_RETURN) AS RECEIVE_RETURN
+			,		SUM(C.RECEIVE_PREORDER) AS RECEIVE_PREORDER
+			,		SUM(C.CONSIGNMENT) AS CONSIGNMENT
+			,		SUM(C.CONSIGNMENT_PREPARATION) AS CONSIGNMENT_PREPARATION
+			,		SUM(C.PURCHASE_ORDER) AS PURCHASE_ORDER
+			,		SUM(C.PURCHASE_REQUEST) AS PURCHASE_REQUEST
+			,		SUM(C.ORDER_REQUEST) AS ORDER_REQUEST
+			,		SUM(C.APPROVAL_REQUEST) AS APPROVAL_REQUEST
+			,		SUM(C.RECEIVE_LIST2) + SUM(C.ASSUME) AS ASSUME
+			,		SUM(C.RECEIVE_LIST) + SUM(C.RECEIVE_RETURN) + SUM(C.RECEIVE_PREORDER) + SUM(C.CONSIGNMENT) + 
+					SUM(C.CONSIGNMENT_PREPARATION) + SUM(C.PURCHASE_ORDER) + SUM(C.PURCHASE_REQUEST) + SUM(C.ORDER_REQUEST) + 
+					SUM(C.APPROVAL_REQUEST) AS SUMMARY_TOTA_AMOU
+			FROM SMPCODES A WITH(NOLOCK) 
+			LEFT OUTER JOIN SMPCODES B WITH(NOLOCK) 
+				ON A.CODEVAL1 = B.CODEVAL2
+			LEFT OUTER JOIN (
+								SELECT	MAX(E.WORKID) AS WORKID
+								,		F.WORKNM
+								,		F.MAT_KIND
+								,		SUM(CASE 
+												WHEN C.DELI_STAT_FLAG = '70' AND mrordm.REGI_DATE_TIME BETWEEN CONVERT(DATETIME,#{srcResultFrom}+ '01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+												THEN D.sale_prod_amou ELSE 0 
+											END) AS RECEIVE_LIST--인수완료
+								,		SUM(CASE 
+												WHEN C.DELI_STAT_FLAG = '80' AND (C.RETU_IDEN_NUM IS NOT NULL OR C.RETU_IDEN_NUM !='') AND H.RETU_STAT_FLAG = '1'
+													 AND mrordm.REGI_DATE_TIME BETWEEN CONVERT(DATETIME,#{srcResultFrom}+ '01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+													 AND (D.sale_sequ_numb IS NULL OR D.sale_sequ_numb = '')
+												THEN B.ORDE_REQU_PRIC * H.RETU_PROD_QUAN 
+												ELSE 0 
+											END)AS RECEIVE_RETURN --반품완료
+								,		SUM(CASE 
+												WHEN C.DELI_STAT_FLAG = '69' AND mrordm.REGI_DATE_TIME BETWEEN CONVERT(DATETIME,#{srcResultFrom}+ '01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+												THEN B.ORDE_REQU_PRIC * C.RECE_PROD_QUAN 
+												ELSE 0 
+											END) AS RECEIVE_PREORDER --인수완료(선발주)
+								,		SUM(CASE 
+												WHEN C.DELI_STAT_FLAG = '60' AND D.ORDE_IDEN_NUMB IS NULL AND (C.INVOICEDATE IS NOT NULL OR C.INVOICEDATE != '')
+													 AND mrordm.REGI_DATE_TIME BETWEEN CONVERT(DATETIME,#{srcResultFrom}+ '01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+												THEN B.ORDE_REQU_PRIC * C.DELI_PROD_QUAN ELSE 0 END) AS CONSIGNMENT--출하
+								,		SUM(CASE	
+												WHEN (C.DELI_STAT_FLAG = '60' AND D.ORDE_IDEN_NUMB IS NULL AND (C.INVOICEDATE IS NULL OR C.INVOICEDATE = '')) 
+													 AND mrordm.REGI_DATE_TIME BETWEEN CONVERT(DATETIME,#{srcResultFrom}+ '01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+												THEN B.ORDE_REQU_PRIC * C.DELI_PROD_QUAN ELSE 0 END) AS CONSIGNMENT_PREPARATION--출하(준비중)
+								,		SUM(CASE WHEN (B.PURC_STAT_FLAG = '50' AND C.ORDE_IDEN_NUMB IS NULL) THEN B.ORDE_REQU_PRIC * B.purc_requ_quan
+												 ELSE 0 
+											END) AS PURCHASE_ORDER--발주접수
+								,		SUM(CASE 
+												WHEN B.PURC_STAT_FLAG = '40' AND C.ORDE_IDEN_NUMB IS NULL
+													 AND mrordm.REGI_DATE_TIME BETWEEN CONVERT(DATETIME,#{srcResultFrom}+ '01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+												THEN B.ORDE_REQU_PRIC * B.PURC_REQU_QUAN 
+												ELSE 0 
+											END) AS PURCHASE_REQUEST --'발주의뢰'
+								,		SUM(CASE 
+												WHEN A.ORDE_STAT_FLAG = '10' AND B.ORDE_IDEN_NUMB IS NULL
+													 AND mrordm.REGI_DATE_TIME BETWEEN CONVERT(DATETIME,#{srcResultFrom}+ '01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+												THEN A.ORDE_REQU_QUAN * A.ORDE_REQU_PRIC 
+												ELSE 0 
+											END) AS ORDER_REQUEST --주문요청
+								,		SUM(CASE 
+												WHEN A.ORDE_STAT_FLAG = '05' AND B.ORDE_IDEN_NUMB IS NULL
+													 AND mrordm.REGI_DATE_TIME BETWEEN CONVERT(DATETIME,#{srcResultFrom}+ '01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+												THEN A.ORDE_REQU_QUAN * A.ORDE_REQU_PRIC ELSE 0 END) AS APPROVAL_REQUEST --'승인요청'
+								,		SUM(CASE 
+												WHEN C.DELI_STAT_FLAG = '70' AND D.RECE_REGI_DATE BETWEEN CONVERT(DATETIME, '20090101') AND GETDATE()
+												THEN D.sale_prod_amou
+												ELSE 0 
+											END) AS RECEIVE_LIST2--인수완료
+								,		SUM(CASE 
+												WHEN C.DELI_STAT_FLAG = '60' AND D.ORDE_IDEN_NUMB IS NULL 
+												AND (DATEADD(D,5,C.invoiceDate) BETWEEN CONVERT(DATETIME, '20090101') AND GETDATE()) 
+												THEN B.ORDE_REQU_PRIC * C.DELI_PROD_QUAN 
+											END) AS ASSUME
+								FROM MRORDM mrordm WITH(NOLOCK) 
+								LEFT OUTER JOIN MRORDT A WITH(NOLOCK) 
+									ON mrordm.orde_iden_numb = A.ORDE_IDEN_NUMB
+								LEFT OUTER JOIN MRPURT B WITH(NOLOCK) 
+									ON A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+									AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+								LEFT OUTER JOIN MRACPT C WITH(NOLOCK) 
+									ON B.ORDE_IDEN_NUMB = C.ORDE_IDEN_NUMB
+									AND B.ORDE_SEQU_NUMB = C.ORDE_SEQU_NUMB
+									AND B.PURC_IDEN_NUMB = C.PURC_IDEN_NUMB
+								LEFT OUTER JOIN MRORDTLIST D WITH(NOLOCK) 
+									ON C.ORDE_IDEN_NUMB = D.ORDE_IDEN_NUMB
+									AND C.ORDE_SEQU_NUMB = D.ORDE_SEQU_NUMB
+									AND C.PURC_IDEN_NUMB = D.PURC_IDEN_NUMB
+									AND C.DELI_IDEN_NUMB = D.DELI_IDEN_NUMB
+								LEFT OUTER JOIN SMPBRANCHS E WITH(NOLOCK) 
+									ON mrordm.BRANCHID = E.BRANCHID
+								LEFT OUTER JOIN SMPWORKINFO F WITH(NOLOCK) 
+									ON E.WORKID = F.WORKID
+								LEFT OUTER JOIN SMPUSERS G WITH(NOLOCK) 
+									ON F.USERID = G.USERID
+								LEFT OUTER JOIN MRAREM H WITH(NOLOCK) 
+									ON C.ORDE_IDEN_NUMB = H.ORDE_IDEN_NUMB
+									AND C.ORDE_SEQU_NUMB = H.ORDE_SEQU_NUMB
+									AND C.PURC_IDEN_NUMB = H.PURC_IDEN_NUMB
+								WHERE 1=1
+								AND (MAT_KIND IS NOT NULL OR MAT_KIND != '')
+								GROUP BY E.WORKID, F.WORKNM,MAT_KIND
+								UNION ALL
+								SELECT	WORKID
+								,		WORKNM
+								,		MAT_KIND
+								,		0 AS RECEIVE_LIST
+								,		0 AS RECEIVE_RETURN
+								,		0 AS RECEIVE_PREORDER
+								,		0 AS CONSIGNMENT
+								,		0 AS CONSIGNMENT_PREPARATION
+								,		0 AS PURCHASE_ORDER
+								,		0 AS PURCHASE_REQUEST
+								,		0 AS ORDER_REQUEST
+								,		0 AS APPROVAL_REQUEST
+								,		0 AS RECEIVE_LIST2
+								,		0 AS ASSUME
+								FROM SMPWORKINFO WITH(NOLOCK) 
+								WHERE 1=1
+								AND (MAT_KIND IS NOT NULL OR MAT_KIND != '')
+			)C
+				ON B.CODEVAL1 = C.MAT_KIND
+			WHERE A.CODETYPECD = 'SMPWORKINFO_CODE_TOP'
+			AND B.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+			GROUP BY  WORKID, WORKNM
+		)A
+	</select>
+	
+	<select id="selectAnalysisWorkInfoExpectationSalesList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisWorkInfoExpectationSalesList */
+		SELECT	C.CODENM1 AS codeNmTop 
+		,		B.CODENM1 AS codeNmMid
+		,		A.MAT_KIND
+		,		A.WORKNM
+		,		A.WORKID
+		,		A.RECEIVE_LIST
+		,		A.RECEIVE_RETURN
+		,		A.CONSIGNMENT
+		,		A.PURCHASE_ORDER
+		,		A.PURCHASE_REQUEST
+		,		A.ORDER_REQUEST
+		,		A.APPROVAL_REQUEST
+		,		A.ASSUME
+		,		A.SUMMARY_TOTA_AMOU
+		,		A.SALE_REQU_AMOU
+		FROM(	
+				SELECT	MAX(AA.MAT_KIND) AS MAT_KIND
+				,		AA.WORKNM AS WORKNM
+				,		AA.WORKID AS WORKID
+				,		SUM(AA.RECEIVE_LIST) + SUM(AA.SALE_PROD_AMOU) AS RECEIVE_LIST
+				,		SUM(AA.RECEIVE_RETURN) AS RECEIVE_RETURN
+				,		SUM(AA.CONSIGNMENT) AS CONSIGNMENT
+				,		SUM(AA.PURCHASE_ORDER) AS PURCHASE_ORDER
+				,		SUM(AA.PURCHASE_REQUEST) AS PURCHASE_REQUEST
+				,		SUM(AA.ORDER_REQUEST) AS ORDER_REQUEST
+				,		SUM(AA.APPROVAL_REQUEST) AS APPROVAL_REQUEST
+				,		SUM(AA.RECEIVE_LIST2) + SUM(AA.ASSUME) + SUM(AA.SALE_REQU_AMOU) AS ASSUME
+				,		SUM(AA.ORDER_REQUEST) + SUM(AA.PURCHASE_REQUEST) + SUM(AA.PURCHASE_ORDER) +
+						SUM(AA.CONSIGNMENT) + SUM(AA.RECEIVE_LIST) + SUM(AA.RECEIVE_RETURN) AS SUMMARY_TOTA_AMOU
+				,		SUM(AA.SALE_REQU_AMOU) AS SALE_REQU_AMOU
+				FROM(
+						SELECT	MAX(E.WORKID) AS WORKID
+						,		F.WORKNM
+						,		F.MAT_KIND
+						,		SUM(CASE 
+										WHEN C.DELI_STAT_FLAG = '70' AND (D.SALE_SEQU_NUMB IS NULL OR D.SALE_SEQU_NUMB = '' )
+											THEN c.deli_prod_quan * b.orde_requ_pric 
+										ELSE 0 
+									END) AS RECEIVE_LIST--인수완료
+						,		SUM(CASE 
+										WHEN C.DELI_STAT_FLAG = '80' AND (C.RETU_IDEN_NUM IS NOT NULL OR C.RETU_IDEN_NUM !='') AND H.RETU_STAT_FLAG = '1' AND (D.sale_sequ_numb IS NULL OR D.sale_sequ_numb = '')
+											THEN B.ORDE_REQU_PRIC * H.RETU_PROD_QUAN 
+										ELSE 0 
+									END) * -1 AS RECEIVE_RETURN --반품완료
+						,		SUM(CASE 
+										WHEN ISNULL(C.DELI_STAT_FLAG, ISNULL(B.PURC_STAT_FLAG, A.ORDE_STAT_FLAG)) = '60'
+											THEN B.ORDE_REQU_PRIC * C.DELI_PROD_QUAN 
+										ELSE 0 
+									END) AS CONSIGNMENT--출하
+						,		SUM(CASE WHEN (ISNULL(C.DELI_STAT_FLAG, ISNULL(B.PURC_STAT_FLAG, A.ORDE_STAT_FLAG)) = '50') 
+											THEN B.ORDE_REQU_PRIC * B.purc_requ_quan
+										 ELSE 0 
+									END) AS PURCHASE_ORDER--발주접수
+						,		SUM(CASE 
+										WHEN ISNULL(C.DELI_STAT_FLAG, ISNULL(B.PURC_STAT_FLAG, A.ORDE_STAT_FLAG)) = '40'
+											THEN B.ORDE_REQU_PRIC * B.PURC_REQU_QUAN 
+										ELSE 0 
+									END) AS PURCHASE_REQUEST --'발주의뢰'
+						,		SUM(CASE 
+										WHEN ISNULL(C.DELI_STAT_FLAG, ISNULL(B.PURC_STAT_FLAG, A.ORDE_STAT_FLAG)) = '10'
+											THEN A.ORDE_REQU_QUAN * A.ORDE_REQU_PRIC 
+										ELSE 0 
+									END) AS ORDER_REQUEST --주문요청
+						,		SUM(CASE 
+										WHEN ISNULL(C.DELI_STAT_FLAG, ISNULL(B.PURC_STAT_FLAG, A.ORDE_STAT_FLAG)) = '05'
+											THEN A.ORDE_REQU_QUAN * A.ORDE_REQU_PRIC 
+										ELSE 0 
+									END) AS APPROVAL_REQUEST --'승인요청'
+						,		SUM(CASE 
+										WHEN ISNULL(C.DELI_STAT_FLAG, ISNULL(B.PURC_STAT_FLAG, A.ORDE_STAT_FLAG)) in ('70','80') AND (D.SALE_SEQU_NUMB IS NULL OR D.SALE_SEQU_NUMB = '' )
+											THEN c.deli_prod_quan * b.orde_requ_pric
+										ELSE 0 
+									END) AS RECEIVE_LIST2--인수완료
+						,		SUM(CASE 
+										WHEN ISNULL(C.DELI_STAT_FLAG, ISNULL(B.PURC_STAT_FLAG, A.ORDE_STAT_FLAG)) = '60' AND D.ORDE_IDEN_NUMB IS NULL AND DATEADD(D,5, C.INVOICEDATE) BETWEEN '20090101' AND DATEADD(D,5,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01')))
+											THEN B.ORDE_REQU_PRIC * C.DELI_PROD_QUAN 
+									END) AS ASSUME --자동인수대상
+						,		SUM(CASE 
+										WHEN I.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01'))) AND (I.SAP_JOUR_NUMB IS NOT NULL AND I.SAP_JOUR_NUMB != '')
+											THEN I.SALE_REQU_AMOU
+									END) AS SALE_REQU_AMOU --매출세금계산서일
+						,		SUM(CASE 
+										WHEN I.CLOS_SALE_DATE BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59'))) AND (I.SAP_JOUR_NUMB IS NOT NULL AND I.SAP_JOUR_NUMB != '')
+											THEN D.SALE_PROD_AMOU
+									END) AS SALE_PROD_AMOU --당월세금계산서발행금
+						FROM MRORDM mrordm WITH(NOLOCK) 
+						LEFT OUTER JOIN MRORDT A WITH(NOLOCK) 
+							ON mrordm.orde_iden_numb = A.ORDE_IDEN_NUMB
+						LEFT OUTER JOIN MRPURT B WITH(NOLOCK) 
+							ON A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+							AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+						LEFT OUTER JOIN MRACPT C WITH(NOLOCK) 
+							ON B.ORDE_IDEN_NUMB = C.ORDE_IDEN_NUMB
+							AND B.ORDE_SEQU_NUMB = C.ORDE_SEQU_NUMB
+							AND B.PURC_IDEN_NUMB = C.PURC_IDEN_NUMB
+						LEFT OUTER JOIN MRORDTLIST D WITH(NOLOCK) 
+							ON C.ORDE_IDEN_NUMB = D.ORDE_IDEN_NUMB
+							AND C.ORDE_SEQU_NUMB = D.ORDE_SEQU_NUMB
+							AND C.PURC_IDEN_NUMB = D.PURC_IDEN_NUMB
+							AND C.DELI_IDEN_NUMB = D.DELI_IDEN_NUMB
+						LEFT OUTER JOIN SMPBRANCHS E WITH(NOLOCK) 
+							ON mrordm.BRANCHID = E.BRANCHID
+						LEFT OUTER JOIN SMPWORKINFO F WITH(NOLOCK) 
+							ON E.WORKID = F.WORKID
+						LEFT OUTER JOIN SMPUSERS G WITH(NOLOCK) 
+							ON F.USERID = G.USERID
+						LEFT OUTER JOIN MRAREM H WITH(NOLOCK) 
+							ON C.ORDE_IDEN_NUMB = H.ORDE_IDEN_NUMB
+							AND C.ORDE_SEQU_NUMB = H.ORDE_SEQU_NUMB
+							AND C.PURC_IDEN_NUMB = H.PURC_IDEN_NUMB
+						LEFT OUTER JOIN MSSALM I WITH(NOLOCK) 
+							ON D.SALE_SEQU_NUMB = I.SALE_SEQU_NUMB
+						WHERE 1=1 
+						AND (MAT_KIND IS NOT NULL OR MAT_KIND != '')
+						<![CDATA[
+						AND mrordm.REGI_DATE_TIME > CONVERT(DATETIME, '2014-01-01')
+						]]>
+						GROUP BY E.WORKID, F.WORKNM,MAT_KIND
+						UNION ALL
+						SELECT	WORKID
+						,		WORKNM
+						,		MAT_KIND
+						,		0 AS RECEIVE_LIST
+						,		0 AS RECEIVE_RETURN
+						,		0 AS CONSIGNMENT
+						,		0 AS PURCHASE_ORDER
+						,		0 AS PURCHASE_REQUEST
+						,		0 AS ORDER_REQUEST
+						,		0 AS APPROVAL_REQUEST
+						,		0 AS RECEIVE_LIST2
+						,		0 AS ASSUME
+						,		0 AS SALE_REQU_AMOU
+						,		0 AS SALE_PROD_AMOU
+						FROM SMPWORKINFO WITH(NOLOCK) 
+						WHERE 1=1
+						AND (MAT_KIND IS NOT NULL OR MAT_KIND != '')
+				)AA
+				GROUP BY  AA.WORKID, AA.WORKNM
+		)A
+		INNER JOIN SMPCODES B WITH(NOLOCK) 
+			ON A.MAT_KIND = B.CODEVAL1
+			AND B.CODETYPECD = 'SMPWORKINFO_CODE_MID'
+		INNER JOIN SMPCODES C WITH(NOLOCK) 
+			ON B.CODEVAL2 = C.CODEVAL1
+			AND C.CODETYPECD = 'SMPWORKINFO_CODE_TOP'
+		WHERE (A.MAT_KIND IS NOT NULL OR A.MAT_KIND != '')
+		ORDER BY C.DISORDER, B.DISORDER, MAT_KIND, WORKID
+	</select>
+	
+	<select id="selectAnalysisWeekDaySalesList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		/* analysis.selectAnalysisWeekDaySalesList */
+		SELECT	BB.SRC_DATE AS SRC_DATE
+		,		SUBSTRING(BB.SRC_DATE,6,2) AS SRC_MONTH -- 일자
+		,		SUBSTRING(BB.SRC_DATE,9,2) AS SRC_DAY -- 일자
+		,		DATENAME(DW,BB.SRC_DATE) AS WEEK_DAY --요일
+		,		ISNULL(AA.ORDER_AMOUNT,0) AS ORDER_AMOUNT -- 주문실적
+		,		ISNULL(CC.INVOICE_AMOUNT,0) AS INVOICE_AMOUNT -- 출하실적
+		,		ISNULL(DD.RECEIVE_AMOUNT,0) AS RECEIVE_AMOUNT -- 인수실적
+		,		ISNULL(DD.PROFIT_AMOUNT,0) AS PROFIT_AMOUNT -- 매출이익
+		,		ISNULL(EE.AUTO_RECEIVE_AMOUNT,0) AS AUTO_RECEIVE_AMOUNT -- 자동인수실적
+		,		ISNULL(EE.MENU_RECEIVE_AMOUNT,0) AS MENU_RECEIVE_AMOUNT -- 인수실적
+		,		STR(ISNULL(CASE WHEN EE.AUTO_RECEIVE_AMOUNT+EE.MENU_RECEIVE_AMOUNT != 0 THEN (EE.AUTO_RECEIVE_AMOUNT/((EE.AUTO_RECEIVE_AMOUNT+EE.MENU_RECEIVE_AMOUNT))*100)
+							WHEN EE.AUTO_RECEIVE_AMOUNT = 0 THEN 0
+						END,0),6,2) AUTO_SALE_AMOUNT
+		,		STR(ISNULL(CASE WHEN EE.AUTO_RECEIVE_AMOUNT+EE.MENU_RECEIVE_AMOUNT != 0 THEN (EE.MENU_RECEIVE_AMOUNT/((EE.AUTO_RECEIVE_AMOUNT+EE.MENU_RECEIVE_AMOUNT))*100)
+							WHEN EE.MENU_RECEIVE_AMOUNT = 0 THEN 0
+						END,0),6,2) MENU_SALE_AMOUNT
+		,		ISNULL(FF.RECE_PAY_AMOU,0) AS RECE_PAY_AMOU
+		,		'' AS RECE_PAY_AMOU_PERCENT
+		,		ISNULL(GG.RECE_PAY_AMOU,0) AS RECE_PAY_AMOU_CASH
+		,		ISNULL(HH.RECE_PAY_AMOU,0) AS RECE_PAY_AMOU_BILL
+		,		ISNULL(II.RECE_PAY_AMOU,0) AS RECE_PAY_AMOU_SETOFF
+		FROM(
+				SELECT	CONVERT(VARCHAR(10), A.regi_date_time, 120) AS CLIN_DATE
+				, SUM( 
+						(CASE	WHEN E.orde_iden_numb IS NOT NULL THEN E.sale_prod_quan 
+								WHEN D.orde_iden_numb IS NOT NULL THEN D.deli_prod_quan 
+								WHEN C.orde_iden_numb IS NOT NULL THEN C.purc_requ_quan 
+								ELSE B.orde_requ_quan END) * 
+						(CASE	WHEN E.orde_iden_numb IS NOT NULL THEN E.sale_prod_pris 
+								WHEN C.orde_iden_numb IS NOT NULL THEN C.orde_requ_pric 
+								ELSE B.orde_requ_pric 
+						END) ) AS ORDER_AMOUNT
+				FROM	MRORDM A WITH(NOLOCK) 
+				INNER JOIN MRORDT B WITH(NOLOCK) 
+					ON	A.orde_iden_numb = B.orde_iden_numb
+				LEFT OUTER JOIN MRPURT C WITH(NOLOCK) 
+					ON B.orde_iden_numb = C.orde_iden_numb
+					AND B.orde_sequ_numb = C.orde_sequ_numb
+				LEFT OUTER JOIN mracpt D WITH(NOLOCK)
+					ON C.orde_iden_numb = D.orde_iden_numb
+					AND C.orde_sequ_numb = D.orde_sequ_numb
+					AND C.purc_iden_numb = D.purc_iden_numb
+				LEFT OUTER JOIN MRORDTLIST E WITH(NOLOCK)
+					ON D.orde_iden_numb = E.orde_iden_numb
+					AND D.orde_sequ_numb = E.orde_sequ_numb
+					AND D.purc_iden_numb = E.purc_iden_numb
+					AND D.DELI_IDEN_NUMB = E.DELI_IDEN_NUMB
+				WHERE(
+					CASE 
+						WHEN D.orde_iden_numb IS NOT NULL THEN D.deli_stat_flag
+						WHEN C.orde_iden_numb IS NOT NULL THEN C.purc_stat_flag
+						ELSE B.orde_stat_flag
+					END
+				) IN ('05','10', '40', '50', '60', '69', '70', '80')
+				AND EXISTS(
+						SELECT	1
+						FROM	SMPWORKINFO A1 WITH(NOLOCK) 
+						INNER JOIN SMPBRANCHS B1 WITH(NOLOCK) 
+							ON	A1.WORKID = B1.WORKID
+						WHERE	A1.IS_SKTS_MANAGE = '1'
+						AND		B1.BRANCHID = A.branchid
+				)
+				AND A.regi_date_time BETWEEN CONVERT(DATETIME,  #{srcResultFrom} /**P*/+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME, #{srcResultFrom} /**P*/+'01 23:59:59')))
+				GROUP BY CONVERT(VARCHAR(10), A.regi_date_time, 120)
+		) AA
+		RIGHT OUTER JOIN(
+				SELECT	CONVERT(VARCHAR(10), Z.SRC_DATE, 120) AS SRC_DATE
+				FROM
+				(
+						SELECT DATEADD(day,0,CONVERT(DATETIME, #{srcResultFrom}+'01'))+(t1.Number*256+t2.Number) AS SRC_DATE 
+						FROM	Master.dbo.spt_Values t1
+						,		Master.dbo.spt_Values t2 
+						<![CDATA[
+						WHERE	t1.Type = 'P' AND t1.Number < 30
+						]]>
+						AND		t2.Type = 'P'
+				) Z
+				WHERE	Z.SRC_DATE BETWEEN CONVERT(DATETIME, #{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01')))
+		) BB
+			ON	BB.SRC_DATE = CONVERT(VARCHAR(10),AA.clin_date,120)
+		LEFT OUTER JOIN (
+				SELECT	CONVERT(VARCHAR(10), D.invoiceDate, 120) AS invoiceDate
+				,		SUM(D.deli_prod_quan*C.ORDE_REQU_PRIC) AS INVOICE_AMOUNT
+				FROM	MRORDM A WITH(NOLOCK) 
+				INNER JOIN MRORDT B WITH(NOLOCK) 
+					ON	A.orde_iden_numb = B.orde_iden_numb
+				INNER JOIN MRPURT C WITH(NOLOCK) 
+					ON	B.orde_iden_numb = C.orde_iden_numb
+					AND	B.orde_sequ_numb = C.orde_sequ_numb
+				INNER JOIN MRACPT D WITH(NOLOCK) 
+					ON	C.orde_iden_numb = D.orde_iden_numb
+					AND	C.orde_sequ_numb = D.orde_sequ_numb
+					AND	C.purc_iden_numb = D.purc_iden_numb
+				WHERE	A.orde_type_clas != '90'
+				AND		B.orde_stat_flag != '99'
+				AND		C.purc_stat_flag = '50'
+				AND		EXISTS(
+								SELECT	1
+								FROM	SMPWORKINFO A1 WITH(NOLOCK) 
+								INNER JOIN SMPBRANCHS B1 WITH(NOLOCK) 
+									ON	A1.WORKID = B1.WORKID
+								WHERE	A1.IS_SKTS_MANAGE = '1'
+								AND		B1.BRANCHID = A.branchid)
+				AND		D.invoiceDate BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+				GROUP BY CONVERT(VARCHAR(10), D.invoiceDate, 120)	
+		) CC
+			ON BB.SRC_DATE = CONVERT(VARCHAR(10),CC.invoiceDate,120)
+		LEFT OUTER JOIN (
+				SELECT	CONVERT(VARCHAR(10), A.rece_regi_date, 120) AS rece_regi_date
+				,		SUM(A.sale_prod_amou) AS RECEIVE_AMOUNT
+				,		SUM(A.SALE_PROD_AMOU - A.PURC_PROD_AMOU) AS PROFIT_AMOUNT
+				FROM	MRORDTLIST A WITH(NOLOCK) 
+				WHERE	EXISTS(
+								SELECT	1
+								FROM	SMPWORKINFO A1 WITH(NOLOCK) 
+								INNER JOIN SMPBRANCHS B1 WITH(NOLOCK) 
+									ON	A1.WORKID = B1.WORKID
+								WHERE	A1.IS_SKTS_MANAGE = '1'
+								AND		B1.BRANCHID = A.branchid)
+				AND		A.rece_regi_date BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+				GROUP BY CONVERT(VARCHAR(10), A.rece_regi_date, 120)
+		) DD
+			ON BB.SRC_DATE = CONVERT(VARCHAR(10),DD.rece_regi_date)
+		LEFT OUTER JOIN (
+				SELECT	AA.rece_regi_date
+				,		SUM(AA.AUTO_RECEIVE_AMOUNT) AS AUTO_RECEIVE_AMOUNT
+				,		SUM(AA.MENU_RECEIVE_AMOUNT) AS MENU_RECEIVE_AMOUNT
+				FROM
+				(
+						SELECT	CONVERT(VARCHAR(10), A.rece_regi_date, 120) AS rece_regi_date
+						,		(CASE WHEN B.rece_proc_id = '0' THEN A.sale_prod_amou
+									 ELSE 0
+								END) AS AUTO_RECEIVE_AMOUNT
+						,		(CASE WHEN B.rece_proc_id != '0' THEN A.sale_prod_amou
+									 ELSE 0
+								END) AS MENU_RECEIVE_AMOUNT
+						FROM	MRORDTLIST A WITH(NOLOCK) 
+						INNER JOIN MRACPT B WITH(NOLOCK) 
+							ON	A.orde_iden_numb = B.orde_iden_numb
+							AND	A.orde_sequ_numb = B.orde_sequ_numb
+							AND	A.purc_iden_numb = B.purc_iden_numb
+							AND	A.deli_iden_numb = B.deli_iden_numb
+						WHERE	EXISTS(
+										SELECT	1
+										FROM	SMPWORKINFO A1 WITH(NOLOCK) 
+										INNER JOIN SMPBRANCHS B1 WITH(NOLOCK) 
+											ON	A1.WORKID = B1.WORKID
+										WHERE	A1.IS_SKTS_MANAGE = '1'
+										AND		B1.BRANCHID = A.branchid)
+						AND		A.rece_regi_date BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+				) AA
+				GROUP BY CONVERT(VARCHAR(10), AA.rece_regi_date, 120)
+		)EE
+			ON BB.SRC_DATE = CONVERT(VARCHAR(10),EE.rece_regi_date,120)
+		LEFT OUTER JOIN(
+			SELECT	SUM(RECE_PAY_AMOU) AS RECE_PAY_AMOU
+			,		CONVERT(VARCHAR(10), ALRAM_DATE,120) AS ALRAM_DATE
+			FROM MPTREC WITH(NOLOCK) 
+			WHERE ALRAM_DATE BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+			GROUP BY CONVERT(VARCHAR(10), ALRAM_DATE,120)
+		)FF
+			ON BB.SRC_DATE = CONVERT(VARCHAR(10),FF.ALRAM_DATE, 120)
+		LEFT OUTER JOIN(
+			SELECT	SUM(AA.RECE_PAY_AMOU) AS RECE_PAY_AMOU
+			,		AA.ALRAM_DATE
+			,		AA.RECE_SALE_STATUS
+			FROM(
+				SELECT	RECE_PAY_AMOU
+				,		CONVERT(VARCHAR(10), ALRAM_DATE,120) AS ALRAM_DATE
+				,		ISNULL(RECE_SALE_STATUS, 10) AS RECE_SALE_STATUS
+				FROM MPTREC WITH(NOLOCK) 
+				WHERE ALRAM_DATE BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+				AND (RECE_SALE_STATUS = '10' OR (RECE_SALE_STATUS IS NULL OR RECE_SALE_STATUS = ''))
+			)AA
+			GROUP BY AA.ALRAM_DATE, RECE_SALE_STATUS
+		)GG
+			ON BB.SRC_DATE = CONVERT(VARCHAR(10),GG.ALRAM_DATE, 120)
+		LEFT OUTER JOIN(
+			SELECT	SUM(RECE_PAY_AMOU) AS RECE_PAY_AMOU
+			,		CONVERT(VARCHAR(10), ALRAM_DATE,120) AS ALRAM_DATE
+			,		ISNULL(RECE_SALE_STATUS, 10) AS RECE_SALE_STATUS
+			FROM MPTREC WITH(NOLOCK) 
+			WHERE ALRAM_DATE BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+			AND RECE_SALE_STATUS = '20'
+			GROUP BY CONVERT(VARCHAR(10), ALRAM_DATE,120), RECE_SALE_STATUS
+		)HH
+			ON BB.SRC_DATE = CONVERT(VARCHAR(10),HH.ALRAM_DATE, 120)
+		LEFT OUTER JOIN(
+			SELECT	SUM(RECE_PAY_AMOU) AS RECE_PAY_AMOU
+			,		CONVERT(VARCHAR(10), ALRAM_DATE,120) AS ALRAM_DATE
+			,		ISNULL(RECE_SALE_STATUS, 10) AS RECE_SALE_STATUS
+			FROM MPTREC WITH(NOLOCK) 
+			WHERE ALRAM_DATE BETWEEN CONVERT(DATETIME,#{srcResultFrom}+'01') AND DATEADD(D,-1,DATEADD(MONTH,1,CONVERT(DATETIME,#{srcResultFrom}+'01 23:59:59')))
+			AND RECE_SALE_STATUS = '30'
+			GROUP BY CONVERT(VARCHAR(10), ALRAM_DATE,120), RECE_SALE_STATUS
+		)II
+			ON BB.SRC_DATE = CONVERT(VARCHAR(10),II.ALRAM_DATE, 120)
+	</select>
+	
+	<select id="selectAnalysisBonds" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+		SELECT	ISNULL(SUM(SALE_TOTA_AMOU),0) - ISNULL(SUM(RECE_PAY_AMOU),0) AS SUM_AMOU
+		,		COUNT(1) AS SALE_CNT
+		,		'정상채권' AS RECE_NAME		
+		,		'1' AS ORDER_COL
+		FROM
+		(
+		SELECT		
+				A.SALE_SEQU_NAME
+		,		SALE_TOTA_AMOU
+		,		RECE_PAY_AMOU
+		,		TRANSFER_STATUS
+		FROM	MSSALM A WITH(NOLOCK) 
+		,		MPTREC B WITH(NOLOCK) 
+		WHERE	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB		
+		AND		TRANSFER_STATUS = '1'
+		<if test="srcDate != null and srcDate neq ''">
+		<![CDATA[
+		AND 	CONVERT(VARCHAR(6), CLOS_SALE_DATE,112) >= #{srcDate} 
+		]]>
+		</if>
+		<![CDATA[
+		AND		DATEDIFF(DAY,CLOS_SALE_DATE , CREAT_DATE) <= 60
+		]]>
+		)BB
+		UNION ALL
+		SELECT	ISNULL(SUM(SALE_TOTA_AMOU),0) - ISNULL(SUM(RECE_PAY_AMOU),0) AS SUM_AMOU
+		,		COUNT(1) AS SALE_CNT
+		,		'관리채권' AS RECE_NAME		
+		,		'2' AS ORDER_COL
+		FROM
+		(
+		SELECT		
+				A.SALE_SEQU_NAME
+		,		SALE_TOTA_AMOU
+		,		RECE_PAY_AMOU
+		,		TRANSFER_STATUS
+		FROM	MSSALM A  WITH(NOLOCK) 
+		,		MPTREC B WITH(NOLOCK) 
+		WHERE	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB		
+		AND		TRANSFER_STATUS = '1'
+		<if test="srcDate != null and srcDate neq ''">
+		<![CDATA[
+		AND 	CONVERT(VARCHAR(6), CLOS_SALE_DATE,112) >= #{srcDate} 
+		]]>
+		</if>
+		AND		DATEDIFF(DAY,CLOS_SALE_DATE , CREAT_DATE) BETWEEN 61 AND 100
+		)BB
+		UNION ALL
+		SELECT	ISNULL(SUM(SALE_TOTA_AMOU),0) - ISNULL(SUM(RECE_PAY_AMOU),0) AS SUM_AMOU
+		,		COUNT(1) AS SALE_CNT
+		,		'장기채권' AS RECE_NAME		
+		,		'3' AS ORDER_COL
+		FROM
+		(
+		SELECT		
+				A.SALE_SEQU_NAME
+		,		SALE_TOTA_AMOU
+		,		RECE_PAY_AMOU
+		,		TRANSFER_STATUS
+		FROM	MSSALM A WITH(NOLOCK) 
+		,		MPTREC B WITH(NOLOCK) 
+		WHERE	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB		
+		AND		TRANSFER_STATUS = '1'
+		<if test="srcDate != null and srcDate neq ''">
+		<![CDATA[
+		AND 	CONVERT(VARCHAR(6), CLOS_SALE_DATE,112) >= #{srcDate} 
+		]]>
+		</if>
+		<![CDATA[
+		AND		DATEDIFF(DAY,CLOS_SALE_DATE , CREAT_DATE)>= 100 
+		]]>
+		)BB
+		UNION ALL
+		SELECT	ISNULL(SUM(SALE_TOTA_AMOU),0) - ISNULL(SUM(RECE_PAY_AMOU),0) AS SUM_AMOU
+		,		COUNT(1) AS SALE_CNT
+		,		'이관채권' AS RECE_NAME		
+		,		'4' AS ORDER_COL
+		FROM
+		(
+		SELECT		
+				A.SALE_SEQU_NAME
+		,		SALE_TOTA_AMOU
+		,		RECE_PAY_AMOU
+		,		TRANSFER_STATUS
+		FROM	MSSALM A WITH(NOLOCK) 
+		,		MPTREC B WITH(NOLOCK) 
+		WHERE	A.SALE_SEQU_NUMB = B.SALE_SEQU_NUMB		
+		AND		TRANSFER_STATUS = '0'
+		<if test="srcDate != null and srcDate neq ''">
+		<![CDATA[
+		AND 	CLOS_SALE_DATE >= #{srcDate} 
+		]]>
+		</if>
+		)BB
+		ORDER BY ORDER_COL 		
+	</select>
+	<select id="selectAnalysisBondsCorpListCnt" resultType="int">
+	SELECT count(1)
+	FROM(
+		<include refid="selectAnalysisBondsCorpListSQL"/>
+		) AA
+	</select>
+	<select id="selectAnalysisBondsCorpList" resultType="kr.co.bitcube.analysis.dto.AnalysisDto">
+	<include refid="selectAnalysisBondsCorpListSQL"/>
+	<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+	</if>
+	</select>
+	<sql id="selectAnalysisBondsCorpListSQL">
+	SELECT branchid                                             
+			,  branchnm                                         
+			,  BUSINESSNUM                                      
+			,  usernm                                           
+			,  sum_amou                                         
+			,  clos_sale_date                                   
+			,  st_over_date                        
+			,  clos_over_date
+			,  ACCMANAGEUSERID
+			,  rece_name                                            
+	FROM(
+		select branchid
+				,  branchnm
+				,  BUSINESSNUM
+				,  usernm
+				,  sum_amou
+				,  CONVERT(VARCHAR, clos_sale_date, 23) as clos_sale_date
+				,  over_date as st_over_date
+				,  AUTORDERLIMITPERIOD + over_date as clos_over_date
+				,  ACCMANAGEUSERID
+				,  case 
+				<![CDATA[
+				when exce_date > 60 and exce_date < 100
+				]]>
+				then '관리채권'
+				when exce_date >= 100 
+				then '장기채권'
+				else '정상채권'
+				end as rece_name
+		from
+		(
+			select c.BRANCHID
+					,  c.BRANCHNM
+					,  c.BUSINESSNUM
+					,  d.USERNM
+					,  a.clos_sale_date
+					,  a.sale_tota_amou - b.rece_pay_amou as sum_amou
+					,  c.AUTORDERLIMITPERIOD
+					,  DATEdiff(day,a.clos_sale_date , b.creat_date) - c.AUTORDERLIMITPERIOD as over_date
+					,  DATEdiff(day,a.clos_sale_date , b.creat_date) AS exce_date
+					,  ACCMANAGEUSERID
+			from mssalm a WITH(NOLOCK) 
+				,  mptrec b WITH(NOLOCK) 
+				,  smpbranchs c WITH(NOLOCK) 
+				,  SMPUSERS d WITH(NOLOCK) 
+			where a.sale_sequ_numb = b.sale_sequ_numb
+				and  a.branchid = c.BRANCHID
+				and  c.ACCMANAGEUSERID = d.userid
+		)a
+		where a.over_date > -10
+		and  sum_amou > 0
+		) BB
+		WHERE 1=1
+		<if test="srcBranchId != null and srcBranchId != ''">
+		AND branchid = #{srcBranchId}
+		</if>
+		<if test="srcAccUser != null and srcAccUser != ''">
+		And ACCMANAGEUSERID = #{srcAccUser}
+		</if> 
+		<if test="srcBondDiv != null and srcBondDiv != ''">
+		And rece_name = #{srcBondDiv}
+		</if> 
+	</sql>
+</mapper>
