@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="product.app">
+	<select id="selectAppProductDetail" resultType="kr.co.bitcube.product.dto.ProductAppGoodDto">
+		/* product.app.selectProductInfo */
+		SELECT APPGOOD.app_good_id 
+		     , APPGOOD.chn_price_clas 
+		     , APPGOOD.good_iden_numb 
+			 , GOOD.good_name 
+		     , APPGOOD.fix_good_id 
+		     , APPGOOD.disp_good_id 
+		     , APPGOOD.before_price 
+		     , APPGOOD.after_price 
+			 /**, (APPGOOD.after_price - APPGOOD.before_price) / APPGOOD.after_price * (1/100) as chn_persent*/
+			 , 0 AS chn_persent
+		     , APPGOOD.change_reason 
+		     , APPGOOD.app_sts_flag 
+		     , APPGOOD.register_userid 
+		     , dbo.FNS_USERNAME_BY_USERID(APPGOOD.register_userid ,'1') as register_nm
+		     , CONVERT(VARCHAR , APPGOOD.register_date , 23 ) AS register_date   
+		     , APPGOOD.confirm_userid 
+		     , dbo.FNS_USERNAME_BY_USERID(APPGOOD.confirm_userid,'1') as confirm_nm 
+		     , CONVERT(VARCHAR , APPGOOD.confirm_date , 23 ) AS confirm_date   
+		     , APPGOOD.app_userid 
+		     , dbo.FNS_USERNAME_BY_USERID(APPGOOD.app_userid ,'1') as app_nm 
+		     , CONVERT ( VARCHAR , APPGOOD.app_date , 23) AS app_date   
+		     , APPGOOD.vendorid 
+			 , (SELECT VENDORNM FROM SMPVENDORS WITH(NOLOCK) WHERE VENDORID = APPGOOD.vendorid )  AS vendornm
+			 , appcode.apptypecode
+			 , appcode.apptypenm
+			 , appstscode.appstscode
+			 , appstscode.appstsnm 
+		  FROM mcappgoodprice APPGOOD WITH(NOLOCK) 
+		     , mcgood GOOD  WITH(NOLOCK) 
+		     , (SELECT CODEVAL1 AS APPTYPECODE , CODENM1 APPTYPENM FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPEID = '13271') APPCODE
+			 , (SELECT CODEVAL1 AS APPSTSCODE , CODENM1 APPSTSNM FROM SMPCODES  WITH(NOLOCK) WHERE CODETYPEID = '13266') APPSTSCODE 
+		 WHERE APPGOOD.good_iden_numb = GOOD.good_iden_numb
+		   AND APPGOOD.chn_price_clas = APPCODE.APPTYPECODE 
+		   AND APPGOOD.app_sts_flag = APPSTSCODE.APPSTSCODE
+		   AND APPGOOD.app_good_id = #{app_good_id}
+	</select>
+	
+	<select id="selectProductAppListCnt" resultType="int">
+		/* product.app.selectProductAppListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectProductAppListSql"/>
+	</select>
+	
+	<select id="selectProductAppList" resultType="kr.co.bitcube.product.dto.ProductAppGoodDto">
+		/* product.app.selectProductAppList */
+		SELECT APPGOOD.APP_GOOD_ID
+		,		APPGOOD.CHN_PRICE_CLAS
+		,		APPGOOD.GOOD_IDEN_NUMB
+		,		GOOD.GOOD_NAME
+		,		APPGOOD.FIX_GOOD_ID
+		,		APPGOOD.DISP_GOOD_ID
+		,		APPGOOD.BEFORE_PRICE
+		,		APPGOOD.AFTER_PRICE
+		,		APPGOOD.CHANGE_REASON
+		,		APPGOOD.APP_STS_FLAG
+		,		APPGOOD.REGISTER_USERID
+		,		(SELECT USERNM FROM SMPUSERS WITH(NOLOCK)  WHERE USERID = APPGOOD.REGISTER_USERID )  AS REGISTER_USERNM
+		,		CONVERT(VARCHAR , APPGOOD.REGISTER_DATE , 23 ) AS REGISTER_DATE
+		,		APPGOOD.CONFIRM_USERID
+		,		(SELECT USERNM FROM SMPUSERS WITH(NOLOCK)  WHERE USERID = APPGOOD.CONFIRM_USERID )  AS CONFIRM_USERNM
+		,		CONVERT(VARCHAR , APPGOOD.CONFIRM_DATE , 23 ) AS CONFIRM_DATE
+		,		APPGOOD.APP_USERID
+		,		(SELECT USERNM FROM SMPUSERS  WITH(NOLOCK) WHERE USERID = APP_USERID )  AS APP_USERNM
+		,		CONVERT ( VARCHAR , APPGOOD.APP_DATE , 23) AS APP_DATE
+		,		APPGOOD.VENDORID
+		,		(SELECT VENDORNM FROM SMPVENDORS  WITH(NOLOCK) WHERE VENDORID = APPGOOD.VENDORID )  AS VENDORNM
+		,		APPCODE.APPTYPECODE
+		,		APPCODE.APPTYPENM
+		,		APPSTSCODE.APPSTSCODE
+		,		APPSTSCODE.APPSTSNM
+		<include refid="selectProductAppListSql"/>
+	</select>
+	
+	<sql id="selectProductAppListSql">
+		FROM	MCAPPGOODPRICE APPGOOD WITH(NOLOCK) 
+		,		MCGOOD GOOD WITH(NOLOCK) 
+		,		(SELECT CODEVAL1 AS APPTYPECODE , CODENM1 APPTYPENM FROM SMPCODES WITH(NOLOCK)  WHERE CODETYPEID = '13271') APPCODE
+		,		(SELECT CODEVAL1 AS APPSTSCODE , CODENM1 APPSTSNM FROM SMPCODES WITH(NOLOCK)  WHERE CODETYPEID = '13302') APPSTSCODE
+		WHERE	APPGOOD.GOOD_IDEN_NUMB = GOOD.GOOD_IDEN_NUMB
+		AND	APPGOOD.CHN_PRICE_CLAS = APPCODE.APPTYPECODE
+		AND	APPGOOD.APP_STS_FLAG = APPSTSCODE.APPSTSCODE
+		<if test="srcVendorId != null and srcVendorId != '' and srcVendorId neq '0'.toString() ">
+			AND APPGOOD.VENDORID = #{srcVendorId}
+		</if>
+		<if test="srcGoodName != null and srcGoodName != ''">
+			AND GOOD.GOOD_NAME LIKE '%${srcGoodName}%'
+		</if>
+		<if test="srcConfirmStartDate != null and srcConfirmStartDate != ''">
+			<if test="srcConfirmEndDate != null and srcConfirmEndDate != ''">
+				AND APPGOOD.CONFIRM_DATE BETWEEN CONVERT(DATETIME, #{srcConfirmStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcConfirmEndDate}))
+			</if>
+		</if>
+		<if test="srcChnPriceClas != null and srcChnPriceClas != ''">
+			AND APPGOOD.CHN_PRICE_CLAS = #{srcChnPriceClas}
+		</if>
+		<if test="srcAppStsFlag != null and srcAppStsFlag != ''">
+			AND APPGOOD.APP_STS_FLAG = #{srcAppStsFlag}
+		</if>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</sql>
+	
+	<select id="selectDispIdForInsertNewDispId" resultType="kr.co.bitcube.product.dto.ProductAppGoodDto">
+		/* product.app.selectDispIdForInsertNewDispId */
+		SELECT DISPGOOD.disp_good_id
+				, DISPGOOD.sale_unit_pric
+		  FROM mcdisplaygood DISPGOOD WITH(NOLOCK)  
+		 WHERE DISPGOOD.good_iden_numb = #{good_iden_numb}
+		   AND DISPGOOD.vendorid       = #{vendorid} 
+		   AND DISPGOOD.final_good_sts = '1'
+	</select>
+	
+	<update id="updateSetAbleDispProduct">
+		/* product.app.updateSetAbleDispProduct */
+		UPDATE mcdisplaygood 
+		   SET final_good_sts = '1'
+		     , disp_from_date = getdate()
+		 WHERE disp_good_id = #{disp_good_id}
+	</update>
+	
+	<update id="updateSetUnAbleDispPastProduct">
+		/* product.app.updateSetUnAbleDispPastProduct */
+		WITH TMP_TBL( disp_good_id ) 
+			AS (
+			SELECT ref_good_seq
+			  FROM mcdisplaygood WITH(NOLOCK)  
+		     WHERE disp_good_id =  #{disp_good_id}
+		    UNION ALL
+			SELECT DISPGOOD.ref_good_seq
+			  FROM mcdisplaygood DISPGOOD WITH(NOLOCK)  
+			     , TMP_TBL 
+		     WHERE DISPGOOD.disp_good_id = TMP_TBL.disp_good_id
+			)
+		UPDATE mcdisplaygood 
+		   SET final_good_sts = '0'
+		     , disp_to_date   = getdate()
+		 WHERE disp_good_id IN (
+									SELECT disp_good_id  
+									  FROM TMP_TBL
+								)
+	</update>
+	
+	<update id="updateMcGoodFixAppSts">
+		/* product.app.updateMcGoodFixAppSts */
+		UPDATE mcgoodfix 
+		   SET fix_app_sts = #{fix_app_sts} 
+		 WHERE fix_good_id = #{fix_good_id}
+	</update>
+	<update id="updateMcGoodFixAppStsByApproval">
+		/* product.app.updateMcGoodFixAppStsByApproval*/
+		UPDATE mcgoodfix 
+		   SET fix_app_sts = #{fix_app_sts} 
+		   ,		price = #{sale_unit_pric}
+		 WHERE fix_good_id = #{fix_good_id}
+	</update>
+	
+	<update id="updateProdVendorUnitPrice">
+		/* product.app.updateProdVendorUnitPrice*/
+		UPDATE mcgoodvendor 
+		   SET sale_unit_pric = #{sale_unit_pric},
+		   isUse = '2' 
+		   ,		UPDATE_DATE = GETDATE()
+		 WHERE good_iden_numb = #{good_iden_numb}
+		   AND vendorid       = #{vendorid}
+	</update>
+	<update id="updateProdVendorUnitPriceByExcelUpload">
+		/* product.app.updateProdVendorUnitPriceByExcelUpload*/
+		UPDATE MCGOODVENDOR SET 
+            SELL_PRICE = #{sell_price} 
+		,	SALE_UNIT_PRIC = #{sale_unit_pric} 
+		,	GOOD_ST_SPEC_DESC = #{good_st_spec_desc}
+		,	GOOD_SPEC_DESC = #{good_spec_desc}
+		,	ORDE_CLAS_CODE = #{orde_clas_code}
+		,	DELI_MINI_DAY = #{deli_mini_day}
+		,	DELI_MINI_QUAN = #{deli_mini_quan}
+		,	GOOD_CLAS_CODE = #{good_clas_code}
+		,	ISUSE = #{isUse}
+		,	GOOD_REG_YEAR = #{good_reg_year}
+		<if test="vendor_priority != null and vendor_priority != ''">
+		,	VENDOR_PRIORITY = #{vendor_priority}
+		</if>
+		,	GOOD_INVENTORY_CNT = #{good_inventory_cnt}
+		,		UPDATE_DATE = GETDATE()
+		WHERE GOOD_IDEN_NUMB = #{good_iden_numb}
+		AND VENDORID       = #{vendorid}
+	</update>
+	<select id="selectMcgoodVendorInfoByExcelUpload" resultType="java.util.HashMap">
+		/* product.app.selectMcgoodVendorInfoByExcelUpload*/
+		SELECT a.good_iden_numb
+		     ,a.vendorid
+		     ,a.req_good_id
+		     ,a.sale_unit_pric
+		     ,a.good_st_spec_desc
+		     ,a.good_spec_desc
+		     ,a.orde_clas_code
+		     ,a.deli_mini_day
+		     ,a.deli_mini_quan
+		     ,a.make_comp_name
+		     ,a.original_img_path
+		     ,a.large_img_path
+		     ,a.middle_img_path
+		     ,a.small_img_path
+		     ,a.good_same_word
+		     ,a.good_desc
+		     ,a.issub_ontract
+		     ,a.good_clas_code
+		     ,a.good_inventory_cnt
+		     ,a.regist_date
+		     ,isnull(a.order_cnt,0) as order_cnt
+		     ,a.isUse
+		     ,a.distri_rate 
+		  FROM mcgoodvendor a WITH(NOLOCK) 
+		  where a.good_iden_numb = #{good_iden_numb}
+		  and a.vendorid = #{vendorid}
+	</select>
+	
+	<insert id="insertProductVendorHist">
+		/* product.app.insertProductVendorHist*/
+		INSERT INTO mcgoodvendor_hist 
+		       (   good_hist_id
+		         , good_iden_numb
+		         , vendorid
+		         , req_good_id
+		         , sale_unit_pric
+		         , good_spec_desc
+		         , orde_clas_code
+		         , deli_mini_day
+		         , deli_mini_quan
+		         , make_comp_name
+		         , original_img_path
+		         , large_img_path
+		         , middle_img_path
+		         , small_img_path
+		         , good_same_word
+		         , good_desc
+		         , issub_ontract
+		         , good_clas_code
+		         , good_inventory_cnt
+		         , regist_date 
+		         , isUse
+		         <if test="insetUserId != null and insetUserId !=''">
+		         , insert_user_id
+		         </if>
+		       ) 
+		   SELECT  #{good_hist_id}
+		         , good_iden_numb
+		         , vendorid
+		         , req_good_id
+		         , sale_unit_pric
+		         , good_spec_desc
+		         , orde_clas_code
+		         , deli_mini_day
+		         , deli_mini_quan
+		         , make_comp_name
+		         , original_img_path
+		         , large_img_path
+		         , middle_img_path
+		         , small_img_path
+		         , good_same_word
+		         , good_desc
+		         , issub_ontract
+		         , good_clas_code
+		         , good_inventory_cnt
+		         , GETDATE()
+		         , isUse
+		         <if test="insetUserId != null and insetUserId !=''">
+		         , #{insetUserId} AS insert_user_id 
+		         </if>
+		    FROM  dbo.mcgoodvendor  WITH(NOLOCK) 
+		   WHERE  good_iden_numb = #{good_iden_numb} 
+		     AND  vendorid       = #{vendorid}
+	</insert>
+	
+	<insert id="insertDispProductInfos">
+		/* product.app.insertDispProductInfos*/
+		INSERT INTO mcdisplaygood 
+		       (   disp_good_id
+		         , good_iden_numb
+		         , groupid
+		         , clientid
+		         , branchid
+		         , vendorid
+		         , cont_from_date
+		         , cont_to_date
+		         , ref_good_seq
+		         , ispast_sell_flag
+		         , final_good_sts
+		         , sell_price
+		         , sale_unit_pric
+		         , disp_from_date
+		         , disp_to_date
+		         , cust_good_iden_numb 
+		         , areatype
+		       ) 
+		  SELECT   #{new_disp_good_id}
+		         , good_iden_numb
+		         , groupid
+		         , clientid
+		         , branchid
+		         , vendorid
+		         , cont_from_date
+		         , cont_to_date
+		         , disp_good_id
+		         , ispast_sell_flag
+		         , final_good_sts
+		         , sell_price
+		         , #{sale_unit_pric}
+		         , getdate()
+		         , '9999-12-31'
+		         , cust_good_iden_numb
+		         , areatype
+		    FROM mcdisplaygood WITH(NOLOCK)      
+		   WHERE disp_good_id = #{disp_good_id}
+	</insert>
+	
+	<update id="updateUnDispPlayProdVendor">
+		/* product.app.updateUnDispPlayProdVendor*/
+		UPDATE mcdisplaygood 
+		   SET final_good_sts = '0'
+		     , disp_to_date   = getdate()
+		 WHERE disp_good_id = #{disp_good_id}
+	</update>
+	
+	<delete id="deleteProductVendor">
+		/* product.app.deleteProductVendor*/
+		DELETE 
+		  FROM MCGOODVENDOR 
+		 WHERE GOOD_IDEN_NUMB = #{good_iden_numb}
+		   AND vendorid       = #{vendorid}
+	</delete>
+	
+	<update id="updateProdVendorUseSts">
+		/* product.app.updateProdVendorUseSts*/
+		UPDATE mcgoodvendor 
+		   SET isUse = #{isUse},
+		   <if test="isUse == 0">
+		       sale_unit_pric = 0,
+		       sell_price = 0,
+		   </if>
+		       UPDATE_DATE = GETDATE()
+		 WHERE good_iden_numb = #{good_iden_numb}
+		   and vendorid       = #{vendorid}
+	</update>
+	
+	
+	<update id="updateAppGoodSts">
+		/* product.app.updateAppGoodSts*/
+		UPDATE mcappgoodprice 
+		   SET app_sts_flag = #{app_sts_flag}
+		     , app_userid 	= #{app_userid}
+		     , app_date 	= getdate()
+		 WHERE app_good_id = #{app_good_id}
+	</update>
+	
+	
+	<insert id="insertProductVendorHistForDelete">
+		/* product.app.insertProductVendorHistForDelete*/
+		INSERT INTO mcgoodvendor_hist 
+		       (   good_hist_id
+		         , good_iden_numb
+		         , vendorid
+		       ) 
+		   SELECT  #{good_hist_id}
+		         , good_iden_numb
+		         , vendorid
+		    FROM  dbo.mcgoodvendor  WITH(NOLOCK) 
+		   WHERE  good_iden_numb = #{good_iden_numb} 
+		     AND  vendorid       = #{vendorid}
+	</insert>
+	
+	<select id="selectProdVendorUnitPriceChart" resultType="java.util.HashMap">
+		/* product.app.selectProdVendorUnitPriceChart*/
+		 SELECT TBL.VENDORID
+		      , TBL.SALE_UNIT_PRIC
+		      , TBL.DISP_FROM_DATE
+		      , TBL.DISPLEV
+		      , TBL.LEV
+		      , TBL.VENDORNM
+		      , YEAR(TBL.DISP_FROM_DATE) as YEAR
+		      , month(TBL.DISP_FROM_DATE) as MON
+		      , day(TBL.DISP_FROM_DATE) as DAY
+		
+		   FROM (
+				SELECT CASE
+						WHEN LEV = 1  THEN VENDORID 
+						WHEN LEV = 2  AND DISPLEV = 1 THEN VENDORID
+						ELSE ''    
+					   END AS VENDORID  
+					 , CASE
+						WHEN LEV = 1  THEN SALE_UNIT_PRIC
+						WHEN LEV = 2  AND DISPLEV = 1 THEN SALE_UNIT_PRIC
+						ELSE '' 
+					   END AS SALE_UNIT_PRIC  
+					 , CASE
+						WHEN LEV = 1  THEN DISP_FROM_DATE
+						WHEN LEV = 2  AND DISPLEV = 1 THEN  GETDATE() 
+						ELSE '' 
+					   END AS DISP_FROM_DATE
+					 , CASE
+						WHEN LEV = 1  THEN DISPLEV
+						WHEN LEV = 2  AND DISPLEV = 1 THEN DISPLEV
+						ELSE '' 
+					   END AS DISPLEV
+					 , LEV
+					 , VENDORNM AS VENDORNM  
+				  FROM (
+						SELECT DISPGOOD.VENDORID, SALE_UNIT_PRIC, DISP_FROM_DATE 
+							 , RANK() OVER ( PARTITION BY DISPGOOD.VENDORID ORDER BY DISP_FROM_DATE DESC) AS DISPLEV
+							 , VENDOR.VENDORNM
+						  FROM	mcdisplaygood  DISPGOOD  WITH(NOLOCK) 
+						  ,			SMPVENDORS VENDOR WITH(NOLOCK) 
+						 WHERE DISPGOOD.vendorid = VENDOR.VENDORID 
+						   AND DISPGOOD.final_good_sts != '9'
+						   AND GOOD_IDEN_NUMB = #{good_iden_numb} 
+						   --AND DISP_FROM_DATE BETWEEN DATEADD(M , -6 , GETDATE())  AND GETDATE()  
+						) A CROSS JOIN 
+						(  SELECT 1 AS LEV UNION ALL SELECT 2 ) B
+			) TBL
+		 WHERE TBL.VENDORID > '' 
+		ORDER BY VENDORID , DISP_FROM_DATE
+	</select>
+	<select id="selectprodSellUnitPriceChart" resultType="java.util.HashMap">
+		/* product.app.selectprodSellUnitPriceChart*/
+			SELECT TBL.GROUPCOL
+			     , TBL.SELL_PRICE
+				 , TBL.DISP_FROM_DATE
+				 , TBL.DISPLEV
+			     , YEAR(TBL.DISP_FROM_DATE) as YEAR
+			     , month(TBL.DISP_FROM_DATE) as MON
+			     , day(TBL.DISP_FROM_DATE) as DAY
+			  FROM ( 
+					SELECT 
+					        CASE
+							WHEN LEV = 1  THEN GROUPCOL 
+							WHEN LEV = 2  AND DISPLEV = 1 THEN GROUPCOL
+							ELSE ''    
+						   END AS GROUPCOL  
+						 , CASE
+							WHEN LEV = 1  THEN SELL_PRICE
+							WHEN LEV = 2  AND DISPLEV = 1 THEN SELL_PRICE
+							ELSE '0' 
+						   END AS SELL_PRICE  
+						 , CASE
+							WHEN LEV = 1  THEN DISP_FROM_DATE
+							WHEN LEV = 2  AND DISPLEV = 1 THEN  GETDATE() 
+							ELSE NULL
+						   END AS DISP_FROM_DATE
+						 , CASE
+							WHEN LEV = 1  THEN DISPLEV
+							WHEN LEV = 2  AND DISPLEV = 1 THEN DISPLEV
+							ELSE NULL 
+						   END AS DISPLEV
+					  FROM (
+							SELECT SELL_PRICE
+								 , DISP_FROM_DATE       
+								 , CASE
+									WHEN DISPGOOD.BRANCHID  > '0' THEN dbo.FNS_BorgNameByBorgID(BRANCHID) + '/' + dbo.FNS_BorgNameByBorgID(DISPGOOD.VENDORID)
+									WHEN DISPGOOD.CLIENTID  > '0' THEN dbo.FNS_BorgNameByBorgID(CLIENTID) + '/' + dbo.FNS_BorgNameByBorgID(DISPGOOD.VENDORID)
+									ELSE dbo.FNS_BorgNameByBorgID(GROUPID) + '/' + dbo.FNS_BorgNameByBorgID(DISPGOOD.VENDORID)
+								   END AS GROUPCOL
+								 , RANK() OVER ( PARTITION BY DISPGOOD.GROUPID , DISPGOOD.CLIENTID , DISPGOOD.BRANCHID , DISPGOOD.VENDORID ORDER BY DISP_FROM_DATE DESC) AS DISPLEV       
+							  FROM mcdisplaygood  DISPGOOD WITH(NOLOCK)  
+							 WHERE DISPGOOD.final_good_sts != '9'         
+							   AND GOOD_IDEN_NUMB = #{good_iden_numb}
+							) A CROSS JOIN 
+							(  SELECT 1 AS LEV UNION ALL SELECT 2 ) B
+				) TBL
+			WHERE TBL.GROUPCOL != ''
+			 ORDER BY TBL.GROUPCOL , TBL.DISP_FROM_DATE
+	</select>
+</mapper>

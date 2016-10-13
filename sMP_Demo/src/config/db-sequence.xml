@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans	xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+			
+	<bean name="systemIdGenerationService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="dataSource" />         <!-- db-config.xml에 있는 bean id  -->
+		<property name="blockSize"  value="1" />                <!-- blockSize : Id Generation 내부적으로 사용하는 정보로 ID 요청시마다 DB접속을 하지 않기 위한 정보(지정한 횟수 마다 DB 접속 처리) -->
+		<property name="table"      value="SMP_SEQUENCE" />           <!-- table : 생성하는 테이블 정보로 사용처에서 테이블명 변경 가능 -->
+		<property name="tableName"  value="SEQMP_CORESYSTEM" /> <!-- tableName : 사용하고자 하는 아이디 개별 인식을 위한 키 값(대개의 경우는 테이블 별로 아이디가 필요하기에 tableName이라고 지정함) -->
+	</bean>
+	<bean name="seqMpBorgsService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_BORGS" />
+	</bean>
+	<bean name="seqMpBoardService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_NOTICEBOARD" />
+	</bean>
+	<bean name="seqMpUsersService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy">
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_USERS" />
+	</bean>
+	<bean name="seqMpChatService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 채팅 시컨스(2012-06-20, tytolee) -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_CHAT" />
+	</bean>
+	<bean name="seqMpOrderHistService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 주문 상태 히스토리 시퀀스-->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_MRORDTHIST" />
+	</bean>
+	<bean name="seqMpOrderReturnService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 반품주문 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_MRAREM" />
+	</bean>
+	<bean name="seqMpOrderReceiptNum" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 인수증 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_RECEIPTNUM" />
+	</bean>
+	<bean name="seqMpMracptSubService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 선정산 히스토리 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_MRACPTSUB" />
+	</bean>
+	<bean name="seqMcCategoryService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 카테고리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_CATEGORY" />
+	</bean>
+	<bean name="seqMcCategoryHistoryService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 카테고리 히스토리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_CATEGORY_HISTORY" />
+	</bean>
+	<bean name="seqMcProductDispGoodService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 상품 진열 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_DISPGOOD" />
+	</bean>
+	<bean name="seqMcProductService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 상품 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_PRODUCT" />
+	</bean>
+	<bean name="seqMcProductHistoryService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 상품 히스토리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_PRODUCT_HISTORY" />
+	</bean>
+	<bean name="seqMcAppProductService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 상품승인 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_APPPRODUCT" />
+	</bean>
+	<bean name="seqMcGoodFixService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 상품 변경 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_FIXGOOD" />
+	</bean>
+	
+	<bean name="seqMpAttachInfoService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 첨부파일관리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_ATTACHINFO" />
+	</bean>
+	<bean name="seqMpDeliveryInfoService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 배송지관리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_DELIVERYINFO" />
+	</bean>
+	<bean name="seqMpMailInfoService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 메일관리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_MAILINFO" />
+	</bean>
+	<bean name="seqMcReqProductService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 고객사상품등록요청 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_REQPRODUCT" />
+	</bean>	
+	<bean name="seqMcReqProductHistService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 고객사상품등록요청 히스트 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_REQPRODUCTHISY" />
+	</bean>
+	<bean name="seqMcBidService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 상품입찰공고 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMC_BID" />
+	</bean>
+	<bean name="seqAdjustGenerationService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 정산관리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_MSSALM" />
+	</bean>
+	<bean name="seqMrgoodsvendorHistService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 카테고리 히스토리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_MRGOODSVENDOR_HIST" />
+	</bean>
+	<bean name="seqSalesSapNo" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 매출SAP 전표번호생성 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_SALES_SAPNO" />
+	</bean>	
+	<bean name="seqPurchaseSapNo" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 매입SAP 전표번호생성 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_PURCHASE_SAPNO" />
+	</bean>	
+	<bean name="seqMptrec" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 채권/채무 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_MPTREC" />
+	</bean>		
+	<bean name="seqWorkInfo" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 공사유형 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_WORKINFO" />
+	</bean>		
+	<bean name="seqEvaluate" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 공사유형 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQMP_EVALUATE" />
+	</bean>
+	<bean name="seqContract" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 물품공급 계약서 버전 관리 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_CONTRACT" />
+	</bean>
+	<bean name="seqContractList" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 물품공급 계약서 서명 내역 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_CONTRACT_LIST" />
+	</bean>	
+	<bean name="seqProposalService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 신규자재 제안 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_SMPNEW_MATERSUGGEST" />
+	</bean>
+	<bean name="seqProposalHistService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 신규자재 제안 히스토리 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_SMPNEW_MATERSUGGEST_HISTOR" />
+	</bean>
+		<bean name="seqMmsId" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- MMS 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_MMS_ID" />
+	</bean>
+	<bean name="seqMenuAccessLog" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 인터페이스 업체 시컨스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="100" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_MENUACCESSLOG" />
+	</bean>
+	<bean name="seqParticipation" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 참여 게시판 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_PARTICIPATION" />
+	</bean>
+	<bean name="seqParticipationComment" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 참여 게시판 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="PARTICIPATION_COMMENT_SEQ" />
+	</bean>
+	<bean name="seqImpro" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 개선사항 게시판 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_IMPRO" />
+	</bean>
+	<bean name="seqVocBoardService" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 고객의소리 시퀀스 -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="blockSize"  value="1" />
+		<property name="table"      value="SMP_SEQUENCE" />
+		<property name="tableName"  value="SEQ_VOCBOARD" />  
+	</bean>		
+    <bean name="seqItem" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 대표상품 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQ_ITEM" />
+    </bean>
+    <bean name="seqPartAppl" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 참가신청 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQ_PARTAPPL" />
+    </bean>
+    <bean name="seqLastEvalAttach" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 최종평가증빙자료 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQ_LASTEVALATTACH" />
+    </bean>
+    <bean name="seqPoll" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 설문조사 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQ_POLL" />
+    </bean>
+    <bean name="seqPollComment" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 설문조사댓글 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQ_POLLCOMMENT" />
+    </bean>
+    <bean name="seqMcAddProduct" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 추가상품 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQMC_ADDGOOD" />
+    </bean>
+    <bean name="seqMcPriceChgHist" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 가격변경이력 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQMCPRICECHGHIST" />
+    </bean>
+    <bean name="seqMcStockChgHist" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 재고변경이력 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQMCSTOCKCHGHIST" />
+    </bean>
+    <bean name="seqMcGoodDisplay" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 재고변경이력 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQMCGOODDISPLAY" />
+    </bean>
+    <bean name="seqMcGoodDisplayBranch" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 재고변경이력 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQMCGOODDISPLAYBRANCH" />
+    </bean>
+    <bean name="seqMcGoodCommonOption" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 상품공통옵션 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQMCGOODCOMMONOPTION" />
+    </bean>
+    <bean name="seqFaq" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- FAQ 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQFAQ_MANAGE" />
+    </bean>
+    <bean name="seqRepair" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 유지보수 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="REQ_REPAIR_ID" />
+    </bean>
+    <bean name="seqBondsHist" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 채권관리 HISTORY 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="BOND_MANAGE_HIST" />
+    </bean>
+    <bean name="seqSmile" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 스마일관리 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQ_SMILE" />
+    </bean>
+    <bean name="seqMrpurtCancel" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 발주취소요청 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQ_MRPURT_CANCEL" />
+    </bean>
+    <bean name="seqElectronicBill" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 전자어음 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQ_ELECTRONIC_BILL" />
+    </bean>
+    <bean name="seqMpQuality" class="egovframework.rte.fdl.idgnr.impl.EgovTableIdGnrService" destroy-method="destroy"><!-- 전자어음 시퀀스 -->
+        <property name="dataSource" ref="dataSource" />
+        <property name="blockSize"  value="1" />
+        <property name="table"      value="SMP_SEQUENCE" />
+        <property name="tableName"  value="SEQMP_QUALITY" />
+    </bean>
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource" > 
+		<property name="basenames"> 
+			<list>  
+				<value>classpath:/egovframework/rte/fdl/idgnr/messages/idgnr</value>  
+			</list> 
+		</property> 
+	</bean>
+
+
+</beans>

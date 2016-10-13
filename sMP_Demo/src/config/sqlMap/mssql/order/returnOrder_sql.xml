@@ -1,0 +1,1158 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="order.returnOrder">
+
+	<!-- 인수내역/반품요청 리스트 조회 -->
+	<select id="selectReturnOrderRegistListCnt" resultType="int">
+		/* order.returnOrder.selectReturnOrderRegistListCnt */
+		SELECT COUNT(1)  FROM (
+	<include refid="selectReturnOrderRegistListSql"/>
+	</select>
+	<select id="selectReturnOrderRegistList" resultType="kr.co.bitcube.order.dto.OrderDeliDto">
+		/* order.returnOrder.selectReturnOrderRegistList */
+		SELECT AA.* FROM (
+		<include refid="selectReturnOrderRegistListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	<sql id="selectReturnOrderRegistListSql">
+		SELECT	C.CODENM1 AS ORDE_TYPE_CLAS 
+		,		A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB AS ORDE_IDEN_NUMB 
+		,		A.PURC_IDEN_NUMB 
+		,		A.DELI_IDEN_NUMB 
+		,		B.CONS_IDEN_NAME
+		,		ISNULL(A1.RECE_IDEN_NUMB, '') AS RECE_IDEN_NUMB
+		,		(SELECT Z.CODENM1 FROM SMPCODES Z  WITH(NOLOCK) WHERE A.DELI_TYPE_CLAS = Z.CODEVAL1 AND Z.CODETYPECD = 'DELIVERYTYPE' ) AS DELI_TYPE_CLAS 
+		,		A.DELI_INVO_IDEN 
+		,		J.BRANCHNM AS ORDE_CLIENT_NAME
+				<![CDATA[
+		,		( CASE WHEN ( B.ORDE_TYPE_CLAS <> '90' AND H.NORM_TRUS_FLAG = 1) THEN '<b>물류센터 </b>('+F.VENDORNM+')' ELSE F.VENDORNM END) AS VENDORNM
+				]]>
+		,		G.GOOD_NAME 
+		,		H.ORDE_REQU_QUAN 
+		,		(CASE WHEN A1.ORDE_IDEN_NUMB IS NOT NULL THEN A1.SALE_PROD_QUAN ELSE A.RECE_PROD_QUAN END) AS RECE_PROD_QUAN
+		,		G.GOOD_TYPE AS GOOD_CLAS_TYPE 
+		,		G.GOOD_IDEN_NUMB 
+		,		H.DISP_GOOD_ID 
+		,		E.VENDORID 
+		,		A.DELI_TYPE_CLAS AS DELI_TYPE_CLAS_CODE 
+		,		(	SELECT SUM(Z.RETU_PROD_QUAN) 
+					FROM MRAREM Z WITH(NOLOCK)  
+					WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB 
+					AND Z.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB 
+					AND Z.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB 
+					AND Z.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB 
+					AND Z.RECE_IDEN_NUMB = A1.RECE_IDEN_NUMB
+					AND Z.RETU_STAT_FLAG IN ('0','1') 
+				) AS SUM_RETURN_REQUEST_QUAN 
+		,		A.RECEIPT_NUM
+		,		CONVERT(VARCHAR(10), B.REGI_DATE_TIME, 120) AS REGI_DATE_TIME
+		,		CONVERT(VARCHAR(10), H.REQU_DELI_DATE, 120) AS REQU_DELI_DATE
+		,		CONVERT(VARCHAR(10), A.PURC_PROC_DATE, 120) AS PURC_PROC_DATE
+		,		CASE WHEN A1.SALE_SEQU_NUMB IS NOT NULL OR A1.BUYI_SEQU_NUMB IS NOT NULL THEN 1
+				WHEN (SELECT COUNT(1) FROM MRORDTLIST Z WITH(NOLOCK)  
+					WHERE Z.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB 
+					AND Z.ORDE_SEQU_NUMB = A1.ORDE_SEQU_NUMB 
+					AND Z.PURC_IDEN_NUMB = A1.PURC_IDEN_NUMB 
+					AND Z.DELI_IDEN_NUMB = A1.DELI_IDEN_NUMB ) >= 2 THEN 2
+				ELSE 0
+				END AS RECEIVECANCELABLE
+		,		I.GOOD_ST_SPEC_DESC
+		,		I.GOOD_SPEC_DESC
+		,		B.BRANCHID
+		FROM	MRORDM B WITH(NOLOCK)
+		INNER JOIN MRORDT H WITH(NOLOCK)
+				ON	B.ORDE_IDEN_NUMB = H.ORDE_IDEN_NUMB
+		INNER JOIN MRPURT E WITH(NOLOCK)
+				ON	H.ORDE_IDEN_NUMB = E.ORDE_IDEN_NUMB
+				AND	H.ORDE_SEQU_NUMB = E.ORDE_SEQU_NUMB
+		INNER JOIN MRACPT A WITH(NOLOCK)
+				ON	E.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB
+				AND	E.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB
+				AND	E.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB
+		LEFT OUTER JOIN MRORDTLIST A1 WITH(NOLOCK)
+				ON	A.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB
+				AND	A.ORDE_SEQU_NUMB = A1.ORDE_SEQU_NUMB
+				AND	A.PURC_IDEN_NUMB = A1.PURC_IDEN_NUMB
+				AND	A.DELI_IDEN_NUMB = A1.DELI_IDEN_NUMB
+		LEFT OUTER JOIN MCGOOD G WITH(NOLOCK)
+				ON	E.GOOD_IDEN_NUMB = G.GOOD_IDEN_NUMB
+		LEFT OUTER JOIN MCGOODVENDOR I WITH(NOLOCK)
+				ON	E.GOOD_IDEN_NUMB = I.GOOD_IDEN_NUMB
+				AND	E.VENDORID = I.VENDORID
+		LEFT OUTER JOIN SMPVENDORS F WITH(NOLOCK)
+				ON	E.VENDORID = F.VENDORID
+		INNER JOIN SMPCODES C WITH(NOLOCK)
+				ON	C.CODETYPECD = 'ORDERTYPECODE'
+				AND	B.ORDE_TYPE_CLAS = C.CODEVAL1 
+		LEFT OUTER JOIN SMPBRANCHS J WITH(NOLOCK)
+				ON	B.BRANCHID = J.BRANCHID
+		WHERE 	A.DELI_STAT_FLAG IN ('69','70','80')
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+		AND		A.ORDE_IDEN_NUMB = #{srcOrdeIdenNumb}
+		<if test="srcOrdeSequNumb != null and srcOrdeSequNumb != ''"><!--주문상세번호 추출 By Seo --> 
+		AND		A.ORDE_SEQU_NUMB = #{srcOrdeSequNumb}
+			</if>
+		</if>
+		<if test="srcOrderUserId != null and srcOrderUserId != ''">
+		AND B.ORDE_USER_ID  = #{srcOrderUserId}
+		</if>
+		<if test="srcGoodsNm != null and srcGoodsNm != ''">
+		AND G.GOOD_NAME like '%'+#{srcGoodsNm}+'%'
+		</if>
+		<if test="srcCenFlag == ''">
+		AND B.ORDE_TYPE_CLAS &lt;&gt; '90'
+		</if>	
+		<if test="srcCenFlag != ''">
+		AND B.ORDE_TYPE_CLAS = '90'
+		</if>
+		<if test="srcGroupId != null and  srcGroupId != '' and srcGroupId neq '0'.toString() ">
+			AND B.GROUPID = #{srcGroupId}	
+		</if>
+		<if test="srcClientId != null and  srcClientId != '' and srcClientId neq '0'.toString() ">
+			AND B.CLIENTID = #{srcClientId}	
+		</if>
+		<if test="srcBranchId != null and  srcBranchId != '' and srcBranchId neq '0'.toString() ">
+			AND B.BRANCHID = #{srcBranchId}
+		</if>
+		<if test="srcWorkInfoUser != null and srcWorkInfoUser != '' and srcWorkInfoUser neq '0'.toString() ">
+		AND		EXISTS(	SELECT 1 
+								FROM 	SMPBRANCHS AA1 WITH(NOLOCK) 
+								INNER JOIN SMPWORKINFO AA2 WITH(NOLOCK) 
+										ON	AA1.WORKID = AA2.WORKID
+										AND	AA1.BRANCHID = B.BRANCHID
+										AND	AA2.USERID = #{srcWorkInfoUser}
+								)
+		</if>
+		<if test="srcVendorId != null and  srcVendorId != '' and srcVendorId neq '0'.toString() ">
+			AND E.VENDORID = #{srcVendorId}
+		</if>
+		<if test="srcOrderStartDate != null and srcOrderStartDate != ''">
+			<if test="srcOrderEndDate != null and srcOrderEndDate != ''">
+<!-- 				AND B.REGI_DATE_TIME BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate})) -->
+				AND A.PURC_PROC_DATE BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+			</if>
+		</if>
+		)AA where 1=1
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+			and aa.orde_iden_numb like #{srcOrdeIdenNumb}+'%'
+		</if>
+	</sql>
+	
+	
+	<!-- 운영사 : 인수내역/반품요청 리스트 조회 -->
+	<select id="selectReturnOrderRegistListCntNew" resultType="int">
+		/* order.returnOrder.selectReturnOrderRegistListCntNew */
+		SELECT COUNT(1)  FROM (
+	<include refid="selectReturnOrderRegistListNewSql"/>
+	</select>
+	
+	<select id="selectReturnOrderRegistListNew" resultType="kr.co.bitcube.order.dto.OrderDeliDto">
+		/* order.returnOrder.selectReturnOrderRegistListNew */
+		SELECT AA.* FROM (
+		<include refid="selectReturnOrderRegistListNewSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectReturnOrderRegistListExcelView" resultType="java.util.HashMap">
+		/* order.returnOrder.selectReturnOrderRegistListExcelView */
+		SELECT AA.* FROM (
+		<include refid="selectReturnOrderRegistListNewSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	<sql id="selectReturnOrderRegistListNewSql">
+		SELECT	C.CODENM1 AS ORDE_TYPE_CLAS 
+		,		A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB AS ORDE_IDEN_NUMB 
+		,		A.PURC_IDEN_NUMB 
+		,		A.DELI_IDEN_NUMB 
+		,		B.CONS_IDEN_NAME
+		,		ISNULL(A1.RECE_IDEN_NUMB, '') AS RECE_IDEN_NUMB
+		,		(SELECT Z.CODENM1 FROM SMPCODES Z  WITH(NOLOCK) WHERE A.DELI_TYPE_CLAS = Z.CODEVAL1 AND Z.CODETYPECD = 'DELIVERYTYPE' ) AS DELI_TYPE_CLAS 
+		,		A.DELI_INVO_IDEN 
+		,		J.BRANCHNM AS ORDE_CLIENT_NAME
+				<![CDATA[
+		,		( CASE WHEN ( B.ORDE_TYPE_CLAS <> '90' AND H.NORM_TRUS_FLAG = 1) THEN '<b>물류센터 </b>('+F.VENDORNM+')' ELSE F.VENDORNM END) AS VENDORNM
+				]]>
+		,		H.GOOD_NAME 
+		,		H.ORDE_REQU_QUAN 
+		,		(CASE WHEN A1.ORDE_IDEN_NUMB IS NOT NULL THEN A1.SALE_PROD_QUAN ELSE A.RECE_PROD_QUAN END) AS RECE_PROD_QUAN
+		--,		G.GOOD_TYPE AS GOOD_CLAS_TYPE 
+		,		H.GOOD_IDEN_NUMB 
+		,		H.DISP_GOOD_ID 
+		,		E.VENDORID 
+		,		A.DELI_TYPE_CLAS AS DELI_TYPE_CLAS_CODE 
+		,		(	SELECT ISNULL( SUM(Z.RETU_PROD_QUAN) , 0 ) 
+					FROM MRAREM Z WITH(NOLOCK)  
+					WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB 
+					AND Z.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB 
+					AND Z.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB 
+					AND Z.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB 
+					AND Z.RECE_IDEN_NUMB = A1.RECE_IDEN_NUMB
+					AND Z.RETU_STAT_FLAG IN ('0','1') 
+				) AS SUM_RETURN_REQUEST_QUAN 
+		,		A.RECEIPT_NUM
+		,		CONVERT(VARCHAR(10), B.REGI_DATE_TIME, 120) AS REGI_DATE_TIME
+		,		CONVERT(VARCHAR(10), H.REQU_DELI_DATE, 120) AS REQU_DELI_DATE
+		,		CONVERT(VARCHAR(10), A.PURC_PROC_DATE, 120) AS PURC_PROC_DATE
+		,		CASE WHEN A1.SALE_SEQU_NUMB IS NOT NULL OR A1.BUYI_SEQU_NUMB IS NOT NULL THEN 1
+				WHEN (SELECT COUNT(1) FROM MRORDTLIST Z WITH(NOLOCK)  
+					WHERE Z.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB 
+					AND Z.ORDE_SEQU_NUMB = A1.ORDE_SEQU_NUMB 
+					AND Z.PURC_IDEN_NUMB = A1.PURC_IDEN_NUMB 
+					AND Z.DELI_IDEN_NUMB = A1.DELI_IDEN_NUMB ) >= 2 THEN 2
+				ELSE 0
+				END AS RECEIVECANCELABLE
+		,		'' AS GOOD_ST_SPEC_DESC
+		,		H.GOOD_SPEC AS GOOD_SPEC_DESC
+		,		B.BRANCHID
+		,		CASE WHEN ISNULL(ADDMST.VENDORID , ADDSUB.VENDORID) IS NOT NULL THEN 'Y' ELSE 'N' END IS_ADD
+		FROM	MRORDM B WITH(NOLOCK)
+		INNER JOIN MRORDT H WITH(NOLOCK)
+				ON	B.ORDE_IDEN_NUMB = H.ORDE_IDEN_NUMB
+				
+		LEFT OUTER JOIN MRORDT ADDMST
+				ON B.ORDE_IDEN_NUMB = ADDMST.ORDE_IDEN_NUMB
+				AND H.ADD_REPRE_SEQU_NUMB = ADDMST.ORDE_SEQU_NUMB
+		LEFT OUTER JOIN MRORDT ADDSUB
+				ON B.ORDE_IDEN_NUMB = ADDSUB.ORDE_IDEN_NUMB
+				AND H.ORDE_SEQU_NUMB = ADDSUB.ADD_REPRE_SEQU_NUMB		
+				
+		INNER JOIN MRPURT E WITH(NOLOCK)
+				ON	H.ORDE_IDEN_NUMB = E.ORDE_IDEN_NUMB
+				AND	H.ORDE_SEQU_NUMB = E.ORDE_SEQU_NUMB
+		INNER JOIN MRACPT A WITH(NOLOCK)
+				ON	E.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB
+				AND	E.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB
+				AND	E.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB
+		LEFT OUTER JOIN MRORDTLIST A1 WITH(NOLOCK)
+				ON	A.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB
+				AND	A.ORDE_SEQU_NUMB = A1.ORDE_SEQU_NUMB
+				AND	A.PURC_IDEN_NUMB = A1.PURC_IDEN_NUMB
+				AND	A.DELI_IDEN_NUMB = A1.DELI_IDEN_NUMB
+		LEFT OUTER JOIN SMPVENDORS F WITH(NOLOCK)
+				ON	E.VENDORID = F.VENDORID
+		INNER JOIN SMPCODES C WITH(NOLOCK)
+				ON	C.CODETYPECD = 'ORDERTYPECODE'
+				AND	B.ORDE_TYPE_CLAS = C.CODEVAL1 
+		LEFT OUTER JOIN SMPBRANCHS J WITH(NOLOCK)
+				ON	B.BRANCHID = J.BRANCHID
+		WHERE 	A.DELI_STAT_FLAG IN ('69','70','80')
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+		AND		A.ORDE_IDEN_NUMB = #{srcOrdeIdenNumb}
+		<if test="srcOrdeSequNumb != null and srcOrdeSequNumb != ''"><!--주문상세번호 추출 By Seo --> 
+		AND		A.ORDE_SEQU_NUMB = #{srcOrdeSequNumb}
+			</if>
+		</if>
+		<if test="srcOrderUserId != null and srcOrderUserId != ''">
+		AND B.ORDE_USER_ID  = #{srcOrderUserId}
+		</if>
+		<if test="srcGoodsNm != null and srcGoodsNm != ''">
+		AND H.GOOD_NAME like '%'+#{srcGoodsNm}+'%'
+		</if>
+		<if test="srcCenFlag == ''">
+		AND B.ORDE_TYPE_CLAS &lt;&gt; '90'
+		</if>	
+		<if test="srcCenFlag != ''">
+		AND B.ORDE_TYPE_CLAS = '90'
+		</if>
+		<if test="srcGroupId != null and  srcGroupId != '' and srcGroupId neq '0'.toString() ">
+			AND B.GROUPID = #{srcGroupId}	
+		</if>
+		<if test="srcClientId != null and  srcClientId != '' and srcClientId neq '0'.toString() ">
+			AND B.CLIENTID = #{srcClientId}	
+		</if>
+		<if test="srcBranchId != null and  srcBranchId != '' and srcBranchId neq '0'.toString() ">
+			AND B.BRANCHID = #{srcBranchId}
+		</if>
+		<if test="srcWorkInfoUser != null and srcWorkInfoUser != '' and srcWorkInfoUser neq '0'.toString() ">
+		AND		EXISTS(	SELECT 1 
+								FROM 	SMPBRANCHS AA1 WITH(NOLOCK) 
+								INNER JOIN SMPWORKINFO AA2 WITH(NOLOCK) 
+										ON	AA1.WORKID = AA2.WORKID
+										AND	AA1.BRANCHID = B.BRANCHID
+										AND	AA2.USERID = #{srcWorkInfoUser}
+								)
+		</if>
+		<if test="srcVendorId != null and  srcVendorId != '' and srcVendorId neq '0'.toString() ">
+			AND E.VENDORID = #{srcVendorId}
+		</if>
+		<if test="srcOrderStartDate != null and srcOrderStartDate != ''">
+			<if test="srcOrderEndDate != null and srcOrderEndDate != ''">
+<!-- 				AND B.REGI_DATE_TIME BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate})) -->
+				AND A.PURC_PROC_DATE BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+			</if>
+		</if>
+		)AA where 1=1
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+			and aa.orde_iden_numb like #{srcOrdeIdenNumb}+'%'
+		</if>
+	</sql>
+
+	<!-- 반품이력 리스트 조회 -->
+	<select id="selectReturnOrderListCnt" resultType="int">
+		/* order.returnOrder.selectReturnOrderListCnt */
+		SELECT COUNT(1)  FROM (
+	<include refid="selectReturnOrderListSql"/>
+	</select>
+	<select id="selectReturnOrderList" resultType="kr.co.bitcube.order.dto.OrderReturnDto">
+		/* order.returnOrder.selectReturnOrderList */
+		select AA.* from (
+		<include refid="selectReturnOrderListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	<sql id="selectReturnOrderListSql">
+		SELECT
+			A.RETU_IDEN_NUM                                           
+		,	F.CODENM1 AS ORDE_TYPE_CLAS                               
+		,	A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB AS ORDE_IDEN_NUMB   
+		,	A.PURC_IDEN_NUMB                                          
+		,	A.DELI_IDEN_NUMB                                          
+		,	C.BRANCHNM AS ORDE_CLIENT_NAME       
+		<![CDATA[
+        , ( CASE WHEN ( H.ORDE_TYPE_CLAS <> '90' AND D.NORM_TRUS_FLAG = 1) THEN '<b>물류센터 </b>('+G.VENDORNM+')' ELSE G.VENDORNM END) AS VENDORNM
+		]]>
+		,	E.CODENM1 AS RETU_STAT_FLAG                               
+		,	B.GOOD_NAME                                               
+		,	B.SALE_PROD_PRIS AS ORDE_REQU_PRIC                                          
+		,	A.RETU_PROD_QUAN                                          
+		,	A.RETU_PROD_QUAN * B.SALE_PROD_PRIS AS RETU_REQU_PRIC     
+		,	B.SALE_PROD_QUAN AS RECE_PROD_QUAN                                          
+		,	B.GOOD_IDEN_NUMB                                            
+		,	D.DISP_GOOD_ID                                            
+		,	B.VENDORID
+		,	B.BRANCHID
+		FROM MRAREM A WITH(NOLOCK),
+		MRORDTLIST B WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPBRANCHS C WITH(NOLOCK) 
+			ON B.BRANCHID = C.BRANCHID
+		LEFT OUTER JOIN SMPVENDORS G WITH(NOLOCK) 
+			ON B.VENDORID = G.VENDORID,
+		MRORDT D WITH(NOLOCK),
+		MRORDM H WITH(NOLOCK),
+		SMPCODES E WITH(NOLOCK),
+		SMPCODES F WITH(NOLOCK)
+		WHERE A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+			AND A.ORDE_IDEN_NUMB = H.ORDE_IDEN_NUMB
+			AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+			AND A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+			AND A.DELI_IDEN_NUMB = B.DELI_IDEN_NUMB
+			AND A.RECE_IDEN_NUMB = B.RECE_IDEN_NUMB
+			AND A.ORDE_IDEN_NUMB = D.ORDE_IDEN_NUMB
+			AND A.ORDE_SEQU_NUMB = D.ORDE_SEQU_NUMB
+			AND E.CODETYPECD = 'RETURNSTATUSFLAG'
+			AND A.RETU_STAT_FLAG = E.CODEVAL1
+			AND F.CODETYPECD = 'ORDERTYPECODE'
+			AND B.ORDE_TYPE_CLAS = F.CODEVAL1  
+		<if test="srcOrderUserId != null and srcOrderUserId != ''">
+			AND B.ORDE_USER_ID = #{srcOrderUserId}	
+		</if>
+		<if test="srcGroupId != null and  srcGroupId != '' and srcGroupId neq '0'.toString() ">
+			AND B.GROUPID = #{srcGroupId}	
+		</if>
+		<if test="srcClientId != null and  srcClientId != '' and srcClientId neq '0'.toString()  ">
+			AND B.CLIENTID = #{srcClientId}	
+		</if>
+		<if test="srcBranchId != null and  srcBranchId != '' and srcBranchId neq '0'.toString()  ">
+			AND B.BRANCHID = #{srcBranchId}
+		</if>
+		<if test="srcWorkInfoUser != null and srcWorkInfoUser != '' and srcWorkInfoUser neq '0'.toString() ">
+		AND		EXISTS(	SELECT 1 
+								FROM 	SMPBRANCHS AA1 WITH(NOLOCK) 
+								INNER JOIN SMPWORKINFO AA2 WITH(NOLOCK) 
+										ON	AA1.WORKID = AA2.WORKID
+										AND	AA1.BRANCHID = B.BRANCHID
+										AND	AA2.USERID = #{srcWorkInfoUser}
+								)
+		</if>
+		<if test="srcVendorId != null and  srcVendorId != '' and srcVendorId neq '0'.toString() ">
+			AND B.VENDORID = #{srcVendorId}
+		</if>
+		<if test="srcReturnStatFlag != null and srcReturnStatFlag != ''">
+			AND A.RETU_STAT_FLAG = #{srcReturnStatFlag}
+		</if>
+		<if test="srcReturnStartDate != null and srcReturnStartDate != ''">
+			<if test="srcReturnEndDate != null and srcReturnEndDate != ''">
+				AND A.RETU_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcReturnStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcReturnEndDate}))
+			</if>
+		</if>
+		)AA WHERE 1=1
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+			AND AA.ORDE_IDEN_NUMB LIKE #{srcOrdeIdenNumb}+'%'
+		</if>
+	</sql>
+
+	<select id="selectReturnOrderRegistDetail" parameterType="java.util.Map" resultType="kr.co.bitcube.order.dto.OrderReturnDto">
+		/* order.returnOrder.selectReturnOrderRegistDetail */
+		SELECT 	A.RETU_IDEN_NUM
+		, 		DBO.FNS_BORG_STRING(B.BRANCHID) AS ORDE_CLIENT_NAME
+		, 		D.VENDORNM 
+		, 		A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB AS ORDE_IDEN_NUMB
+		, 		E.GOOD_NAME
+		,		F.GOOD_SPEC_DESC
+		,		F.GOOD_ST_SPEC_DESC
+		, 		STR(C.ORDE_REQU_PRIC) AS ORDE_REQU_PRIC
+		, 		STR(C.SALE_UNIT_PRIC) AS SALE_UNIT_PRIC
+		, 		CONVERT(VARCHAR,G.ORDE_REQU_QUAN)+'/'+ CONVERT(VARCHAR,H.RECE_PROD_QUAN) AS ORDE_RECE_QUAN
+		, 		STR(A.RETU_PROD_QUAN) AS RETU_PROD_QUAN
+		, 		I.CODENM1 AS  RETU_STAT_FLAG
+		, 		A.RETU_RESE_TEXT
+		, 		A.RETU_CNAC_TEXT
+		FROM 	MRAREM A WITH(NOLOCK)
+		,		MRORDM B WITH(NOLOCK)
+		,		MRPURT C WITH(NOLOCK)
+		,		SMPVENDORS D WITH(NOLOCK)
+		,		MCGOOD E WITH(NOLOCK)
+		,		MCGOODVENDOR F WITH(NOLOCK)
+		,		MRORDT G WITH(NOLOCK)
+		,		MRACPT H WITH(NOLOCK)
+		,		SMPCODES I WITH(NOLOCK)
+		WHERE A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+		AND A.ORDE_IDEN_NUMB = C.ORDE_IDEN_NUMB
+		AND A.ORDE_SEQU_NUMB = C.ORDE_SEQU_NUMB
+		AND A.PURC_IDEN_NUMB = C.PURC_IDEN_NUMB
+		AND C.VENDORID = D.VENDORID
+		AND C.GOOD_IDEN_NUMB = E.GOOD_IDEN_NUMB
+		AND C.GOOD_IDEN_NUMB = F.GOOD_IDEN_NUMB
+		AND C.VENDORID = F.VENDORID
+		AND A.ORDE_IDEN_NUMB = G.ORDE_IDEN_NUMB
+		AND A.ORDE_SEQU_NUMB = G.ORDE_SEQU_NUMB
+		AND A.ORDE_IDEN_NUMB = H.ORDE_IDEN_NUMB
+		AND A.ORDE_SEQU_NUMB = H.ORDE_SEQU_NUMB
+		AND A.PURC_IDEN_NUMB = H.PURC_IDEN_NUMB
+		AND A.DELI_IDEN_NUMB = H.DELI_IDEN_NUMB
+		AND A.RETU_STAT_FLAG = I.CODEVAL1
+		AND I.CODETYPECD = 'RETURNSTATUSFLAG'
+		AND A.RETU_IDEN_NUM = #{retu_iden_num}
+	</select>
+	
+	<insert id="insertMrarem">
+		/* order.returnOrder.insertMrarem */
+		INSERT INTO MRAREM ( 
+	           RETU_IDEN_NUM
+	         ,ORDE_IDEN_NUMB
+	         ,ORDE_SEQU_NUMB
+	         ,DELI_IDEN_NUMB
+	         ,PURC_IDEN_NUMB
+	         ,RECE_IDEN_NUMB
+	         ,RETU_STAT_FLAG
+	         ,RETU_PROD_QUAN
+	         ,RETU_REGI_ID
+	         ,RETU_REGI_DATE
+	         ,VENDORID
+	         ,RETU_RESE_TEXT
+	    ) 
+		SELECT 
+			#{retu_iden_num}
+			, A.ORDE_IDEN_NUMB
+			, A.ORDE_SEQU_NUMB
+			, A.DELI_IDEN_NUMB
+			, A.PURC_IDEN_NUMB
+			, #{rece_iden_numb}
+			, '0'
+			, #{retu_prod_quan}
+			, #{retu_regi_id}
+			, GETDATE()
+			, B.VENDORID
+			, #{chan_reas_desc}
+		FROM MRACPT A WITH(NOLOCK) 
+		,	MRPURT B WITH(NOLOCK) 
+		WHERE A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+		AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+		AND A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+		AND A.ORDE_IDEN_NUMB = #{orde_iden_numb}
+		AND A.ORDE_SEQU_NUMB = #{orde_sequ_numb}
+		AND A.PURC_IDEN_NUMB = #{purc_iden_numb}
+		AND A.DELI_IDEN_NUMB = #{deli_iden_numb}
+	</insert>
+	
+	<!-- 공급사반품 리스트 조회 -->
+	<select id="selectVenReturnOrderListCnt" resultType="int">
+		/* order.returnOrder.selectVenReturnOrderListCnt*/
+		SELECT COUNT(1)  FROM (
+	<include refid="selectVenReturnOrderSql"/>
+	</select>
+	<select id="selectVenReturnOrderList" resultType="kr.co.bitcube.order.dto.OrderReturnDto">
+		/* order.returnOrder.selectVenReturnOrderList*/
+		SELECT AA.* FROM (
+		<include refid="selectVenReturnOrderSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	<sql id="selectVenReturnOrderSql">
+		SELECT
+			A.RETU_IDEN_NUM																								
+			, A.RETU_RESE_TEXT                                         
+			, C.BRANCHNM AS ORDE_CLIENT_NAME                           
+			, A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB AS ORDE_IDEN_NUMB  
+			, A.PURC_IDEN_NUMB                                         
+			, A.DELI_IDEN_NUMB                                         
+			, B.GOOD_NAME                                              
+			, B.PURC_PROD_PRIS AS SALE_UNIT_PRIC                       
+			, D.ORDE_REQU_QUAN                                         
+			, B.PURC_PROD_PRIS * D.ORDE_REQU_QUAN AS TOT_SALE_PRIC     
+			, B.SALE_PROD_QUAN AS RECE_PROD_QUAN                       
+			, A.RETU_PROD_QUAN                                         
+			, E.CODENM1 AS  RETU_STAT_FLAG                             
+			, B.VENDORID                                               
+			, B.GOOD_IDEN_NUMB   
+			, CASE WHEN (F.ORDE_TYPE_CLAS &lt;&gt; '90' AND D.NORM_TRUS_FLAG = 1) THEN 0 ELSE 1 END ISDISPLAY
+		FROM MRAREM A WITH(NOLOCK),
+		MRORDTLIST B WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPBRANCHS C WITH(NOLOCK) ON B.BRANCHID = C.BRANCHID,
+		MRORDT D,
+		MRORDM F,
+		SMPCODES E
+		WHERE A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+		AND A.ORDE_IDEN_NUMB = F.ORDE_IDEN_NUMB
+		AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+		AND A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+		AND A.DELI_IDEN_NUMB = B.DELI_IDEN_NUMB
+		AND A.RECE_IDEN_NUMB = B.RECE_IDEN_NUMB
+		AND A.ORDE_IDEN_NUMB = D.ORDE_IDEN_NUMB
+		AND A.ORDE_SEQU_NUMB = D.ORDE_SEQU_NUMB
+		AND E.CODETYPECD = 'RETURNSTATUSFLAG'
+		AND A.RETU_STAT_FLAG = E.CODEVAL1
+		<if test="srcGroupId != null and  srcGroupId != '' and srcGroupId neq '0'.toString() ">
+			AND B.GROUPID = #{srcGroupId}	
+		</if>
+		<if test="srcClientId != null and  srcClientId != '' and srcClientId neq '0'.toString() ">
+			AND B.CLIENTID = #{srcClientId}	
+		</if>
+		<if test="srcBranchId != null and  srcBranchId != '' and srcBranchId neq '0'.toString() ">
+			AND B.BRANCHID = #{srcBranchId}
+		</if>
+		<if test="srcVendorId != null and  srcVendorId != '' and srcVendorId neq '0'.toString() ">
+			AND B.VENDORID = #{srcVendorId}
+		</if>
+		<if test="srcReturnStatFlag != null and srcReturnStatFlag != ''">
+			AND A.RETU_STAT_FLAG = #{srcReturnStatFlag}
+		</if>
+		<if test="srcReturnStartDate != null and srcReturnStartDate != ''">
+			<if test="srcReturnEndDate != null and srcReturnEndDate != ''">
+				AND A.RETU_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcReturnStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcReturnEndDate}))
+			</if>
+		</if>
+		)AA WHERE 1=1
+		<if test="srcIsCen != ''">
+			AND AA.ISDISPLAY = '0'
+		</if>
+		<if test="srcIsCen == ''">
+			AND AA.ISDISPLAY = '1'
+		</if>
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+			AND AA.ORDE_IDEN_NUMB LIKE #{srcOrdeIdenNumb}+'%'
+		</if>
+	</sql>
+	
+	<!-- 반품테이블 업데이트 -->
+	<update id="updateMrarem">
+		/* order.returnOrder.updateMrarem*/
+		UPDATE MRAREM 
+		<trim prefix="SET" prefixOverrides=", ">
+			<if test="retu_stat_flag != null and retu_stat_flag != ''">
+				, RETU_STAT_FLAG=#{retu_stat_flag}
+			</if>
+			<if test="vend_proc_id != null and vend_proc_id != ''">
+				, VEND_PROC_ID=#{vend_proc_id}
+			</if>
+			<if test="retu_cnac_text != null and retu_cnac_text != ''">
+				, RETU_CNAC_TEXT=#{retu_cnac_text}
+			</if>
+			<if test="retu_getdate != null and retu_getdate != ''">
+				, VEND_PROC_DATE=GETDATE()
+			</if>
+		</trim>
+		WHERE RETU_IDEN_NUM=#{retu_iden_num}
+	</update>
+	<insert id="insertMracptForOrderReturn">
+		/* order.returnOrder.insertMracptForOrderReturn*/
+		INSERT INTO MRACPT 
+	       ( 
+	           ORDE_IDEN_NUMB 
+	         ,ORDE_SEQU_NUMB 
+	         ,PURC_IDEN_NUMB 
+	         ,DELI_IDEN_NUMB 
+	         ,DELI_PROD_QUAN 
+	         ,RECE_PROD_QUAN 
+	         ,DELI_STAT_FLAG 
+	         ,DELI_TYPE_CLAS 
+	         ,DELI_COMP_CLAS 
+	         ,DELI_INVO_IDEN 
+	         ,DELI_DEGR_ID 
+	         ,DELI_DEGR_DATE 
+	         ,RECE_PROC_ID 
+	         ,PURC_PROC_DATE 
+	         ,ISDELIVERY 
+	         ,RETU_IDEN_NUM
+	       ) VALUES ( 
+	          #{orde_iden_numb} 
+	         ,#{orde_sequ_numb}
+	         ,#{purc_iden_numb} 
+	         ,#{deli_iden_numb_new}
+	         ,#{retu_prod_quan} 
+	         ,#{retu_prod_quan}
+	         ,#{deli_stat_flag}
+	         ,'ETC' 
+	         ,''
+	         ,'' 
+	         ,#{vend_proc_id}
+	         ,GETDATE()
+	         ,#{vend_proc_id}
+	         ,GETDATE()
+	         ,'0'
+	         ,#{retu_iden_num}
+	       ) 
+	</insert>
+	<select id="selectReturnOrderRequestCnt" resultType="int">
+		/* order.returnOrder.selectReturnOrderRequestCnt */
+		SELECT	COUNT(1)
+		FROM	MRAREM A WITH(NOLOCK)
+		WHERE	A.RETU_IDEN_NUM = #{retu_iden_num}
+		AND		A.RETU_STAT_FLAG != '0'
+	</select>
+	
+	<select id="getParticularsTargetBranchs" resultType="kr.co.bitcube.order.dto.ParticularsTargetBranchsDto">
+		SELECT	MAX(A.GROUPID) AS GROUPID 
+		,		MAX(A.CLIENTID) AS CLIENTID 
+		,		A.BRANCHID
+		FROM	MRORDM A WITH(NOLOCK)
+		INNER JOIN MRORDT A1 WITH(NOLOCK)
+				ON	A.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB
+		INNER JOIN MRPURT B WITH(NOLOCK)
+				ON	A1.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+				AND	A1.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+		INNER JOIN MRACPT C WITH(NOLOCK)
+				ON	B.ORDE_IDEN_NUMB = C.ORDE_IDEN_NUMB
+				AND	B.ORDE_SEQU_NUMB = C.ORDE_SEQU_NUMB
+				AND	B.PURC_IDEN_NUMB = C.PURC_IDEN_NUMB
+		WHERE	C.DELI_STAT_FLAG IN ('69','70','80')
+		AND		A.ORDE_TYPE_CLAS &lt;&gt; '90'
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+		AND A.ORDE_IDEN_NUMB  = #{srcOrdeIdenNumb}
+		</if>
+		<if test="srcOrderUserId != null and srcOrderUserId != ''">
+		AND A.ORDE_USER_ID  = #{srcOrderUserId}
+		</if>
+		<if test="srcGroupId != null and  srcGroupId != '' and srcGroupId neq '0'.toString() ">
+		AND A.GROUPID = #{srcGroupId}	
+		</if>
+		<if test="srcClientId != null and  srcClientId != '' and srcClientId neq '0'.toString() ">
+		AND A.CLIENTID = #{srcClientId}	
+		</if>
+		<if test="srcBranchId != null and  srcBranchId != '' and srcBranchId neq '0'.toString() ">
+		AND A.BRANCHID = #{srcBranchId}
+		</if>
+		<if test="srcVendorId != null and  srcVendorId != '' and srcVendorId neq '0'.toString() ">
+		AND B.VENDORID = #{srcVendorId}
+		</if>
+		<if test="srcOrderStartDate != null and srcOrderStartDate != '' and srcOrderEndDate != null and srcOrderEndDate != ''">
+		AND C.PURC_PROC_DATE BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+		</if>
+		<if test="srcWorkInfoUser != null and srcWorkInfoUser != '' and srcWorkInfoUser neq '0'.toString() ">
+		AND		EXISTS(	SELECT 1 
+								FROM 	SMPBRANCHS AA1 WITH(NOLOCK) 
+								INNER JOIN SMPWORKINFO AA2 WITH(NOLOCK) 
+										ON	AA1.WORKID = AA2.WORKID
+										AND	AA1.BRANCHID = A.BRANCHID
+										AND	AA2.USERID = #{srcWorkInfoUser}
+								)
+		</if>
+		GROUP BY A.BRANCHID	
+	</select>
+	
+	<select id="selectReceiveCancelCheck" resultType="int">
+		/* order.orderRequest.selectReceiveCancelCheck */
+		SELECT 
+			CASE WHEN A.SALE_SEQU_NUMB IS NOT NULL OR A.BUYI_SEQU_NUMB IS NOT NULL THEN 1
+			WHEN (SELECT COUNT(1) FROM MRORDTLIST Z  WITH(NOLOCK) WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB AND Z.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB AND Z.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB AND Z.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB ) >= 2 THEN 2
+			ELSE 0
+			END 
+		FROM MRORDTLIST A WITH(NOLOCK) 
+		WHERE A.ORDE_IDEN_NUMB = #{orde_iden_numb}
+		AND A.ORDE_SEQU_NUMB = #{orde_sequ_numb}
+		AND A.PURC_IDEN_NUMB = #{purc_iden_numb}
+		AND A.DELI_IDEN_NUMB = #{deli_iden_numb}
+		AND A.RECE_IDEN_NUMB = #{rece_iden_numb}
+	</select>
+	
+	<update id="updateMracptForRcop">
+		/* order.returnOrder.updateMracptForRcop*/
+		UPDATE MRACPT 
+		       SET RECE_PROD_QUAN = 0 
+		     , DELI_STAT_FLAG = '60'
+		     , RECE_PROC_ID = NULL
+		     , PURC_PROC_DATE = NULL 
+		 WHERE ORDE_IDEN_NUMB = #{orde_iden_numb} 
+		       AND ORDE_SEQU_NUMB = #{orde_sequ_numb} 
+		       AND PURC_IDEN_NUMB = #{purc_iden_numb} 
+		       AND DELI_IDEN_NUMB = #{deli_iden_numb}
+	</update>
+	
+	<delete id="deleteMrordtListRcop">
+		/* order.orderRequest.deleteMrordtListRcop */
+		DELETE FROM MRORDTLIST 
+		WHERE ORDE_IDEN_NUMB = #{orde_iden_numb}
+		AND ORDE_SEQU_NUMB = #{orde_sequ_numb}
+		AND PURC_IDEN_NUMB = #{purc_iden_numb}
+		AND DELI_IDEN_NUMB = #{deli_iden_numb}
+		AND RECE_IDEN_NUMB = #{rece_iden_numb}
+	</delete>
+	
+<!-- 	<select id="selectReturnOrderRegistListExcelView" resultType="java.util.HashMap"> -->
+<!-- 		/* order.returnOrder.selectReturnOrderRegistListExcelView*/ -->
+<!-- 		SELECT  -->
+<!-- 			CONVERT(VARCHAR(500),AA.ORDE_TYPE_CLAS 					) AS ORDE_TYPE_CLAS           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.ORDE_IDEN_NUMB          ) AS ORDE_IDEN_NUMB           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.PURC_IDEN_NUMB          ) AS PURC_IDEN_NUMB           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.DELI_IDEN_NUMB          ) AS DELI_IDEN_NUMB           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.RECE_IDEN_NUMB          ) AS RECE_IDEN_NUMB           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.DELI_TYPE_CLAS          ) AS DELI_TYPE_CLAS           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.DELI_INVO_IDEN          ) AS DELI_INVO_IDEN           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.ORDE_CLIENT_NAME        ) AS ORDE_CLIENT_NAME         -->
+<!-- 			,CONVERT(VARCHAR(500),AA.VENDORNM                ) AS VENDORNM                 -->
+<!-- 			,CONVERT(VARCHAR(500),AA.GOOD_NAME               ) AS GOOD_NAME                -->
+<!-- 			,CONVERT(VARCHAR(500),AA.ORDE_REQU_QUAN          ) AS ORDE_REQU_QUAN           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.RECE_PROD_QUAN          ) AS RECE_PROD_QUAN           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.GOOD_CLAS_TYPE          ) AS GOOD_CLAS_TYPE           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.GOOD_IDEN_NUMB          ) AS GOOD_IDEN_NUMB           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.DISP_GOOD_ID            ) AS DISP_GOOD_ID             -->
+<!-- 			,CONVERT(VARCHAR(500),AA.VENDORID                ) AS VENDORID                 -->
+<!-- 			,CONVERT(VARCHAR(500),AA.DELI_TYPE_CLAS_CODE     ) AS DELI_TYPE_CLAS_CODE      -->
+<!-- 			,CONVERT(VARCHAR(500),AA.SUM_RETURN_REQUEST_QUAN ) AS SUM_RETURN_REQUEST_QUAN  -->
+<!-- 			,CONVERT(VARCHAR(500),AA.RECEIPT_NUM             ) AS RECEIPT_NUM              -->
+<!-- 			,CONVERT(VARCHAR(500),AA.REGI_DATE_TIME          ) AS REGI_DATE_TIME           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.REQU_DELI_DATE          ) AS REQU_DELI_DATE           -->
+<!-- 			,CONVERT(VARCHAR(500),AA.PURC_PROC_DATE          ) AS PURC_PROC_DATE           -->
+<!-- 			,ISNULL(DBO.FNS_SPLIT_PROD_SPEC(#{prodStSpec} , AA.GOOD_ST_SPEC_DESC, '‡'),'') + ISNULL(DBO.FNS_SPLIT_PROD_SPEC(#{prodSpec} , AA.GOOD_SPEC_DESC, '‡'),'') AS GOOD_SPEC_DESC -->
+<!-- 			,CONVERT(VARCHAR(500),AA.CONS_IDEN_NAME          ) AS CONS_IDEN_NAME           -->
+<!-- 		FROM ( -->
+<!-- 		<include refid="selectReturnOrderRegistListSql"/> -->
+<!-- 			ORDER BY REGI_DATE_TIME DESC -->
+<!-- 	</select> -->
+	
+	<!-- 반품내역 엑셀 조회 -->
+	<select id="selectReturnOrderListExcelView" resultType="java.util.HashMap">
+		/* order.returnOrder.selectReturnOrderListExcelView*/
+		SELECT 
+			CONVERT(VARCHAR(500),AA.RETU_IDEN_NUM    ) AS 	RETU_IDEN_NUM                                          
+			,CONVERT(VARCHAR(500),AA.ORDE_TYPE_CLAS   ) AS  ORDE_TYPE_CLAS                             
+			,CONVERT(VARCHAR(500),AA.ORDE_IDEN_NUMB   ) AS  ORDE_IDEN_NUMB   
+			,CONVERT(VARCHAR(500),AA.PURC_IDEN_NUMB   ) AS  PURC_IDEN_NUMB                                        
+			,CONVERT(VARCHAR(500),AA.DELI_IDEN_NUMB   ) AS  DELI_IDEN_NUMB                                        
+			,CONVERT(VARCHAR(500),AA.ORDE_CLIENT_NAME ) AS  ORDE_CLIENT_NAME     
+			,CONVERT(VARCHAR(500),AA.VENDORNM         ) AS  VENDORNM                                              
+			,CONVERT(VARCHAR(500),AA.RETU_STAT_FLAG   ) AS  RETU_STAT_FLAG                             
+			,CONVERT(VARCHAR(500),AA.GOOD_NAME        ) AS  GOOD_NAME                                             
+			,CONVERT(VARCHAR(500),AA.ORDE_REQU_PRIC   ) AS  ORDE_REQU_PRIC                                        
+			,CONVERT(VARCHAR(500),AA.RETU_PROD_QUAN   ) AS  RETU_PROD_QUAN                                        
+			,CONVERT(VARCHAR(500),AA.RETU_REQU_PRIC   ) AS  RETU_REQU_PRIC   
+			,CONVERT(VARCHAR(500),AA.RECE_PROD_QUAN   ) AS  RECE_PROD_QUAN                                        
+			,CONVERT(VARCHAR(500),AA.GOOD_IDEN_NUMB   ) AS  GOOD_IDEN_NUMB                                          
+			,CONVERT(VARCHAR(500),AA.DISP_GOOD_ID     ) AS  DISP_GOOD_ID                                          
+			,CONVERT(VARCHAR(500),AA.VENDORID         ) AS  VENDORID    
+		FROM (
+		<include refid="selectReturnOrderListSql"/>
+			ORDER BY RETU_IDEN_NUM DESC
+	</select>
+	
+	<select id="selectIsNormTrusGood" resultType="int">
+		/* order.returnOrder.selectIsNormTrusGood*/
+		SELECT 
+			C.GOOD_TYPE AS GOOD_CLAS_CODE 
+		FROM	MCGOODVENDOR A WITH(NOLOCK) 
+		INNER JOIN MRPURT B WITH(NOLOCK) 
+			ON	A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+			AND A.VENDORID = B.VENDORID
+		INNER JOIN MCGOOD C WITH(NOLOCK) 
+			ON	A.GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB
+		WHERE B.ORDE_IDEN_NUMB  = #{orde_iden_numb}
+		AND B.ORDE_SEQU_NUMB = #{orde_sequ_numb}
+		AND B.PURC_IDEN_NUMB  = #{purc_iden_numb}
+	</select>
+	<select id="selectStockOrderInfo" resultType="java.util.HashMap">
+		/* order.returnOrder.selectStockOrderInfo*/
+		SELECT 
+			C.GOOD_TYPE AS GOOD_CLAS_CODE 
+		,	CONVERT(VARCHAR(500), B.GOOD_IDEN_NUMB) AS GOOD_IDEN_NUMB
+		,	B.VENDORID
+		,	CONVERT(INT, ISNULL(A.GOOD_INVENTORY_CNT,0)) AS BEFORE_QUANTITY 
+		FROM	MCGOODVENDOR A WITH(NOLOCK) 
+		INNER JOIN MRPURT B WITH(NOLOCK) 
+			ON	A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+			AND A.VENDORID = B.VENDORID
+		INNER JOIN MCGOOD C WITH(NOLOCK) 
+			ON	A.GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB
+		WHERE B.ORDE_IDEN_NUMB  = #{orde_iden_numb}
+		AND B.ORDE_SEQU_NUMB = #{orde_sequ_numb}
+		AND B.PURC_IDEN_NUMB  = #{purc_iden_numb}
+	</select>
+	
+	<select id="selectReturnOrderVendorList" resultType="java.util.HashMap">
+		/* order.returnOrder.selectReturnOrderVendorList*/
+		SELECT	REPLACE(F.MOBILE, '-', '') AS orderMobile 
+		,		REPLACE(G.MOBILE, '-', '') AS vendorMobile
+		,		G.VENDORNM AS vendorNm
+		,		G.USERNM
+		FROM MRORDTLIST A WITH(NOLOCK) 
+		INNER JOIN MRACPT B WITH(NOLOCK) 
+			ON A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+			AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+			AND A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+			AND A.DELI_IDEN_NUMB = B.DELI_IDEN_NUMB
+		INNER JOIN MRPURT C WITH(NOLOCK) 
+			ON B.ORDE_IDEN_NUMB = C.ORDE_IDEN_NUMB
+			AND B.ORDE_SEQU_NUMB = C.ORDE_SEQU_NUMB
+			AND B.PURC_IDEN_NUMB = C.PURC_IDEN_NUMB
+		INNER JOIN MRORDT D WITH(NOLOCK) 
+			ON C.ORDE_IDEN_NUMB = D.ORDE_IDEN_NUMB
+			AND C.ORDE_SEQU_NUMB = D.ORDE_SEQU_NUMB
+		INNER JOIN MRORDM E WITH(NOLOCK) 
+			ON D.ORDE_IDEN_NUMB = E.ORDE_IDEN_NUMB
+		LEFT OUTER JOIN SMPUSERS F WITH(NOLOCK) 
+			ON E.ORDE_USER_ID = F.USERID
+		LEFT OUTER JOIN (
+			SELECT	A.VENDORNM
+			,		C.MOBILE
+			,		C.USERNM
+			,		A.VENDORID
+			FROM SMPVENDORS A WITH(NOLOCK) 
+			LEFT OUTER JOIN SMPBORGS_USERS_ROLES B WITH(NOLOCK) 
+				ON A.VENDORID = B.BORGID
+				AND ROLEID = '13087'
+			LEFT OUTER JOIN SMPUSERS C WITH(NOLOCK) 
+				ON B.USERID = C.USERID
+		)G
+			ON D.VENDORID = G.VENDORID
+		WHERE 1=1
+		AND A.ORDE_IDEN_NUMB = #{orde_iden_numb}
+		AND A.ORDE_SEQU_NUMB = #{orde_sequ_numb}
+		AND A.PURC_IDEN_NUMB = #{purc_iden_numb}
+		AND A.DELI_IDEN_NUMB = #{deli_iden_numb}
+	</select>
+	
+	<select id="selectReturnOrderSmsInfo" resultType="java.util.HashMap">
+		/* order.returnOrder.selectReturnOrderSmsInfo*/
+		SELECT	A.GOOD_NAME AS goodName								--상품명
+		,		REPLACE(B.ORDE_TELE_NUMB, '-', '') AS ordeTeleNumb	--주문자 전화번호
+		,		REPLACE(C.PHONENUM, '-', '') AS phoneNum			--공급사 대표번호
+		FROM MRORDTLIST A WITH(NOLOCK) 
+		INNER JOIN MRORDM B WITH(NOLOCK) 
+			ON A.ORDE_IDEN_NUMB  = B.ORDE_IDEN_NUMB
+		INNER JOIN SMPVENDORS C WITH(NOLOCK) 
+			ON A.VENDORID = C.VENDORID
+		WHERE 1=1
+		AND A.ORDE_IDEN_NUMB = #{orde_iden_numb}
+		AND A.ORDE_SEQU_NUMB = #{orde_sequ_numb}
+		AND A.PURC_IDEN_NUMB = #{purc_iden_numb}
+		AND A.DELI_IDEN_NUMB = #{deli_iden_numb}
+	</select>
+	
+	
+
+	<!-- 고객사 반품신청 / 현황 인수상태 조회 -->
+	<select id="selectClientReturnOrderListCntForRece" resultType="int">
+		/* order.returnOrder.selectClientReturnOrderListCntForRece */
+		SELECT COUNT(1)
+	<include refid="selectClientReturnOrderSqlForRece"/>
+	</select>
+	<select id="selectClientReturnOrderListForRece" resultType="java.util.HashMap">
+		/* order.returnOrder.selectClientReturnOrderListForRece */
+		SELECT 
+                CONVERT(VARCHAR(10), A.RECE_REGI_DATE, 120) AS PURC_PROC_DATE
+            ,   A.RECE_REGI_DATE AS PURC_PROC_DATETIME
+            ,	A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB AS ORDE_IDEN_NUMB 
+            ,	A.PURC_IDEN_NUMB
+            ,	A.DELI_IDEN_NUMB
+            ,	A.RECE_IDEN_NUMB
+            ,	A.CONS_IDEN_NAME
+            ,	A.GOOD_NAME
+            ,	ISNULL(A.GOOD_SPEC,'') AS GOOD_SPEC
+            ,	A.GOOD_IDEN_NUMB
+            ,	A.VENDORID
+            ,	B.VENDORNM
+            ,	A0.ORDE_REQU_QUAN
+            ,	A1.DELI_PROD_QUAN
+            ,	A.SALE_PROD_QUAN - ISNULL((SELECT SUM(ISNULL(Z.RETU_PROD_QUAN,0)) 
+                    FROM MRAREM Z WITH(NOLOCK)  
+                    WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB 
+                    AND Z.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB 
+                    AND Z.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB 
+                    AND Z.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB 
+                    AND Z.RECE_IDEN_NUMB = A.RECE_IDEN_NUMB
+                    AND Z.RETU_STAT_FLAG IN ('0','1') 
+                ),0) AS RETURN_ENABLE_QUAN
+            ,	ISNULL((SELECT SUM(ISNULL(Z.RETU_PROD_QUAN,0)) 
+                    FROM MRAREM Z WITH(NOLOCK)  
+                    WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB 
+                    AND Z.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB 
+                    AND Z.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB 
+                    AND Z.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB 
+                    AND Z.RECE_IDEN_NUMB = A.RECE_IDEN_NUMB
+                    AND Z.RETU_STAT_FLAG IN ('0','1') 
+                ),0) AS SUM_RETURN_REQUEST_QUAN
+            ,	'인수' AS RETU_STAT_FLAG_NM
+            ,	'' AS RETU_STAT_FLAG
+            ,	'' AS RETU_IDEN_NUM
+            ,	0 AS RETU_PROD_QUAN
+            
+            ,	'1' AS SEARCH_KIND
+            ,	A.ADD_REPRE_SEQU_NUMB
+			,	CASE WHEN SUBADD.VENDORID IS NOT NULL THEN 'Y' ELSE 'N' END AS IS_ADD_MST
+			,	CONVERT(VARCHAR(10), A2.REGI_DATE_TIME, 120) AS REGI_DATE_TIME
+	<include refid="selectClientReturnOrderSqlForRece"/>
+        ORDER BY A.RECE_REGI_DATE DESC, A.ORDE_IDEN_NUMB ASC
+	</select>
+	<sql id="selectClientReturnOrderSqlForRece">
+            FROM MRORDTLIST A WITH(NOLOCK) 
+            LEFT OUTER JOIN MRORDTLIST SUBADD
+            ON A.ORDE_IDEN_NUMB = SUBADD.ORDE_IDEN_NUMB
+            AND A.ORDE_SEQU_NUMB = SUBADD.ADD_REPRE_SEQU_NUMB
+            INNER JOIN MRORDT A0
+            ON A.ORDE_IDEN_NUMB = A0.ORDE_IDEN_NUMB
+            AND A.ORDE_SEQU_NUMB = A0.ORDE_SEQU_NUMB
+            INNER JOIN MRACPT A1
+            ON A.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB
+            AND A.ORDE_SEQU_NUMB = A1.ORDE_SEQU_NUMB
+            AND A.PURC_IDEN_NUMB = A1.PURC_IDEN_NUMB
+            AND A.DELI_IDEN_NUMB = A1.DELI_IDEN_NUMB
+            INNER JOIN MRORDM A2
+            ON A.ORDE_IDEN_NUMB = A2.ORDE_IDEN_NUMB
+            LEFT OUTER JOIN SMPVENDORS B
+            ON A.VENDORID = B.VENDORID
+            WHERE A1.DELI_PROD_QUAN > 0
+        <if test="printYn == null">
+        	AND A.SALE_PROD_QUAN - ISNULL((SELECT SUM(ISNULL(Z.RETU_PROD_QUAN,0)) 
+                    FROM MRAREM Z WITH(NOLOCK)  
+                    WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB 
+                    AND Z.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB 
+                    AND Z.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB 
+                    AND Z.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB 
+                    AND Z.RECE_IDEN_NUMB = A.RECE_IDEN_NUMB
+                    AND Z.RETU_STAT_FLAG IN ('0','1') 
+                ),0) > 0
+			AND ISNULL(A.ADD_REPRE_SEQU_NUMB,'') = ''
+		</if>
+        <if test="printYn != null and printYn != ''">
+        AND	A.ORDE_IDEN_NUMB = #{ORDE_IDEN_NUMB}
+        AND	A.ORDE_SEQU_NUMB =#{ORDE_SEQU_NUMB}
+        AND	A.PURC_IDEN_NUMB = #{PURC_IDEN_NUMB}
+        AND	A.DELI_IDEN_NUMB = #{PURC_IDEN_NUMB}
+        AND	A.RECE_IDEN_NUMB = #{RECE_IDEN_NUMB}
+        </if>
+		<if test="srcBranchId != null and srcBranchId != ''">
+            AND A.BRANCHID = #{srcBranchId}
+		</if>
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+            AND	A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB LIKE '%'+#{srcOrdeIdenNumb}+'%'
+		</if>
+		<if test="srcOrderDateType != null and srcOrderDateType == 'deli'">
+			<if test="srcOrderStartDate != null and srcOrderStartDate != '' and srcOrderEndDate != null and srcOrderEndDate != ''">
+		AND A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+			</if>
+		</if>
+		<if test="srcOrderDateType != null and srcOrderDateType == 'orde'">
+			<if test="srcOrderStartDate != null and srcOrderStartDate != '' and srcOrderEndDate != null and srcOrderEndDate != ''">
+		AND A2.REGI_DATE_TIME BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+			</if>
+		</if>
+		<if test="srcVendorNm != null and srcVendorNm != ''">
+            AND B.VENDORNM LIKE '%'+#{srcVendorNm}+'%'
+		</if>
+	</sql>
+	
+	
+	<!-- 고객사 반품신청 / 현황 반품상태 조회 -->
+	<select id="selectClientReturnOrderListCntForRetu" resultType="int">
+		/* order.returnOrder.selectClientReturnOrderListCntForRetu */
+		SELECT COUNT(1)
+	<include refid="selectClientReturnOrderSqlForRetu"/>
+	</select>
+	<select id="selectClientReturnOrderListForRetu" resultType="java.util.HashMap">
+		/* order.returnOrder.selectClientReturnOrderListForRetu */
+            SELECT 
+                CONVERT(VARCHAR(10), A.RECE_REGI_DATE, 120) AS PURC_PROC_DATE
+            ,	A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB AS ORDE_IDEN_NUMB 
+            ,	A.PURC_IDEN_NUMB
+            ,	A.DELI_IDEN_NUMB
+            ,	A.RECE_IDEN_NUMB
+            ,	A.CONS_IDEN_NAME
+            ,	A.GOOD_NAME
+            ,	ISNULL(A.GOOD_SPEC,'') AS GOOD_SPEC
+            ,	A.GOOD_IDEN_NUMB
+            ,	A.VENDORID
+            ,	B.VENDORNM
+            ,	A0.ORDE_REQU_QUAN
+            ,	A1.DELI_PROD_QUAN
+            ,	A.SALE_PROD_QUAN - ISNULL((SELECT SUM(ISNULL(Z.RETU_PROD_QUAN,0)) 
+                    FROM MRAREM Z WITH(NOLOCK)  
+                    WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB 
+                    AND Z.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB 
+                    AND Z.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB 
+                    AND Z.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB 
+                    AND Z.RECE_IDEN_NUMB = A.RECE_IDEN_NUMB
+                    AND Z.RETU_STAT_FLAG IN ('0','1') 
+                ),0) AS RETURN_ENABLE_QUAN
+            ,	ISNULL((SELECT SUM(ISNULL(Z.RETU_PROD_QUAN,0)) 
+                    FROM MRAREM Z WITH(NOLOCK)  
+                    WHERE Z.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB 
+                    AND Z.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB 
+                    AND Z.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB 
+                    AND Z.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB 
+                    AND Z.RECE_IDEN_NUMB = A.RECE_IDEN_NUMB
+                    AND Z.RETU_STAT_FLAG IN ('0','1') 
+                ),0) AS SUM_RETURN_REQUEST_QUAN
+            ,	(CASE C.RETU_STAT_FLAG 
+                    WHEN '0' THEN '요청' 
+                    WHEN '1' THEN '승인' 
+                    WHEN '9' THEN '반려' 
+                    ELSE '' END) AS RETU_STAT_FLAG_NM
+            ,	ISNULL(C.RETU_STAT_FLAG,'') AS RETU_STAT_FLAG
+            ,	ISNULL(C.RETU_IDEN_NUM,'') AS RETU_IDEN_NUM
+            ,	ISNULL(C.RETU_PROD_QUAN,0) AS RETU_PROD_QUAN
+            
+            ,	'0' AS SEARCH_KIND
+            ,CONVERT(VARCHAR(10), A.ORDE_REGI_DATE, 120) AS REGI_DATE_TIME
+	<include refid="selectClientReturnOrderSqlForRetu"/>
+        ORDER BY A.RECE_REGI_DATE DESC, A.ORDE_IDEN_NUMB ASC
+	</select>
+	<sql id="selectClientReturnOrderSqlForRetu">
+            FROM MRORDTLIST A WITH(NOLOCK) 
+            INNER JOIN MRORDT A0 WITH(NOLOCK) 
+            	ON A.ORDE_IDEN_NUMB = A0.ORDE_IDEN_NUMB
+            	AND A.ORDE_SEQU_NUMB = A0.ORDE_SEQU_NUMB
+            INNER JOIN MRACPT A1 WITH(NOLOCK) 
+	            ON A.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB
+	            AND A.ORDE_SEQU_NUMB = A1.ORDE_SEQU_NUMB
+	            AND A.PURC_IDEN_NUMB = A1.PURC_IDEN_NUMB
+	            AND A.DELI_IDEN_NUMB = A1.DELI_IDEN_NUMB
+            LEFT OUTER JOIN SMPVENDORS B WITH(NOLOCK) 
+            	ON A.VENDORID = B.VENDORID
+            INNER JOIN MRAREM C WITH(NOLOCK) 
+            	ON C.ORDE_IDEN_NUMB = A.ORDE_IDEN_NUMB 
+	            AND C.ORDE_SEQU_NUMB = A.ORDE_SEQU_NUMB 
+	            AND C.PURC_IDEN_NUMB = A.PURC_IDEN_NUMB 
+	            AND C.DELI_IDEN_NUMB = A.DELI_IDEN_NUMB 
+	            AND C.RECE_IDEN_NUMB = A.RECE_IDEN_NUMB
+            WHERE A1.DELI_PROD_QUAN > 0
+            AND	C.RETU_STAT_FLAG = #{srcReturnStatFlagStr}
+		<if test="srcBranchId != null and srcBranchId != ''">
+            AND A.BRANCHID = #{srcBranchId}
+		</if>
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+            AND	A.ORDE_IDEN_NUMB LIKE #{srcOrdeIdenNumb}+'%'
+		</if>
+		<if test="srcOrderDateType != null and srcOrderDateType == 'deli'">
+			<if test="srcOrderStartDate != null and srcOrderStartDate != '' and srcOrderEndDate != null and srcOrderEndDate != ''">
+		AND A.RECE_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+			</if>
+		</if>
+		<if test="srcOrderDateType != null and srcOrderDateType == 'orde'">
+			<if test="srcOrderStartDate != null and srcOrderStartDate != '' and srcOrderEndDate != null and srcOrderEndDate != ''">
+		AND A.ORDE_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+			</if>
+		</if>
+		<if test="srcVendorNm != null and srcVendorNm != ''">
+            AND B.VENDORNM LIKE '%'+#{srcVendorNm}+'%'
+		</if>
+	</sql>
+	
+	
+	<!-- 공급사 반품신청 / 현황 반품상태 조회 -->
+	<select id="selectReturnOrdStatListCnt" resultType="int">
+		/* order.returnOrder.selectReturnOrdStatListCnt */
+		SELECT COUNT(1)
+		<include refid="selectReturnOrdStatSql"/>
+	</select>
+	<select id="selectReturnOrdStatList" resultType="java.util.HashMap">
+		/* order.returnOrder.selectReturnOrdStatList */
+		SELECT 
+            B.RETU_IDEN_NUM
+        ,	CONVERT(VARCHAR(10), B.RETU_REGI_DATE, 120) AS RETU_REGI_DATE
+        ,	CONVERT(VARCHAR(10), A.RECE_REGI_DATE, 120) AS RECE_REGI_DATE
+        ,	CONVERT(VARCHAR(10), A2.REGI_DATE_TIME, 120) AS REGI_DATE_TIME
+        ,	A.ORDE_IDEN_NUMB + '-' + A.ORDE_SEQU_NUMB AS ORDE_IDEN_NUMB
+        ,	A.PURC_IDEN_NUMB
+        ,	A.DELI_IDEN_NUMB
+        ,	A.RECE_IDEN_NUMB
+        ,	A.CONS_IDEN_NAME
+        ,	C.BRANCHNM AS ORDE_CLIENT_NAME
+        ,	A.GOOD_IDEN_NUMB
+        ,	A.GOOD_NAME
+        ,	ISNULL(A.GOOD_SPEC,'') AS GOOD_SPEC
+        ,	A1.ORDE_REQU_QUAN
+        ,	A.SALE_PROD_QUAN
+        ,	B.RETU_PROD_QUAN
+        ,	B.RETU_RESE_TEXT
+        ,	B.RETU_STAT_FLAG
+        ,	CASE B.RETU_STAT_FLAG 
+                WHEN '0' THEN '반품요청' 
+                WHEN '1' THEN '반품승인' 
+                WHEN '9' THEN '반품반려' 
+                ELSE '' END AS RETU_STAT_FLAG_NM
+		<include refid="selectReturnOrdStatSql"/>
+        ORDER BY B.RETU_REGI_DATE DESC
+	</select>
+	<sql id="selectReturnOrdStatSql">
+        FROM MRORDTLIST A WITH(NOLOCK) 
+        INNER JOIN MRORDT A1 WITH(NOLOCK) 
+	        ON A.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB
+	        AND A.ORDE_SEQU_NUMB = A1.ORDE_SEQU_NUMB
+        INNER JOIN MRORDM A2 WITH(NOLOCK) 
+        	ON A2.ORDE_IDEN_NUMB = A1.ORDE_IDEN_NUMB
+        INNER JOIN MRAREM B WITH(NOLOCK) 
+        	ON A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+	        AND A.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB 
+	        AND A.PURC_IDEN_NUMB = B.PURC_IDEN_NUMB
+	        AND A.DELI_IDEN_NUMB = B.DELI_IDEN_NUMB
+        LEFT OUTER JOIN SMPBRANCHS C WITH(NOLOCK) 
+        	ON A.BRANCHID = C.BRANCHID
+        WHERE 1=1
+		<if test="srcVendorId != null and srcVendorId != ''">
+		AND A.VENDORID = #{srcVendorId}
+		</if>
+		<if test="srcBranchName != null and srcBranchName != ''">
+		AND C.BRANCHNM LIKE '%'+#{srcBranchName}+'%'
+		</if>
+		<if test="srcOrdeIdenNumb != null and srcOrdeIdenNumb != ''">
+        AND	A.ORDE_IDEN_NUMB+'-'+A.ORDE_SEQU_NUMB LIKE #{srcOrdeIdenNumb}+'%'
+		</if>
+		<if test="srcOrderStartDate != null and srcOrderStartDate != '' and srcOrderEndDate != null and srcOrderEndDate != ''">
+			<if test="srcDateType != null and srcDateType == 'retu'">
+			AND B.RETU_REGI_DATE BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+			</if>
+			<if test="srcDateType != null and srcDateType == 'regi'">
+			AND A2.REGI_DATE_TIME BETWEEN CONVERT(DATETIME, #{srcOrderStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcOrderEndDate}))
+			</if>
+		</if>
+		<if test="srcRtnStat != null and  srcRtnStat != '' and srcRtnStat neq ''.toString() ">
+        AND B.RETU_STAT_FLAG = #{srcRtnStat}
+		</if>
+	</sql>
+	
+	<!-- 반품상품의 서브 추가상품 조회 -->
+	<select id="selectBuyAddProdOrde" resultType="java.util.HashMap">
+		/* order.returnOrder.selectBuyAddProdOrde */
+		SELECT 
+            ORDE_IDEN_NUMB
+            ,ORDE_SEQU_NUMB
+            ,PURC_IDEN_NUMB
+            ,DELI_IDEN_NUMB
+            ,RECE_IDEN_NUMB
+        FROM MRORDTLIST WITH(NOLOCK)  
+        WHERE ORDE_IDEN_NUMB = #{ORDE_IDEN_NUMB}
+        AND ADD_REPRE_SEQU_NUMB = #{ORDE_SEQU_NUMB}
+        <![CDATA[
+		AND SALE_PROD_AMOU > 0
+        ]]>
+	</select>
+</mapper>

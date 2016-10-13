@@ -1,0 +1,2239 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="board">
+	<sql id="selectNoticeListSql">
+		FROM
+			NOTICEBOARD WITH (NOLOCK) 
+		WHERE
+			BOARD_TYPE IN ('0101','0102','0111')
+		<if test="srcTitle != null and  srcTitle != '' or  srcMessage != null and srcMessage != '' or srcRegi_User_Numb != null and srcRegi_User_Numb != '' ">
+		AND
+			(
+			<trim  prefixOverrides="AND |OR ">
+				<if test="srcTitle != null and  srcTitle != ''">
+				title LIKE '%' + #{srcTitle} + '%'
+				</if>
+				<if test="srcMessage != null and srcMessage != ''">
+				OR MESSAGE LIKE '%' + #{srcMessage} + '%'
+				</if>
+				<if test="srcRegi_User_Numb != null and srcRegi_User_Numb != ''">
+				OR REGI_USER_NUMB LIKE '%' + #{srcRegi_User_Numb} + '%'
+				</if>
+			</trim>
+			)
+		</if>
+		<if test="srcEmergencyYn != null">
+		AND
+			EMERGENCY_YN = 'Y'
+		AND
+			GETDATE() BETWEEN POPUP_START AND POPUP_END + 1
+		</if>
+	</sql>
+	<select id="selectNoticeList_count" resultType="int">
+		/* board.selectNoticeList_count */
+		SELECT COUNT(1) 
+		<include refid="selectNoticeListSql"/>
+		<if test="srcBoardBorgType != null and srcBoardBorgType !='' ">
+			<if test=" srcBoardBorgType == 'BUY'.toString() ">
+				AND (BOARD_BORG_TYPE = #{srcBoardBorgType} OR board_borg_type = 'ALL')
+				<if test="workId != null and workId !=''">
+					AND (WORK_INFO LIKE '%†'+#{workId}+'†%' OR WORK_INFO IS NULL)
+				</if>
+			</if>
+			<if test=" srcBoardBorgType == 'VEN'.toString() ">
+				AND (BOARD_BORG_TYPE = #{srcBoardBorgType} OR board_borg_type = 'ALL')
+			</if>
+		</if>
+	</select>
+	<select id="selectNoticeList" resultType="kr.co.bitcube.board.dto.BoardDto">
+		/* board.selectNoticeList */
+		SELECT  BOARD_NO
+		,		ROW_NUMBER() OVER(ORDER BY board_No) AS num
+		,		TITLE
+		,		MESSAGE 
+		,		CONVERT(VARCHAR(10), REGI_DATE_TIME, 121) AS REGI_DATE_TIME
+		,		REGI_USER_NUMB
+		,		HIT_NO
+		,		(CASE WHEN (file_list1 IS NULL OR file_list1='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list2 IS NULL OR file_list2='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list3 IS NULL OR file_list3='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list4 IS NULL OR file_list4='') THEN 0 ELSE 1 END) AS FILE_LIST_CNT
+		,		(
+					CASE
+						WHEN
+							DATEDIFF(Day, DATEADD(Day, -7, GETDATE()), REGI_DATE_TIME) >= 0
+						THEN
+							'Y'
+						ELSE
+							'N'
+					END
+				) AS isNew
+		,		IMPORTANT_YN AS importantYn
+		,		EMERGENCY_YN AS emergencyYn
+		,		CASE 
+					WHEN BOARD_BORG_TYPE = 'ALL' THEN '전체'
+					WHEN BOARD_BORG_TYPE = 'BUY' THEN '구매사'
+					WHEN BOARD_BORG_TYPE = 'VEN' THEN '공급사'
+				END AS BORG_TYPE_NAME
+		,		CASE 
+					WHEN BOARD_TYPE = '0101' THEN CONVERT(VARCHAR(10), POPUP_START, 121) + ' ~ ' + CONVERT(VARCHAR(10), POPUP_END, 121) 
+				END AS POPUP_PERIOD
+		<include refid="selectNoticeListSql"/>
+		<if test="srcBoardBorgType != null and srcBoardBorgType !='' ">
+			<if test=" srcBoardBorgType == 'BUY'.toString() ">
+				AND (BOARD_BORG_TYPE = #{srcBoardBorgType} OR board_borg_type = 'ALL')
+				<if test="workId != null and workId !=''">
+					AND (WORK_INFO LIKE '%†'+#{workId}+'†%' OR WORK_INFO IS NULL)
+				</if>
+			</if>
+			<if test=" srcBoardBorgType == 'VEN'.toString() ">
+				AND (BOARD_BORG_TYPE = #{srcBoardBorgType} OR board_borg_type = 'ALL')
+			</if>
+		</if>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<sql id="selectMarketListSql">
+		FROM NOTICEBOARD WITH (NOLOCK) 
+			WHERE	BOARD_TYPE = #{board_Type}
+				<if test="srcTitle != null and  srcTitle != '' or  srcMessage != null and srcMessage != '' or srcRegi_User_Numb != null and srcRegi_User_Numb != '' ">
+					AND	(
+							<trim  prefixOverrides="AND |OR ">	
+								<if test="srcTitle != null and  srcTitle != ''">
+									 title LIKE '%' + #{srcTitle} + '%'
+								</if>
+								<if test="srcMessage != null and srcMessage != ''">
+									OR MESSAGE LIKE '%' + #{srcMessage} + '%'
+								</if>
+								<if test="srcRegi_User_Numb != null and srcRegi_User_Numb != ''">
+									OR REGI_USER_NUMB LIKE '%' + #{srcRegi_User_Numb} + '%'
+								</if>
+							</trim>
+						)
+				</if>
+	</sql>
+	<select id="selectMarketListCnt" resultType="int">
+		/* board.selectMarketListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectMarketListSql"/>
+	</select>
+	<select id="selectMarketList" resultType="kr.co.bitcube.board.dto.BoardDto">
+		/* board.selectMarketList */
+		SELECT  BOARD_NO
+		,		TITLE
+		,		MESSAGE 
+		,		CONVERT(VARCHAR(10), REGI_DATE_TIME, 121) AS REGI_DATE_TIME
+		,		REGI_USER_NUMB
+		,		HIT_NO
+		,		(CASE WHEN (file_list1 IS NULL OR file_list1='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list2 IS NULL OR file_list2='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list3 IS NULL OR file_list3='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list4 IS NULL OR file_list4='') THEN 0 ELSE 1 END) AS FILE_LIST_CNT
+		<include refid="selectMarketListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<sql id="selectBoardListSql">
+		WITH BOARD_MASTER( 
+			board_no 
+		,	board_type 
+		,	title 
+		,	hit_no 
+		,	regi_user_numb 
+		,	regi_date_time 
+		,	password 
+		,	board_borg_type 
+		,	LEV 
+		,	parent_board_no 
+		,	SortKey
+		,	FILE_LIST_CNT
+		,	classify
+		,	standard
+		) AS ( 
+			SELECT 	a.board_no AS board_no , a.board_type , a.title , a.hit_no , a.regi_user_numb 
+			, 		CONVERT(VARCHAR(10), a.REGI_DATE_TIME, 121) AS REGI_DATE_TIME , a.password , a.board_borg_type 
+			, 		0 AS LEV , a.parent_board_no , CONVERT(VARCHAR, DBO.LPAD(CONVERT(VARCHAR,999999999-A.board_no),10,'0')) AS SortKey 
+			, 		(
+							CASE WHEN (a.file_list1 IS NULL OR a.file_list1='') THEN 0 ELSE 1 END + 
+							CASE WHEN (a.file_list2 IS NULL OR a.file_list2='') THEN 0 ELSE 1 END + 
+							CASE WHEN (a.file_list3 IS NULL OR a.file_list3='') THEN 0 ELSE 1 END + 
+							CASE WHEN (a.file_list4 IS NULL OR a.file_list4='') THEN 0 ELSE 1 END
+					) AS FILE_LIST_CNT
+			,		a.classify
+			,		a.standard
+			FROM 	noticeBoard a WITH(NOLOCK)  
+			<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			 	a.parent_board_no = 0 
+				and		a.BOARD_TYPE = #{board_Type}
+					<if test="srcTitle != null and  srcTitle != '' or  srcMessage != null and srcMessage != '' or srcRegi_User_Numb != null and srcRegi_User_Numb != '' ">
+						and 	(
+							<trim  prefixOverrides="AND |OR ">	
+								<if test="srcTitle != null and  srcTitle != ''">
+									 a.title LIKE '%' + #{srcTitle} + '%'
+								</if>
+								<if test="srcMessage != null and srcMessage != ''">
+									OR a.MESSAGE LIKE '%' + #{srcMessage} + '%'
+								</if>
+								<if test="srcRegi_User_Numb != null and srcRegi_User_Numb != ''">
+									OR a.REGI_USER_NUMB LIKE '%' + #{srcRegi_User_Numb} + '%'
+								</if>
+							</trim>
+						)
+					</if>
+				<if test="classify != null and classify != ''">
+				and		a.classify = #{classify}
+				</if>
+			</trim>
+			UNION ALL
+			SELECT 	B.board_no , B.board_type , B.title , B.hit_no , B.regi_user_numb 
+			,		CONVERT(VARCHAR(10), b.REGI_DATE_TIME, 121) AS REGI_DATE_TIME , B.password 
+			,		B.board_borg_type , BOARD_MASTER.LEV + 1 AS LEV , B.parent_board_no 
+			,		CONVERT(VARCHAR, BOARD_MASTER.SortKey+CONVERT(VARCHAR,(BOARD_MASTER.LEV+1)+B.board_no)) AS SortKey 
+			,		(
+							CASE WHEN (B.file_list1 IS NULL OR B.file_list1='') THEN 0 ELSE 1 END + 
+							CASE WHEN (B.file_list2 IS NULL OR B.file_list2='') THEN 0 ELSE 1 END + 
+							CASE WHEN (B.file_list3 IS NULL OR B.file_list3='') THEN 0 ELSE 1 END + 
+							CASE WHEN (B.file_list4 IS NULL OR B.file_list4='') THEN 0 ELSE 1 END
+					) AS FILE_LIST_CNT
+			,		b.classify
+			,		b.standard
+			FROM 	dbo.noticeBoard B WITH(NOLOCK)  
+			, 		BOARD_MASTER 
+			<trim prefix="WHERE" prefixOverrides="AND |OR ">
+				B.parent_board_no = BOARD_MASTER.board_no 
+					<if test="srcTitle != null and  srcTitle != '' or  srcMessage != null and srcMessage != '' or srcRegi_User_Numb != null and srcRegi_User_Numb != '' ">
+						AND
+							(
+								<trim prefixOverrides="AND |OR ">	
+									<if test="srcTitle != null and  srcTitle != ''">
+										 b.title LIKE '%' + #{srcTitle} + '%'
+									</if>
+									<if test="srcMessage != null and srcMessage != ''">
+										 OR b.MESSAGE LIKE '%' + #{srcMessage} + '%'
+									</if>
+									<if test="srcRegi_User_Numb != null and srcRegi_User_Numb != ''">
+										 OR b.REGI_USER_NUMB LIKE '%' + #{srcRegi_User_Numb} + '%'
+									</if>
+								</trim>
+							)
+					</if>
+			</trim>
+		) 
+	</sql>
+	<select id="selectBoardListCnt" resultType="int">
+		/* board.selectBoardListCnt */
+		<include refid="selectBoardListSql"/>
+		SELECT COUNT(1) FROM BOARD_MASTER;  
+	</select>
+	<select id="selectBoardList" resultType="kr.co.bitcube.board.dto.BoardDto">
+		/* board.selectBoardList */
+		<include refid="selectBoardListSql"/>
+		SELECT	A.board_no
+		,		A.board_type
+		,		A.title
+		,		A.hit_no
+		,		A.regi_user_numb
+		,		A.regi_date_time
+		,		A.password
+		,		A.board_borg_type
+		,		A.LEV
+		,		A.parent_board_no
+		,		A.SortKey
+		,		A.FILE_LIST_CNT
+		,		A.standard
+		,		(SELECT B.CODENM1 FROM SMPCODES B  WITH(NOLOCK) WHERE A.CLASSIFY = B.CODEVAL1 AND B.CODETYPECD = 'PROPOSAL_SUGGEST') AS classify
+		,		ROW_NUMBER() OVER(order by A.board_no ) AS num
+		FROM BOARD_MASTER A 
+		ORDER BY SortKey
+	</select>	
+	
+	<insert id="insertNotice">
+		/* board.insertNotice  */ 
+		INSERT INTO NOTICEBOARD( 
+			BOARD_NO,        BOARD_TYPE,     TITLE,          MESSAGE,         HIT_NO,
+			FILE_LIST1,      FILE_LIST2,     FILE_LIST3,     FILE_LIST4,      REGI_USER_NUMB,
+			REGI_DATE_TIME,  MODI_USER_NUMB, REGI_BORGID,    BOARD_BORG_TYPE, GROUP_NO,
+			PARENT_BOARD_NO, EMAIL_YN,       SMS_YN,         POPUP_START,     POPUP_END,
+			PASSWORD,        REQ_SALE_AMOUT, TRAN_VEHI_PROC, USER_MAIL_ADDR,  USER_PHON_NUMB,
+			IMPORTANT_YN,    EMERGENCY_YN
+		<if test="workId != null and workId !=''">
+		    , WORK_INFO
+		</if>
+		<if test="classify != null and classify !=''">
+            , CLASSIFY
+		</if>
+		<if test="standard != null and standard !=''">
+			, STANDARD
+		</if>
+		)
+		VALUES( 
+			#{board_No},        #{board_Type},     #{title},       #{message},         0,
+			#{file_list1},      #{file_list2},     #{file_list3},  #{file_list4},      #{regi_User_Numb},
+			GETDATE(),          #{modi_User_Numb}, #{regi_BorgId}, #{board_Borg_Type}, #{group_No},
+			#{parent_Board_No}, #{email_Yn},       #{sms_Yn} 
+		<if test="popup_Start == ''">
+			, GETDATE(), GETDATE() 	
+		</if>
+		<if test="popup_Start != ''">
+			, #{popup_Start}, #{popup_End} 	
+		</if>
+			, #{password},      #{req_Sale_Amout}, #{tran_Vehi_Proc}, #{user_Mail_Addr}, #{user_Phon_Numb},
+			#{importantYn},     #{emergencyYn}
+		<if test="workId != null and workId !=''">
+			, #{workId}
+		</if>
+		<if test="classify != null and classify !=''">
+			, #{classify}
+		</if>
+		<if test="standard != null and standard !=''">
+			, #{standard}
+		</if>
+		) 
+	</insert>
+
+	<select id="selectNoticeDetail" parameterType="java.util.Map" resultType="kr.co.bitcube.board.dto.BoardDto">
+		/* board.selectNoticeDetail */
+		SELECT	A.BOARD_NO
+		,		A.BOARD_TYPE       
+		,		A.TITLE	   
+		,		A.MESSAGE 
+		,		A.REGI_USER_NUMB     
+		,		CONVERT(VARCHAR(10), A.REGI_DATE_TIME, 121) as 'REGI_DATE_TIME'  
+		,		A.EMAIL_YN    
+		,		A.SMS_YN
+		,		A.BOARD_BORG_TYPE
+		,		CONVERT(VARCHAR(10), A.POPUP_START, 121) as 'POPUP_START'
+		,		CONVERT(VARCHAR(10), A.POPUP_END, 121) as 'POPUP_END'
+		,		A.req_Sale_Amout
+		,		A.GROUP_NO
+		,		A.PARENT_BOARD_NO
+		,		A.TRAN_VEHI_PROC
+		,		A.USER_MAIL_ADDR
+		,		A.USER_PHON_NUMB
+		,		A.FILE_LIST1
+		,		A.FILE_LIST2
+		,		A.FILE_LIST3
+		,		A.FILE_LIST4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'NAME') AS ATTACH_FILE_NAME1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'NAME') AS ATTACH_FILE_NAME2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'NAME') AS ATTACH_FILE_NAME3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'NAME') AS ATTACH_FILE_NAME4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'PATH') AS ATTACH_FILE_PATH1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'PATH') AS ATTACH_FILE_PATH2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'PATH') AS ATTACH_FILE_PATH3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'PATH') AS ATTACH_FILE_PATH4
+		,		A.WORK_INFO AS workInfo
+		,		A.CLASSIFY AS classify
+		,		A.STANDARD AS standard
+		,       A.IMPORTANT_YN AS importantYn
+		,       A.EMERGENCY_YN AS emergencyYn
+		FROM	NOTICEBOARD A WITH(NOLOCK) 
+		WHERE	A.BOARD_NO = #{board_No}
+	</select>
+
+	<select id="selectNoticePopDetail" resultType="kr.co.bitcube.board.dto.BoardDto">
+		/* board.selectNoticePopDetail */
+		SELECT	A.BOARD_NO
+		,		A.BOARD_TYPE       
+		,		A.TITLE	   
+		,		A.MESSAGE 
+		,		A.REGI_USER_NUMB     
+		,		A.BOARD_BORG_TYPE
+		,		CONVERT(VARCHAR(10), A.POPUP_START, 121) as 'POPUP_START'
+		,		CONVERT(VARCHAR(10), A.POPUP_END, 121) as 'POPUP_END'
+		,		A.FILE_LIST1
+		,		A.FILE_LIST2
+		,		A.FILE_LIST3
+		,		A.FILE_LIST4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'NAME') AS ATTACH_FILE_NAME1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'NAME') AS ATTACH_FILE_NAME2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'NAME') AS ATTACH_FILE_NAME3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'NAME') AS ATTACH_FILE_NAME4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'PATH') AS ATTACH_FILE_PATH1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'PATH') AS ATTACH_FILE_PATH2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'PATH') AS ATTACH_FILE_PATH3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'PATH') AS ATTACH_FILE_PATH4
+		FROM	NOTICEBOARD A WITH(NOLOCK) 
+		WHERE	A.BOARD_TYPE = #{board_Type}
+		AND     A.BOARD_NO = #{board_No} 
+	</select>
+
+	<select id="selectNoticePopBoardNoList" resultType="kr.co.bitcube.board.dto.BoardDto">
+		/* board.selectNoticePopBoardNoList */
+		SELECT	A.BOARD_NO
+		,		A.BOARD_TYPE
+		,		A.TITLE	   
+		,		A.MESSAGE 
+		,		A.REGI_USER_NUMB     
+		,		A.BOARD_BORG_TYPE
+		,		CONVERT(VARCHAR(10), A.POPUP_START, 121) as 'POPUP_START'
+		,		CONVERT(VARCHAR(10), A.POPUP_END, 121) as 'POPUP_END'
+		,		A.FILE_LIST1
+		,		A.FILE_LIST2
+		,		A.FILE_LIST3
+		,		A.FILE_LIST4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'NAME') AS ATTACH_FILE_NAME1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'NAME') AS ATTACH_FILE_NAME2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'NAME') AS ATTACH_FILE_NAME3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'NAME') AS ATTACH_FILE_NAME4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'PATH') AS ATTACH_FILE_PATH1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'PATH') AS ATTACH_FILE_PATH2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'PATH') AS ATTACH_FILE_PATH3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'PATH') AS ATTACH_FILE_PATH4
+		,		ISNULL(A.WORK_INFO,'') AS workInfo
+		FROM	NOTICEBOARD A WITH(NOLOCK) 
+		WHERE	A.BOARD_TYPE = '0101'
+		AND		(A.BOARD_BORG_TYPE = 'ALL' OR A.BOARD_BORG_TYPE = #{svcTypeCd})
+		AND		GETDATE() BETWEEN A.POPUP_START AND A.POPUP_END+1
+	</select>
+
+	<update id="updateHit_No">
+		/* board.updateHit_No */
+		UPDATE NOTICEBOARD SET
+			HIT_NO = (HIT_NO +1)
+		WHERE BOARD_NO = #{board_No}
+	</update>
+
+	<update id="updateNotice">
+		/* board.updateNotice */
+		UPDATE
+			NOTICEBOARD 
+		SET
+			TITLE           = #{title},           MESSAGE        = #{message},    MODI_USER_NUMB = #{modi_User_Numb}, BOARD_TYPE = #{board_Type},
+			BOARD_BORG_TYPE = #{board_Borg_Type}, MODI_DATE_TIME = GETDATE(),     EMAIL_YN       = #{email_Yn},       SMS_YN     = #{sms_Yn},
+			FILE_LIST1      = #{file_list1},      FILE_LIST2     = #{file_list2}, FILE_LIST3     = #{file_list3},     FILE_LIST4 = #{file_list4},
+			IMPORTANT_YN    = #{importantYn},     EMERGENCY_YN   = #{emergencyYn}
+		<if test="popup_Start == ''">
+			, POPUP_START = GETDATE(), POPUP_END = GETDATE() 	
+		</if>
+		<if test="popup_Start != ''">
+			, POPUP_START = #{popup_Start}, POPUP_END = #{popup_End}
+		</if>
+		<if test="workId != null and workId !=''">
+			, WORK_INFO = #{workId}
+		</if>
+		<if test="classify != null and classify !=''">
+			, CLASSIFY = #{classify}
+		</if>
+		<if test="standard != null and standard !=''">
+			, STANDARD = #{standard}
+		</if>
+		WHERE
+			BOARD_NO = #{board_No}
+	</update>
+
+	<delete id="deleteNotice">
+	/* board.deleteNotice */ 
+	WITH TMP_CATE( BOARD_NO) AS ( 
+		SELECT CONVERT (INT ,#{id}) AS BOARD_NO 
+		UNION ALL 
+		SELECT BOARD.board_no 
+		  FROM noticeBoard BOARD , TMP_CATE 
+		 WHERE BOARD.parent_board_no = TMP_CATE.BOARD_NO 
+	)
+	DELETE 
+	  FROM noticeBoard  
+	 WHERE BOARD_NO IN ( SELECT BOARD_NO FROM TMP_CATE ) 
+	</delete>
+	
+	<delete id="deleteVoc">
+	/* board.deleteVoc */ 
+	DELETE 
+	  FROM vocboard  
+	 WHERE voc_no = #{id}
+	</delete>
+	
+	<select id="selectRequestManageListCnt" resultType="int">
+		/* board.selectRequestManageListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectRequestManageListSql"/>
+	</select>
+	<select id="selectRequestManageList" resultType="kr.co.bitcube.board.dto.MerequDto">
+		/* board.selectRequestManageList */
+		SELECT  A.NO
+		,		(SELECT b.codenm1 FROM SMPCODES b  WITH(NOLOCK) WHERE CODETYPECD = 'DELI_AREA_CODE' and b.codeval1 = a.DELI_AREA_CODE)  as DELI_AREA_CODE
+		,		dbo.FNS_BORG_STRING(A.BORGID) as BORGID
+		,		A.TITLE
+		,		(SELECT b.codenm1 FROM SMPCODES b  WITH(NOLOCK) WHERE CODETYPECD = 'REQU_STAT_FLAG' and b.codeval1 = a.requ_Stat_Flag)  as REQU_STAT_FLAG
+		,		CONVERT(VARCHAR(10), REQU_USER_DATE, 121) AS REQU_USER_DATE
+		<if test="userInfoDto.svcTypeCd != null and ( userInfoDto.svcTypeCd.equals('VEN') or userInfoDto.svcTypeCd.equals('BUY') )">
+		,		A.REQU_USER_NUMB
+		</if>
+		<if test="userInfoDto.svcTypeCd != null and userInfoDto.svcTypeCd.equals('ADM')">
+		,		CASE
+					WHEN
+						A.REQU_TEL_NUMB IS NULL
+					THEN
+						A.REQU_USER_NUMB 
+					ELSE
+						A.REQU_USER_NUMB + ' ( ' + A.REQU_TEL_NUMB + ' )'
+				END AS REQU_USER_NUMB
+		</if>
+		,		A.MODI_USER_NUMB
+		,		CONVERT(VARCHAR(10), MODI_USER_DATE, 121) AS MODI_USER_DATE
+		,		CASE WHEN STAT_FLAG_CODE ='0' THEN '요청' 
+				WHEN STAT_FLAG_CODE = '1' THEN '처리중'
+				ELSE '처리완료' END AS STAT_FLAG_CODE
+		,		(CASE WHEN (file_list1 IS NULL OR file_list1='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list2 IS NULL OR file_list2='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list3 IS NULL OR file_list3='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list4 IS NULL OR file_list4='') THEN 0 ELSE 1 END) AS FILE_LIST_CNT
+		,		ROW_NUMBER() OVER(ORDER BY NO) AS num
+		<include refid="selectRequestManageListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	<sql id="selectRequestManageListSql">
+		FROM MEREQU A WITH (NOLOCK) 
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="srcFromDt != null and  srcFromDt != ''">
+				AND CONVERT(VARCHAR(10), requ_User_Date , 120) &gt;= #{srcFromDt}
+			</if>
+			<if test="srcEndDt != null and  srcEndDt != ''">
+				AND CONVERT(VARCHAR(10), requ_User_Date , 120) &lt;= #{srcEndDt}
+			</if>
+			<if test="srcDeli_Area_Code != null and srcDeli_Area_Code != ''">
+				AND DELI_AREA_CODE = #{srcDeli_Area_Code}
+			</if>
+			<if test="srcRequ_Stat_Flag != null and srcRequ_Stat_Flag != ''">
+				AND REQU_STAT_FLAG = #{srcRequ_Stat_Flag}
+			</if>
+			<if test="srcStatFlagCode != null and srcStatFlagCode != ''">
+				AND STAT_FLAG_CODE = #{srcStatFlagCode}
+			</if>
+			<if test="userInfoDto.svcTypeCd != null and svcTypeCd != '' and ( userInfoDto.svcTypeCd.equals('VEN') or userInfoDto.svcTypeCd.equals('BUY') )">
+			AND REQU_USER_NUMB = #{userInfoDto.userNm}
+			</if>
+		</trim>
+	</sql>
+	
+	<insert id="insertRequestManage">
+		/* board.insertRequestManage */
+		INSERT INTO MEREQU( 
+			NO,             DELI_AREA_CODE, BORGID,         TITLE,          MESSAGE,
+			REQU_STAT_FLAG, REQU_USER_NUMB, REQU_USER_DATE, MODI_USER_NUMB, FILE_LIST1,
+			FILE_LIST2,     FILE_LIST3,     FILE_LIST4,     STAT_FLAG_CODE, REQU_TEL_NUMB
+		)
+		VALUES ( 
+		<![CDATA[
+			#{no},             #{deli_Area_Code}, #{borgId},     #{title},          #{message},
+			#{requ_Stat_Flag}, #{requ_User_Numb}, GETDATE(),     #{modi_User_Numb}, #{file_list1},
+			#{file_list2},     #{file_list3},     #{file_list4}, 0,                 #{requ_tel_numb}
+		]]>
+		) 
+	</insert>
+	
+	<select id="selectRequestManageDetail" parameterType="java.util.Map" resultType="kr.co.bitcube.board.dto.MerequDto">
+		/* board.selectRequestManageDetail */
+		SELECT
+			A.NO,             A.TITLE,          A.REQU_STAT_FLAG, A.MESSAGE,        A.REQ_MESSAGE,
+			A.FILE_LIST1,     A.FILE_LIST2,     A.FILE_LIST3,     A.FILE_LIST4,
+			A.ADDE_FILE_RES1, A.ADDE_FILE_RES2, A.ADDE_FILE_RES3, A.ADDE_FILE_RES4, 
+			A.STAT_FLAG_CODE,
+			A.REQU_TEL_NUMB,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'NAME') AS ATTACH_FILE_NAME1,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'NAME') AS ATTACH_FILE_NAME2,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'NAME') AS ATTACH_FILE_NAME3,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'NAME') AS ATTACH_FILE_NAME4,
+			
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'PATH') AS ATTACH_FILE_PATH1,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'PATH') AS ATTACH_FILE_PATH2,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'PATH') AS ATTACH_FILE_PATH3,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'PATH') AS ATTACH_FILE_PATH4,
+			
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES1, 'NAME') AS res_attach_file_name1,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES2, 'NAME') AS res_attach_file_name2,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES3, 'NAME') AS res_attach_file_name3,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES4, 'NAME') AS res_attach_file_name4,
+			
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES1, 'PATH') AS res_attach_file_path1,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES2, 'PATH') AS res_attach_file_path2,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES3, 'PATH') AS res_attach_file_path3,
+			dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES4, 'PATH') AS res_attach_file_path4
+		FROM
+			MEREQU A WITH (NOLOCK) 
+		WHERE
+			A.NO = #{no}
+	</select>
+	
+	<update id="updateRequestManage">
+		/* board.updateRequestManage */
+		UPDATE 	MEREQU 
+		SET		no = #{no}
+		<if test="title != null and  title != ''">
+		,		TITLE = #{title}
+		</if>
+		<if test="message != null and  message != ''">
+		,		MESSAGE = #{message}
+		</if>
+		<if test="requ_User_Numb != null and  requ_User_Numb != ''">
+		,		REQU_USER_NUMB = #{requ_User_Numb}
+		</if>
+		<if test="requ_User_Date != null and  requ_User_Date != ''">
+		,		REQU_USER_DATE = GETDATE()
+		</if>
+		<if test="requ_Stat_Flag != null and  requ_Stat_Flag != ''">
+		,		REQU_STAT_FLAG = #{requ_Stat_Flag}
+		</if>
+		<if test="file_list1 != null and  file_list1 != ''">
+		,		FILE_LIST1 = #{file_list1}
+		</if>
+		<if test="file_list2 != null and  file_list2 != ''">
+		,		FILE_LIST2 = #{file_list2}
+		</if>
+		<if test="file_list3 != null and  file_list3 != ''">
+		,		FILE_LIST3 = #{file_list3}
+		</if>
+		<if test="file_list4 != null and  file_list4 != ''">
+		,		FILE_LIST4 = #{file_list4}
+		</if>
+		<if test="adde_file_res1 != null and  adde_file_res1 != ''">
+		,		adde_file_res1 = #{adde_file_res1}
+		</if>
+		<if test="adde_file_res2 != null and  adde_file_res2 != ''">
+		,		adde_file_res2 = #{adde_file_res2}
+		</if>
+		<if test="adde_file_res3 != null and  adde_file_res3 != ''">
+		,		adde_file_res3 = #{adde_file_res3}
+		</if>
+		<if test="adde_file_res4 != null and  adde_file_res4 != ''">
+		,		adde_file_res4 = #{adde_file_res4}
+		</if>
+		<if test="req_message != null and  req_message != ''">
+		,		req_message = #{req_message}
+		</if>
+		<if test="stat_flag_code != null and  stat_flag_code != ''">
+		,		stat_flag_code = #{stat_flag_code}
+		</if>
+		,		MODI_USER_NUMB = #{modi_User_Numb}
+		,		MODI_USER_DATE = GETDATE()
+		WHERE 	NO = #{no}
+	</update>
+	
+	<update id="updateRequestManageReply">
+		/* board.updateRequestManageReply */
+		UPDATE 	MEREQU 
+		SET		REQ_MESSAGE = #{req_Message}
+		,		MODI_USER_NUMB = #{modi_User_Numb}
+		,		MODI_USER_DATE = GETDATE()
+		WHERE 	NO = #{no}
+	</update>
+
+	<delete id="deleteRequestManage">
+		/* board.deleteRequestManage */
+		DELETE MEREQU WHERE NO = #{id}
+	</delete>
+	
+	<update id="updateBoardAttachFile">
+		/* board.updateBoardAttachFile */
+		UPDATE	NOTICEBOARD
+		SET		BOARD_NO = #{board_no}
+		<if test="file_list1 != null and  file_list1 != ''">
+		,		FILE_LIST1 = NULL
+		</if>
+		<if test="file_list2 != null and  file_list2 != ''">
+		,		FILE_LIST2 = NULL
+		</if>
+		<if test="file_list3 != null and  file_list3 != ''">
+		,		FILE_LIST3 = NULL
+		</if>
+		<if test="file_list4 != null and  file_list4 != ''">
+		,		FILE_LIST4 = NULL
+		</if>
+		WHERE	BOARD_NO = #{board_no}
+	</update>
+	
+	<update id="updateRequestManageAttachFile">
+		/* board.updateRequestManageAttachFile */
+		UPDATE	MEREQU
+		SET		NO = #{no}
+		<if test="file_list1 != null and  file_list1 != ''">
+		,		FILE_LIST1 = NULL
+		</if>
+		<if test="file_list2 != null and  file_list2 != ''">
+		,		FILE_LIST2 = NULL
+		</if>
+		<if test="file_list3 != null and  file_list3 != ''">
+		,		FILE_LIST3 = NULL
+		</if>
+		<if test="file_list4 != null and  file_list4 != ''">
+		,		FILE_LIST4 = NULL
+		</if>
+		WHERE	NO = #{no}
+	</update>
+	
+	<!-- 개선사항 시작 -->
+	
+	<select id="selectImproManageListCnt" resultType="int">
+		/* board.selectImproManageListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectImproManageListSql"/>
+	</select> 
+	<select id="selectImproManageList" resultType="kr.co.bitcube.board.dto.ImproDto">
+		/* board.selectImproManageList */
+		SELECT  A.NO
+		,		dbo.FNS_BORG_STRING(A.BORGID) as BORGID
+		,		A.TITLE
+		,		CONVERT(VARCHAR(10), REQU_USER_DATE, 121) AS REQU_USER_DATE
+		,       B.USERNM AS REQU_USER_NUMB
+		,		A.MODI_USER_NUMB
+		,		A.HAND_USER_NUMB
+		,		A.FIRST
+		,		CONVERT(VARCHAR(10), MODI_USER_DATE, 121) AS MODI_USER_DATE
+		,		CASE WHEN STAT_FLAG_CODE ='1' THEN '접수대기' 
+				WHEN STAT_FLAG_CODE = '2' THEN '접수'
+				WHEN STAT_FLAG_CODE = '3' THEN '접수반려'
+				WHEN STAT_FLAG_CODE = '5' THEN '답변반려'
+				ELSE '처리완료' END AS STAT_FLAG_CODE
+		,		(CASE WHEN (file_list1 IS NULL OR file_list1='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list2 IS NULL OR file_list2='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list3 IS NULL OR file_list3='') THEN 0 ELSE 1 END + 
+				CASE WHEN (file_list4 IS NULL OR file_list4='') THEN 0 ELSE 1 END) AS FILE_LIST_CNT
+		,		ROW_NUMBER() OVER(ORDER BY NO) AS num
+		<include refid="selectImproManageListSql"/>
+<!-- 		<if test="orderString != null and orderString != ''"> -->
+			ORDER BY REQU_USER_DATE DESC, NO ASC 
+<!-- 		</if> -->
+	</select>
+	<sql id="selectImproManageListSql">
+		FROM IMPRO A WITH(NOLOCK) , SMPUSERS B WITH (NOLOCK) 
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="srcFromDt != null and  srcFromDt != ''">
+				AND CONVERT(VARCHAR(10), requ_User_Date , 120) &gt;= #{srcFromDt}
+			</if>
+			<if test="srcEndDt != null and  srcEndDt != ''">
+				AND CONVERT(VARCHAR(10), requ_User_Date , 120) &lt;= #{srcEndDt}
+				AND A.requ_user_numb = B.USERID
+			</if>
+			<if test="sTat_Flag_Code != null and sTat_Flag_Code != ''">
+				AND STAT_FLAG_CODE = #{sTat_Flag_Code}
+			</if>
+		</trim>
+	</sql>
+	
+	<insert id="insertImproManage"> 
+		/* board.insertImproManage */
+		INSERT INTO IMPRO( 
+				NO 
+		, 		BORGID
+		, 		TITLE
+		,		MESSAGE 
+		,		REQU_USER_NUMB
+		,		REQU_USER_DATE 
+		,		HAND_USER_NUMB
+		,		FILE_LIST1 
+		,		FILE_LIST2 
+		,		FILE_LIST3 
+		,		FILE_LIST4 
+		,		STAT_FLAG_CODE
+		) VALUES ( 
+				#{no} 
+		,		#{borgId} 
+		,		#{title} 
+		,		#{message} 
+		,		#{requ_User_Numb} 
+		,		GETDATE() 
+		,		#{hand_User_Numb} 
+		,		#{file_list1} 
+		,		#{file_list2} 
+		,		#{file_list3} 
+		,		#{file_list4} 
+		,		0
+		) 
+	</insert>
+	
+	<select id="selectImproManageDetail" parameterType="java.util.Map" resultType="kr.co.bitcube.board.dto.ImproDto">
+		/* board.selectImproManageDetail */
+		SELECT	A.NO
+		,		A.TITLE	 
+		,		A.MESSAGE 
+		,		A.REQ_MESSAGE
+		,		A.HAND_MESSAGE
+		,		A.ADDE_FILE_RES1
+		,		A.FIRST
+		,		A.FILE_LIST1
+		,		A.FILE_LIST2
+		,		A.FILE_LIST3
+		,		A.FILE_LIST4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'NAME') AS ATTACH_FILE_NAME1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'NAME') AS ATTACH_FILE_NAME2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'NAME') AS ATTACH_FILE_NAME3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'NAME') AS ATTACH_FILE_NAME4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'PATH') AS ATTACH_FILE_PATH1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'PATH') AS ATTACH_FILE_PATH2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'PATH') AS ATTACH_FILE_PATH3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'PATH') AS ATTACH_FILE_PATH4
+		
+		,		A.HAND_FILE_RES1
+		,		A.HAND_FILE_RES2
+		,		A.HAND_FILE_RES3
+		,		A.HAND_FILE_RES4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.HAND_FILE_RES1, 'NAME') AS HAND_FILE_NAMES1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.HAND_FILE_RES2, 'NAME') AS HAND_FILE_NAMES2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.HAND_FILE_RES3, 'NAME') AS HAND_FILE_NAMES3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.HAND_FILE_RES4, 'NAME') AS HAND_FILE_NAMES4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.HAND_FILE_RES1, 'PATH') AS hand_attach_file_path1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.HAND_FILE_RES2, 'PATH') AS hand_attach_file_path2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.HAND_FILE_RES3, 'PATH') AS hand_attach_file_path3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.HAND_FILE_RES4, 'PATH') AS hand_attach_file_path4
+		
+		,		A.ADDE_FILE_RES1
+		,		A.ADDE_FILE_RES2
+		,		A.ADDE_FILE_RES3
+		,		A.ADDE_FILE_RES4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES1, 'NAME') AS modi_file_names1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES2, 'NAME') AS modi_file_names2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES3, 'NAME') AS modi_file_names3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES4, 'NAME') AS modi_file_names4
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES1, 'PATH') AS modi_file_path1
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES2, 'PATH') AS modi_file_path2
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES3, 'PATH') AS modi_file_path3
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.ADDE_FILE_RES4, 'PATH') AS modi_file_path4
+		,		A.STAT_FLAG_CODE
+		FROM	IMPRO A WITH (NOLOCK) 
+		WHERE	A.NO = #{no}
+	</select>
+	
+	<update id="updateImproManage">
+		/* board.updateImproManage */
+		UPDATE 	IMPRO 
+		SET		no = #{no}
+		<if test="title != null and  title != ''">
+		,		TITLE = #{title}
+		</if>
+		<if test="message != null and  message != ''">
+		,		MESSAGE = #{message}
+		</if>
+		<if test="requ_User_Numb != null and  requ_User_Numb != ''">
+		,		REQU_USER_NUMB = #{requ_User_Numb}
+		</if>
+		<if test="hand_User_Numb != null and  hand_User_Numb != ''">
+		,		HAND_USER_NUMB = #{hand_User_Numb}
+		</if>
+		<if test="requ_User_Date != null and  requ_User_Date != ''">
+		,		REQU_USER_DATE = GETDATE()
+		</if>
+		<if test="requ_Stat_Flag != null and  requ_Stat_Flag != ''">
+		,		REQU_STAT_FLAG = #{requ_Stat_Flag}
+		</if>
+		<if test="file_list1 != null and  file_list1 != ''">
+		,		FILE_LIST1 = #{file_list1}
+		</if>
+		<if test="file_list2 != null and  file_list2 != ''">
+		,		FILE_LIST2 = #{file_list2}
+		</if>
+		<if test="file_list3 != null and  file_list3 != ''">
+		,		FILE_LIST3 = #{file_list3}
+		</if>
+		<if test="file_list4 != null and  file_list4 != ''">
+		,		FILE_LIST4 = #{file_list4}
+		</if>
+		<if test="adde_file_res1 != null and  adde_file_res1 != ''">
+		,		adde_file_res1 = #{adde_file_res1}
+		</if>
+		<if test="adde_file_res2 != null and  adde_file_res2 != ''">
+		,		adde_file_res2 = #{adde_file_res2}
+		</if>
+		<if test="adde_file_res3 != null and  adde_file_res3 != ''">
+		,		adde_file_res3 = #{adde_file_res3}
+		</if>
+		<if test="adde_file_res4 != null and  adde_file_res4 != ''">
+		,		adde_file_res4 = #{adde_file_res4}
+		</if>
+		<if test="req_message != null and  req_message != ''">
+		,		req_message = #{req_message}
+		</if>
+		<if test="stat_flag_code != null and  stat_flag_code != ''">
+		,		stat_flag_code = #{stat_flag_code}
+		</if>
+		,		MODI_USER_NUMB = #{modi_User_Numb}
+		,		MODI_USER_DATE = GETDATE()
+		WHERE 	NO = #{no}
+	</update>
+	
+	<update id="updateImproManageReply">
+		/* board.updateImproManageReply */
+		UPDATE 	IMPRO 
+		SET		REQ_MESSAGE = #{req_Message}
+		,		MODI_USER_NUMB = #{modi_User_Numb}
+		,		MODI_USER_DATE = GETDATE()
+		WHERE 	NO = #{no}
+	</update>
+
+	<delete id="deleteImproManage">
+		/* board.deleteRequestManage */
+		DELETE IMPRO WHERE NO = #{id}
+	</delete>
+	
+	<update id="updateImproBoardAttachFile">
+		/* board.updateImproBoardAttachFile */
+		UPDATE	NOTICEBOARD
+		SET		BOARD_NO = #{board_no}
+		<if test="file_list1 != null and  file_list1 != ''">
+		,		FILE_LIST1 = NULL
+		</if>
+		<if test="file_list2 != null and  file_list2 != ''">
+		,		FILE_LIST2 = NULL
+		</if>
+		<if test="file_list3 != null and  file_list3 != ''">
+		,		FILE_LIST3 = NULL
+		</if>
+		<if test="file_list4 != null and  file_list4 != ''">
+		,		FILE_LIST4 = NULL
+		</if>
+		WHERE	BOARD_NO = #{board_no}
+	</update>
+	
+	<update id="updateImproManageAttachFile">
+		/* board.updateImproManageAttachFile */
+		UPDATE	IMPRO
+		SET		NO = #{no}
+		<if test="file_list1 != null and  file_list1 != ''">
+		,		FILE_LIST1 = NULL
+		</if>
+		<if test="file_list2 != null and  file_list2 != ''">
+		,		FILE_LIST2 = NULL
+		</if>
+		<if test="file_list3 != null and  file_list3 != ''">
+		,		FILE_LIST3 = NULL
+		</if>
+		<if test="file_list4 != null and  file_list4 != ''">
+		,		FILE_LIST4 = NULL
+		</if>
+		WHERE	NO = #{no}
+	</update>
+	<!-- 개선사항 끝 -->
+	
+	<select id="selectWorkInfo" resultType="java.util.HashMap">
+		/* board.selectWorkInfo */
+		SELECT	WORKID
+		,		USERID
+		,		WORKNM
+		,		MAT_KIND
+		FROM SMPWORKINFO WITH(NOLOCK)  
+		WHERE IS_SKTS_MANAGE = '1'
+	</select>
+	
+	<select id="selectParticipationList_count" resultType="java.util.HashMap">
+		/*board.selectParticipationList*/
+		SELECT	COUNT(1) AS CNT 
+		FROM PARTICIPATION_BOARD WITH(NOLOCK) 
+		WHERE 1=1
+		AND SUBJECT LIKE '%'+#{subject}+'%'
+	</select>
+	
+	<select id="selectParticipationList" resultType="java.util.HashMap">
+		/*board.selectParticipationList*/
+		SELECT	AA.NUM
+		,		AA.PARTICIPATION_NO
+		,		AA.CLASSIFY
+		,		AA.SUBJECT+'['+CONVERT(VARCHAR, PARTICIPATION_NO_CNT)+']' AS SUBJECT
+		,		AA.CONTENT
+		,		AA.INSERT_USER_ID
+		,		AA.INSERT_USER_NM
+		,		AA.INSERT_DATE
+		,		AA.FILE_LIST1
+		,		AA.FILE_LIST2
+		,		AA.ATTACH_FILE_NAME1
+		,		AA.ATTACH_FILE_NAME2
+		,		AA.ATTACH_FILE_PATH1
+		,		AA.ATTACH_FILE_PATH2
+		,		AA.CLASSIFY_NM
+		,		CONVERT(VARCHAR, AA.FILE_CNT)+' 개' AS FILE_CNT
+		FROM(
+			SELECT	ROW_NUMBER() OVER(ORDER BY A.PARTICIPATION_NO DESC) AS NUM
+			,		A.PARTICIPATION_NO
+			,		A.CLASSIFY
+			,		A.SUBJECT
+			,		A.CONTENT
+			,		A.INSERT_USER_ID
+			,		A.INSERT_USER_NM
+			,		CONVERT(VARCHAR(10), A.INSERT_DATE, 120) AS INSERT_DATE
+			,		A.FILE_LIST1
+			,		A.FILE_LIST2
+			,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'NAME') AS ATTACH_FILE_NAME1
+			,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'NAME') AS ATTACH_FILE_NAME2
+			,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'PATH') AS ATTACH_FILE_PATH1
+			,		dbo.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'PATH') AS ATTACH_FILE_PATH2
+			,		(SELECT COUNT(1) FROM PARTICIPATION_COMMENT C  WITH(NOLOCK) WHERE C.PARTICIPATION_NO = A.PARTICIPATION_NO) AS PARTICIPATION_NO_CNT
+			,		B.CODENM1 AS CLASSIFY_NM
+			,		C.FILE_CNT
+			FROM PARTICIPATION_BOARD A WITH(NOLOCK) 
+			INNER JOIN SMPCODES B WITH(NOLOCK) 
+				ON A.CLASSIFY = B.CODEVAL1
+				AND B.CODETYPECD = 'PROPOSAL_SUGGEST'
+			INNER JOIN(
+				SELECT	PARTICIPATION_NO
+				,		COUNT(FILE_LIST1) + COUNT(FILE_LIST1) AS FILE_CNT
+				FROM PARTICIPATION_BOARD WITH(NOLOCK) 
+				GROUP BY PARTICIPATION_NO
+			)C
+				ON A.PARTICIPATION_NO = C.PARTICIPATION_NO
+		)AA
+		WHERE 1=1
+		AND AA.SUBJECT LIKE '%'+#{subject}+'%'
+		ORDER BY ${orderString}
+	</select>
+	
+	<select id="selectParticipationDetail" resultType="java.util.HashMap">
+		/*board.selectParticipationDetail*/
+		SELECT	A.PARTICIPATION_NO
+		,		A.CLASSIFY
+		,		A.SUBJECT
+		,		A.CONTENT
+		,		A.FILE_LIST1
+		,		A.FILE_LIST2
+		,		A.ATTACH_FILE_NAME1
+		,		A.ATTACH_FILE_NAME2
+		,		A.ATTACH_FILE_PATH1
+		,		A.ATTACH_FILE_PATH2
+		,		A.INSERT_USER_ID
+		,		A.INSERT_USER_NM
+		,		A.INSERT_DATE
+		FROM(
+			SELECT	PARTICIPATION_NO
+			,		CLASSIFY
+			,		SUBJECT
+			,		CONTENT
+			,		ISNULL(FILE_LIST1, '') AS FILE_LIST1
+			,		ISNULL(FILE_LIST2, '') AS FILE_LIST2
+			,		ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST1, 'NAME'), '') AS ATTACH_FILE_NAME1
+			,		ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST2, 'NAME'), '') AS ATTACH_FILE_NAME2
+			,		ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST1, 'PATH'), '') AS ATTACH_FILE_PATH1
+			,		ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST2, 'PATH'), '') AS ATTACH_FILE_PATH2
+			,		INSERT_USER_ID
+			,		INSERT_USER_NM
+			,		CONVERT(VARCHAR(10), INSERT_DATE, 120) AS INSERT_DATE
+			FROM PARTICIPATION_BOARD WITH(NOLOCK)  
+			WHERE PARTICIPATION_NO = #{participationNo}
+		)A
+	</select>
+	
+	<insert id="insertParticipation">
+		/*board.insertParticipation*/
+		INSERT INTO PARTICIPATION_BOARD(
+			PARTICIPATION_NO
+		,	CLASSIFY
+		,	SUBJECT
+		,	CONTENT
+<if test="fileList1 != null and fileList1 != ''">
+		,	FILE_LIST1
+</if>
+<if test="fileList2 != null and fileList2 != ''">
+		,	FILE_LIST2
+</if>
+		,	INSERT_USER_ID
+		,	INSERT_USER_NM
+		,	INSERT_DATE
+		)VALUES(
+			#{id}
+		,	#{classify}
+		,	#{subject}
+		,	#{content}
+<if test="fileList1 != null and fileList1 != ''">
+		,	#{fileList1}
+</if>
+<if test="fileList2 != null and fileList2 != ''">
+		,	#{fileList2}
+</if>
+		,	#{insertUserId}
+		,	#{insertUserNm}
+		,	GETDATE()
+		)
+	</insert>
+	
+	<select id="selectParticipationBoardDetail" resultType="java.util.HashMap">
+		/* board.selectParticipationBoardDetail*/
+		SELECT PARTICIPATION_NO
+		,		CLASSIFY
+		,		SUBJECT
+		,		CONTENT
+		,		ISNULL(FILE_LIST1, '') AS FILE_LIST1
+		,		ISNULL(FILE_LIST2, '') AS FILE_LIST2
+		,		ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST1, 'NAME'), '') AS ATTACH_FILE_NAME1
+		,		ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST2, 'NAME'), '') AS ATTACH_FILE_NAME2
+		,		ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST1, 'PATH'), '') AS ATTACH_FILE_PATH1
+		,		ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST2, 'PATH'), '') AS ATTACH_FILE_PATH2
+		,		INSERT_USER_ID
+		,		INSERT_USER_NM
+		,		CONVERT(VARCHAR(10), INSERT_DATE, 120) AS INSERT_DATE
+		FROM PARTICIPATION_BOARD WITH(NOLOCK) 
+		WHERE PARTICIPATION_NO = #{participationNo}
+	</select>
+	
+	
+	<select id="selectParticipationCommentList" resultType="java.util.HashMap">
+		/*board.selectParticipationCommentList*/
+		SELECT	A.COMMENT_NO
+		,		PARTICIPATION_NO
+		,		CASE	WHEN ISUSE = 1 THEN CONTENT
+						ELSE '삭제된 답변입니다.'
+				END CONTENT
+		,		INSERT_USER_ID
+		,		INSERT_USER_NM
+		,		CONVERT(VARCHAR(16), INSERT_DATE, 120) AS INSERT_DATE
+		,		GROUP_NO
+		,		LEV_NO
+		,		CASE	WHEN ISUSE = 1 THEN ISNULL(FILE_LIST1,'') 
+						ELSE ''
+				END FILE_LIST1
+		,		CASE	WHEN ISUSE = 1 THEN ISNULL(FILE_LIST2,'') 
+						ELSE ''
+				END FILE_LIST2
+		,		CASE	WHEN ISUSE = 1 THEN ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST1, 'NAME'),'')
+						ELSE ''
+				END ATTACH_FILE_NAME1
+		,		CASE	WHEN ISUSE = 1 THEN ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST2, 'NAME'),'')
+						ELSE ''
+				END ATTACH_FILE_NAME2
+		,		CASE	WHEN ISUSE = 1 THEN ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST1, 'PATH'),'')
+						ELSE ''
+				END ATTACH_FILE_PATH1
+		,		CASE	WHEN ISUSE = 1 THEN ISNULL(dbo.FNS_ATTACH_FILE_NAME_PATH(FILE_LIST2, 'PATH'),'')
+						ELSE ''
+				END ATTACH_FILE_PATH2
+		,		CASE	WHEN B.COMMENT_NO IS NOT NULL 
+							THEN 1
+						ELSE 0
+				END LINE_ISUSE
+		,		ISUSE
+		,		BUSINESS_NUM
+		FROM PARTICIPATION_COMMENT A WITH(NOLOCK) 
+		LEFT OUTER JOIN (
+			SELECT MAX(COMMENT_NO) AS COMMENT_NO
+			FROM PARTICIPATION_COMMENT WITH(NOLOCK) 
+			WHERE PARTICIPATION_NO = #{participationNo}
+			GROUP BY GROUP_NO
+		)B
+			ON A.COMMENT_NO = B.COMMENT_NO 
+		WHERE PARTICIPATION_NO = #{participationNo}
+		<if test="businessNum != null and businessNum !=''">
+		AND (BUSINESS_NUM = #{businessNum} OR ISNULL(BUSINESS_NUM, '') = '')
+		</if>
+		ORDER BY GROUP_NO ASC, LEV_NO, CONVERT(DATETIME, INSERT_DATE)
+	</select>
+	
+	<insert id="insertParticipationComment">
+		/* board.insertParticipationComment */
+			INSERT INTO PARTICIPATION_COMMENT(
+				COMMENT_NO
+			,	PARTICIPATION_NO
+			,	CONTENT
+			,	FILE_LIST1
+			,	FILE_LIST2
+			,	BUSINESS_NUM
+			,	INSERT_USER_ID
+			,	INSERT_USER_NM
+			,	INSERT_DATE
+			,	MOD_USER_ID
+			,	MOD_USER_NM
+			,	MOD_DATE
+			,	BORG_TYPE
+			,	GROUP_NO
+			,	LEV_NO
+			)VALUES(
+				#{id}
+			,	#{participationNo}
+			,	#{content}
+			,	#{fileList1}
+			,	#{fileList2}
+			,	#{businessNum}
+			,	#{insertUserId}
+			,	#{insertUserNm}
+			,	GETDATE()
+			,	#{insertUserId}
+			,	#{insertUserNm}
+			,	GETDATE()
+			,	#{svcType}
+			,	#{id}
+			,	0
+			)
+	</insert>
+	
+	<update id="updateParticipation">
+		/* board.updateParticipation */
+		UPDATE PARTICIPATION_BOARD SET
+			content = #{content}
+		,	classify = #{classify}
+		,	subject = #{subject}
+		,	MOD_USER_ID = #{modUserId}
+		,	MOD_USER_NM = #{modUserNm}
+		,	MOD_DATE = GETDATE()
+		,	FILE_LIST1 = #{fileList1}
+		,	FILE_LIST2 = #{fileList2}
+		WHERE PARTICIPATION_NO = #{participationNo}
+	</update>
+	
+	<insert id="insertParticipationCommentLev">
+		/* board.insertParticipationCommentLev*/
+		INSERT INTO PARTICIPATION_COMMENT(
+			COMMENT_NO
+		,	PARTICIPATION_NO
+		,	CONTENT
+		,	FILE_LIST1
+		,	FILE_LIST2
+		,	BUSINESS_NUM
+		,	INSERT_USER_ID
+		,	INSERT_USER_NM
+		,	INSERT_DATE
+		,	MOD_USER_ID
+		,	MOD_USER_NM
+		,	MOD_DATE
+		,	BORG_TYPE
+		,	GROUP_NO
+		,	LEV_NO
+		)VALUES(
+			#{id}
+		,	#{participationNo}
+		,	#{content}
+		,	#{fileList1}
+		,	#{fileList2}
+		,	#{businessNum}
+		,	#{insertUserId}
+		,	#{insertUserNm}
+		,	GETDATE()
+		,	#{insertUserId}
+		,	#{insertUserNm}
+		,	GETDATE()
+		,	#{svcType}
+		,	#{group}
+		,	#{lev}
+		)	
+	</insert>
+	
+	<update id="updateParticipationComment">
+		/* board.updateParticipationComment */
+		UPDATE PARTICIPATION_COMMENT SET
+			CONTENT = #{content}
+		,	MOD_USER_ID	= #{modUserId}
+		,	MOD_USER_NM = #{modUserNm}
+		,	MOD_DATE = GETDATE()
+		WHERE COMMENT_NO = #{commentNo}
+		AND PARTICIPATION_NO = #{participationNo}
+	</update>
+	
+	<update id="updateParticipationCommentDel">
+		/* board.updateParticipationCommentDel */
+		UPDATE PARTICIPATION_COMMENT SET
+			ISUSE = 0
+		WHERE COMMENT_NO = #{commentNo}
+	</update>
+	
+	<delete id="deleteParticipation">
+		/* board.deleteParticipation*/
+		DELETE 
+		FROM PARTICIPATION_BOARD
+		WHERE PARTICIPATION_NO = (
+			SELECT	A.PARTICIPATION_NO
+			FROM PARTICIPATION_BOARD A WITH(NOLOCK) 
+			LEFT OUTER JOIN PARTICIPATION_COMMENT B WITH(NOLOCK) 
+				ON A.PARTICIPATION_NO = B.PARTICIPATION_NO
+				AND B.ISUSE = 1
+			WHERE A.PARTICIPATION_NO = #{participationNo}
+			GROUP BY A.PARTICIPATION_NO
+			HAVING COUNT(B.COMMENT_NO) = 0
+		)
+	</delete>
+	
+	<update id="updateParticipationHitCnt">
+		/* board.updateParticipationHitCnt */
+		UPDATE PARTICIPATION_BOARD SET
+			HIT_NO = HIT_NO+1
+		WHERE PARTICIPATION_NO = #{participationNo}
+	</update>
+	
+	<!--개선사항 요청자 접수 -->
+	<insert id="insertImproManage2">
+		/* board.insertImproManage2 */
+		INSERT INTO IMPRO( 
+				NO 
+		, 		BORGID
+		, 		TITLE
+		,		MESSAGE
+		,		REQU_USER_NUMB
+		,		REQU_USER_DATE 
+		,		FILE_LIST1
+		,		FILE_LIST2
+		,		FILE_LIST3
+		,		FILE_LIST4 
+		,		STAT_FLAG_CODE
+		) VALUES ( 
+				#{id}
+		,		#{borgId} 
+		,		#{title} 
+		,		#{message}
+		,		#{requ_User_Numb} 
+		,		GETDATE() 
+		,		#{file_list1}
+		,		#{file_list2}
+		,		#{file_list3}
+		,		#{file_list4}
+		,		1
+		) 
+	</insert>
+	<!-- 개선사항 접수버튼 -->
+	<update id="updateImproManageHand">
+		/* board.updateImproManageHand*/
+		UPDATE IMPRO SET
+			HAND_MESSAGE = #{handMessage}
+		,	HAND_USER_NUMB = #{hand_User_Numb}
+		,	STAT_FLAG_CODE = 2
+		,	HAND_USER_DATE = GETDATE()
+		,	FIRST = #{first}
+		,		HAND_FILE_RES1 = #{file_list1}
+		,		HAND_FILE_RES2 = #{file_list2}
+		,		HAND_FILE_RES3 = #{file_list3}
+		,		HAND_FILE_RES4 = #{file_list4}
+		WHERE NO = #{no}
+	</update>
+	
+	<!-- 개선사항 접수반려버튼 -->
+	<update id="updateImproManageReturn">
+		/* board.updateImproManageReturn*/
+		UPDATE IMPRO SET
+			HAND_MESSAGE = #{handMessage}
+		,	HAND_USER_NUMB = #{hand_User_Numb}
+		,	STAT_FLAG_CODE = 3
+		,	HAND_USER_DATE = GETDATE()
+		,		HAND_FILE_RES1 = #{file_list1}
+		,		HAND_FILE_RES2 = #{file_list2}
+		,		HAND_FILE_RES3 = #{file_list3}
+		,		HAND_FILE_RES4 = #{file_list4}
+		WHERE NO = #{no}
+	</update>
+	
+	<!-- 처리완료버튼 -->
+	<update id="updateImproManageHandle">
+		/* board.updateImproManageHandle*/
+		UPDATE IMPRO SET
+			REQ_MESSAGE = #{req_Message}
+		,	MODI_USER_NUMB = #{modi_User_Numb}
+		,	STAT_FLAG_CODE = 4
+		,	MODI_USER_DATE = GETDATE()
+		,		ADDE_FILE_RES1 = #{file_list1}
+		,		ADDE_FILE_RES2 = #{file_list2}
+		,		ADDE_FILE_RES3 = #{file_list3}
+		,		ADDE_FILE_RES4 = #{file_list4}
+		WHERE NO = #{no}
+	</update>
+	<!-- 답변반려버튼 -->
+	<update id="updateImproManageAnswer">
+		/* board.updateImproManageAnswer*/
+		UPDATE IMPRO SET
+			REQ_MESSAGE = #{req_Message}
+		,	MODI_USER_NUMB = #{modi_User_Numb}
+		,	STAT_FLAG_CODE = 5
+		,	MODI_USER_DATE = GETDATE()
+		,		ADDE_FILE_RES1 = #{file_list1}
+		,		ADDE_FILE_RES2 = #{file_list2}
+		,		ADDE_FILE_RES3 = #{file_list3}
+		,		ADDE_FILE_RES4 = #{file_list4}
+		WHERE NO = #{no}
+	</update>
+
+<!-- 	개선사항 수정버튼 -->
+	<update id="updateImproManage3">
+		/* board.updateImproManage3 */
+		UPDATE IMPRO SET
+			TITLE = #{title}
+		,		MESSAGE = #{message}
+		,		FILE_LIST1 = #{file_list1}
+		,		FILE_LIST2 = #{file_list2}
+		,		FILE_LIST3 = #{file_list3}
+		,		FILE_LIST4 = #{file_list4}
+		WHERE NO = #{no}
+	</update>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- ::::::::::::::::::::::::::::::: 고객의 소리 관련 쿼리 공통으로 씀::::::::::::::::::::::::::::::: -->
+	
+	
+	<!-- 고객의 소리 등록 -->
+	<insert id="insertVocInfo">
+		/* board.insertVocInfo  */ 
+		INSERT INTO VOCBOARD( 
+			VOC_NO
+		,	RECE_TYPE
+		,	EMAIL
+		,	TEL
+		,	TITLE
+		,	MESSAGE
+		,	FILE_LIST1
+		,	FILE_LIST2
+		,	FILE_LIST3
+		,	FILE_LIST4
+		,	REGI_USER_ID
+		,	REGI_DATE_TIME
+		) VALUES ( 
+			#{voc_no}
+		,	#{rece_type}
+		,	#{email}
+		,	#{tel}
+		,	#{title}
+		,	#{message}
+		,	#{file_list1}
+		,	#{file_list2}
+		,	#{file_list3}
+		,	#{file_list4}
+		,	#{regi_user_id} 
+		,	GETDATE()
+		) 
+	</insert>
+	
+	
+	
+<!-- 		<if test="srcBoardBorgType != null and srcBoardBorgType !='' "> -->
+<!-- 			<if test=" srcBoardBorgType == 'BUY'.toString() "> -->
+<!-- 			</if> -->
+<!-- 		</if> -->
+	
+<!-- 	고객의 소리 운영사 리스트 화면 -->
+	<select id="selectVocListCnt" resultType="int">
+		/* board.selectVocListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectVocSql"/>
+	</select>
+	<select id="selectVocList" resultType="kr.co.bitcube.board.dto.VocDto">
+		/* board.selectVocList*/
+		SELECT 
+			A.VOC_NO
+		,	B.CODENM1 AS RECE_TYPE_NM
+		,	A.TITLE
+		,	C.USERNM
+		,	DBO.FNS_BORG_STRING_BY_USERID(A.REGI_USER_ID) AS BORG_STRING
+		,	CONVERT(VARCHAR,A.REGI_DATE_TIME,120) AS REGI_DATE_TIME
+		,	(CASE WHEN (A.FILE_LIST1 IS NULL OR A.FILE_LIST1='') THEN 0 ELSE 1 END + 
+			CASE WHEN (A.FILE_LIST2 IS NULL OR A.FILE_LIST2='') THEN 0 ELSE 1 END + 
+			CASE WHEN (A.FILE_LIST3 IS NULL OR A.FILE_LIST3='') THEN 0 ELSE 1 END + 
+			CASE WHEN (A.FILE_LIST4 IS NULL OR A.FILE_LIST4='') THEN 0 ELSE 1 END) AS FILE_LIST_CNT
+		<include refid="selectVocSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	<sql id="selectVocSql">
+		FROM VOCBOARD A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPCODES B WITH (NOLOCK) 
+		ON B.CODETYPECD = 'VOC_RECE_TYPE'
+		AND A.RECE_TYPE = B.CODEVAL1
+		LEFT OUTER JOIN SMPUSERS C WITH (NOLOCK) 
+		ON A.REGI_USER_ID = C.USERID
+		WHERE 	1 = 1
+		<if test="voc_No != null and voc_No != ''">
+			AND A.VOC_NO = #{voc_No}
+		</if>
+		<if test="srcWriter != null and srcWriter != ''">
+			AND 	A.TITLE LIKE '%' + #{srcWriter} + '%'
+		</if>
+		<if test="srcUserWriter != null and srcUserWriter != ''">
+			AND 	C.USERNM LIKE '%' + #{srcUserWriter} + '%'
+		</if>
+		<if test="sTat_Flag_Code != null and sTat_Flag_Code != ''">
+				AND B.CODEVAL1 = #{sTat_Flag_Code}
+		</if>
+		<if test="srcFromDt != null and  srcFromDt != ''">
+				AND CONVERT(VARCHAR(10), regi_date_time , 120) &gt;= #{srcFromDt}
+		</if>
+		<if test="srcEndDt != null and  srcEndDt != ''">
+				AND CONVERT(VARCHAR(10), regi_date_time , 120) &lt;= #{srcEndDt}
+				AND A.REGI_USER_ID = C.USERID
+		</if>
+		
+
+
+	</sql>
+	<select id="selectVocDetail" resultType="kr.co.bitcube.board.dto.VocDto">
+		/* board.selectVocDetail */
+		SELECT 
+			A.VOC_NO
+		,	A.RECE_TYPE
+		,	B.CODENM1 AS RECE_TYPE_NM
+		,	A.EMAIL
+		,	A.TEL
+		,	A.TITLE
+		,	A.MESSAGE
+		,	C.USERNM
+		,	A.FILE_LIST1
+		,	A.FILE_LIST2
+		,	A.FILE_LIST3
+		,	A.FILE_LIST4
+		,	DBO.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'NAME') AS ATTACH_FILE_NAME1
+		,	DBO.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'NAME') AS ATTACH_FILE_NAME2
+		,	DBO.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'NAME') AS ATTACH_FILE_NAME3
+		,	DBO.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'NAME') AS ATTACH_FILE_NAME4
+		,	DBO.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST1, 'PATH') AS ATTACH_FILE_PATH1
+		,	DBO.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST2, 'PATH') AS ATTACH_FILE_PATH2
+		,	DBO.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST3, 'PATH') AS ATTACH_FILE_PATH3
+		,	DBO.FNS_ATTACH_FILE_NAME_PATH(A.FILE_LIST4, 'PATH') AS ATTACH_FILE_PATH4
+		,	DBO.FNS_BORG_STRING_BY_USERID(A.REGI_USER_ID) AS BORG_STRING
+		,	CONVERT(VARCHAR,A.REGI_DATE_TIME,120) AS REGI_DATE_TIME
+		,	(CASE WHEN (A.FILE_LIST1 IS NULL OR A.FILE_LIST1='') THEN 0 ELSE 1 END + 
+			CASE WHEN (A.FILE_LIST2 IS NULL OR A.FILE_LIST2='') THEN 0 ELSE 1 END + 
+			CASE WHEN (A.FILE_LIST3 IS NULL OR A.FILE_LIST3='') THEN 0 ELSE 1 END + 
+			CASE WHEN (A.FILE_LIST4 IS NULL OR A.FILE_LIST4='') THEN 0 ELSE 1 END) AS FILE_LIST_CNT
+			
+		<include refid="selectVocSql"/>
+	</select>
+	
+	
+	
+	
+	
+	
+    <select id="selectPoll" resultType="hashmap">
+        /* board.selectPoll */
+        SELECT POLLID
+             , SUBJECT
+             , TYPE
+             , PERIODFROM
+             , PERIODTO
+             , WIDTH
+             , HEIGHT
+             , CONTENT
+             , REGIUSERID
+         FROM SMPPOLL WITH(NOLOCK) 
+        WHERE POLLID = ${pollId}
+    </select>
+    
+    <select id="selectPollByUser" resultType="hashmap">
+        /* board.selectPollByUser */
+        SELECT A.POLLID
+             , SUBJECT
+             , TYPE
+             , WIDTH
+             , HEIGHT
+             , CONTENT
+             , (SELECT COUNT(1) FROM SMPPOLLCOMMENT X WITH (NOLOCK) WHERE X.POLLID = A.POLLID AND X.COMMENTTYPE = 'good') AS GOODCNT
+             , (SELECT COUNT(1) FROM SMPPOLLCOMMENT X WITH (NOLOCK) WHERE X.POLLID = A.POLLID AND X.COMMENTTYPE = 'poor') AS POORCNT
+             , ISNULL((SELECT TOP 1 COMMENT FROM SMPPOLLCOMMENT X WITH (NOLOCK) WHERE X.POLLID = A.POLLID AND X.COMMENT>''), '') AS RECENTCOMMENT
+             , B.POLLCOMMENTID
+             , COMMENT
+             , COMMENTTYPE
+         FROM SMPPOLL A WITH (NOLOCK)
+         LEFT JOIN SMPPOLLCOMMENT B WITH (NOLOCK)
+           ON A.POLLID = B.POLLID
+          AND B.REGIUSERID = #{userInfoDto.userId}
+        WHERE A.POLLID = ${pollId}
+          AND TYPE = #{userInfoDto.svcTypeCd}
+    </select>
+    
+    <select id="selectPollListByUser" resultType="hashmap">
+        /* board.selectPollListByUser */
+        SELECT A.POLLID
+             , WIDTH
+             , HEIGHT
+         FROM SMPPOLL A WITH (NOLOCK)
+        WHERE GETDATE() BETWEEN CONVERT(DATETIME, PERIODFROM) AND CONVERT(DATETIME, PERIODTO)+.99999999
+          AND TYPE = #{userInfoDto.svcTypeCd}
+       ORDER BY POLLID ASC
+    </select>
+	
+	<select id="selectPollList" resultType="hashmap">
+        /* board.selectPollList */
+	    SELECT POLLID
+             , SUBJECT
+             , TYPE
+             , (CASE TYPE WHEN 'BUY' THEN '고객사' ELSE '공급사' END) AS TYPENM
+             , PERIODFROM + ' ~ ' + PERIODTO AS PERIOD
+             , (SELECT COUNT(1) FROM SMPPOLLCOMMENT X WITH (NOLOCK) WHERE X.POLLID = A.POLLID AND X.COMMENT > '') AS COMMENTCNT
+             , (SELECT COUNT(1) FROM SMPPOLLCOMMENT X WITH (NOLOCK) WHERE X.POLLID = A.POLLID AND X.COMMENTTYPE = 'good') AS GOODCNT
+             , (SELECT COUNT(1) FROM SMPPOLLCOMMENT X WITH (NOLOCK) WHERE X.POLLID = A.POLLID AND X.COMMENTTYPE = 'poor') AS POORCNT
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = REGIUSERID) AS REGIUSERNM
+             , CONVERT(VARCHAR(10), REGIDATE, 121) AS REGIDATE
+	     FROM SMPPOLL A WITH (NOLOCK)
+	    WHERE REGIDATE BETWEEN CONVERT(DATETIME, #{srcStartDate}) AND CONVERT(DATETIME, #{srcEndDate})+.99999999
+	</select>
+    
+    <select id="selectPollList_count" resultType="int">
+        /* board.selectPollList_count */
+       SELECT COUNT(1)
+         FROM SMPPOLL WITH (NOLOCK)
+        WHERE REGIDATE BETWEEN CONVERT(DATETIME, #{srcStartDate}) AND CONVERT(DATETIME, #{srcEndDate})+.99999999
+    </select>
+    
+    <insert id="insertPoll">
+        /* board.insertPoll */
+        INSERT INTO SMPPOLL (
+               POLLID
+             , SUBJECT
+             , TYPE
+             , PERIODFROM
+             , PERIODTO
+             , WIDTH
+             , HEIGHT
+             , CONTENT
+             , REGIUSERID
+             , REGIDATE
+             , REGIIP
+             , MODIUSERID
+             , MODIDATE
+             , MODIIP
+        ) VALUES (
+               #{id}
+             , #{subject}
+             , #{type}
+             , #{periodFrom}
+             , #{periodTo}
+             , #{width}
+             , #{height}
+             , #{content}
+             , #{userInfoDto.userId}
+             , getdate()
+             , #{userInfoDto.remoteIp}
+             , #{userInfoDto.userId}
+             , getdate()
+             , #{userInfoDto.remoteIp}
+        )
+    </insert>
+    
+    <update id="updatePoll">
+        /* board.updatePoll */
+        UPDATE SMPPOLL 
+           SET SUBJECT    = #{subject}
+             , TYPE       = #{type}
+             , PERIODFROM = #{periodFrom}
+             , PERIODTO   = #{periodTo}
+             , WIDTH      = #{width}
+             , HEIGHT     = #{height}
+             , CONTENT    = #{content}
+             , MODIUSERID = #{userInfoDto.userId}
+             , MODIDATE   = getdate()
+             , MODIIP     = #{userInfoDto.remoteIp}
+         WHERE POLLID      = ${pollId}
+    </update>
+    
+    <delete id="deletePoll">
+        /* board.deletePoll */
+        DELETE TOP (1) FROM SMPPOLL
+         WHERE POLLID      = ${id}
+    </delete>
+    
+    <insert id="insertPollComment">
+        /* board.insertPollComment */
+        INSERT INTO SMPPOLLCOMMENT (
+               POLLCOMMENTID
+             , POLLID
+             , COMMENT
+             , REGIUSERID
+             , REGIDATE
+             , REGIIP
+        ) VALUES (
+               #{id}
+             , #{pollId}
+             , #{comment}
+             , #{userInfoDto.userId}
+             , getdate()
+             , #{userInfoDto.remoteIp}
+        )
+    </insert>
+    
+    <update id="updatePollComment">
+        /* board.updatePollComment */
+        UPDATE SMPPOLLCOMMENT
+           SET COMMENT = #{comment}
+         WHERE POLLCOMMENTID = ${pollCommentId}
+    </update>
+    
+    <insert id="insertPollCommentType">
+        /* board.insertPollCommentType */
+        INSERT INTO SMPPOLLCOMMENT (
+               POLLCOMMENTID
+             , POLLID
+             , COMMENTTYPE
+             , REGIUSERID
+             , REGIDATE
+             , REGIIP
+        ) VALUES (
+               #{id}
+             , #{pollId}
+             , #{commentType}
+             , #{userInfoDto.userId}
+             , getdate()
+             , #{userInfoDto.remoteIp}
+        )
+    </insert>
+    
+    <update id="updatePollCommentType">
+        /* board.updatePollCommentType */
+        UPDATE SMPPOLLCOMMENT
+           SET COMMENTTYPE = #{commentType}
+         WHERE POLLCOMMENTID = ${pollCommentId}
+    </update>
+    
+    <select id="selectPollCommentList" resultType="hashmap">
+       /* board.selectPollCommentList */
+		SELECT	A.COMMENT
+		,		B.USERNM AS REGIUSERNM
+		FROM	SMPPOLLCOMMENT A WITH (NOLOCK)
+		LEFT OUTER JOIN SMPUSERS B WITH (NOLOCK)
+			ON	A.REGIUSERID = B.USERID
+		WHERE	A.POLLID = ${pollId}
+		AND		A.COMMENT > ''
+    </select>
+    
+    <select id="selectPollCommentList_count" resultType="int">
+       /* board.selectPollCommentList_count */
+       SELECT COUNT(1)
+         FROM SMPPOLLCOMMENT WITH (NOLOCK)
+        WHERE POLLID = ${pollId}
+          AND COMMENT  > ''
+    </select>
+    
+	<sql id="faqListSql">
+		FROM 	FAQ_MANAGE A WITH (NOLOCK)
+		WHERE	1=1
+		<if test="srcTitle != null and  srcTitle != ''">
+			AND	A.TITLE LIKE '%' + #{srcTitle} + '%'
+		</if>
+		<if test="srcFaqType != null and  srcFaqType != ''">
+			AND A.FAQ_TYPE = #{srcFaqType} 
+		</if>
+		<if test="srcSvcType != null and  srcSvcType != ''">
+			AND A.SVC_TYPE = #{srcSvcType}
+		</if>
+		<if test="faq_seq != null and  faq_seq != ''">
+			AND A.FAQ_SEQ = #{faq_seq}
+		</if>
+	</sql>
+	
+	<select id="selectFapList_count" resultType="int">
+		/* board.selectFapList_count */
+		SELECT	COUNT(1)
+		<include refid="faqListSql"/>
+		
+	</select>
+
+	<select id="selectFapList" resultType="hashmap">
+		/* board.selectFapList */
+		SELECT	A.FAQ_SEQ
+		,		A.FAQ_TYPE
+		,		(SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.FAQ_TYPE = B.CODEVAL1 AND B.CODETYPECD = 'FAQ_TYPE') AS FAQ_TYPE_NM
+		,		A.SVC_TYPE
+		,		(SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.SVC_TYPE = B.CODEVAL1 AND B.CODETYPECD = 'SVCTYPECD') AS SVC_TYPE_NM
+		,		A.TITLE
+		,		A.ANSWER
+		,		A.READ_CNT
+		,		dbo.FNS_USERNAME_BY_USERID(A.CREATE_USERID,1) AS CREATE_USERID
+		,		CONVERT(VARCHAR(10), CREATE_DATE, 121) AS CREATE_DATE
+		<include refid="faqListSql"/>
+		ORDER BY A.FAQ_SEQ DESC
+	</select>
+	
+	<insert id="insertFaqManage">
+		/* board.insertFaqManage */
+		INSERT INTO FAQ_MANAGE(
+			FAQ_SEQ
+		,	FAQ_TYPE
+		,	SVC_TYPE
+		,	TITLE
+		,	ANSWER
+		,	READ_CNT
+		,	CREATE_USERID
+		,	CREATE_DATE	
+		)VALUES(
+			#{id}
+		,	#{FAQ_TYPE}
+		,	#{SVC_TYPE}
+		,	#{TITLE}
+		,	#{ANSWER}
+		,	0
+		,	#{userInfoDto.userId}
+		,	GETDATE()		
+		)
+	</insert>
+	
+	<update id="updateFaqManage">
+		/* board.updateFaqManage */
+		UPDATE	FAQ_MANAGE
+		SET		FAQ_TYPE = #{FAQ_TYPE}
+		,		SVC_TYPE = #{SVC_TYPE}
+		,		TITLE    = #{TITLE}
+		,		ANSWER   = #{ANSWER}
+		WHERE	FAQ_SEQ = #{FAQ_SEQ}
+	</update>
+	
+	<delete id="deleteFaqManage">
+		/* board.deleteFaqManage */
+		DELETE	FROM FAQ_MANAGE
+		WHERE	FAQ_SEQ = #{FAQ_SEQ}
+	</delete>
+	
+	<insert id="insertRepairManage">
+		/* board.insertRepairManage */
+		INSERT INTO REPAIR_MANAGE (
+			REPAIR_ID,   VIEW_NM,      STATE,        REQ_BORG_ID,   REQ_USER_ID,
+			REQ_DATE,    REQ_CONTENTS, ATTACH1_ID,   ATTACH2_ID,    CREATE_USER_ID,
+			CREATE_DATE, REPAIR_TYPE,  IS_IMPORTANT, EXPECT_MAN_DAY
+		)
+		VALUES (
+			#{id},     #{VIEW_NM},      0,               #{userInfoDto.borgId}, #{userInfoDto.userId},
+			GETDATE(), #{REQ_CONTENTS}, #{ATTACH1_ID},   #{ATTACH2_ID},         #{userInfoDto.userId},
+			GETDATE(), #{TYPE},			#{IS_IMPORTANT}, 0
+		)
+	</insert>
+	
+	<sql id="repairManageSql">
+			<if test="srcState != null and  srcState != ''">
+			AND A.STATE = #{srcState}
+			</if>
+			<if test="srcDateType != null and  srcDateType != '' and srcDateType.equals('confirm') ">
+				<if test="srcRequStartDate != null and  srcRequStartDate!= '' and srcRequEndDate != null and  srcRequEndDate !='' ">
+				AND A.REQ_DATE BETWEEN CONVERT(DATETIME,#{srcRequStartDate}) AND CONVERT(DATETIME,#{srcRequEndDate})+0.99999
+				</if>
+			</if>
+			
+			<if test="srcDateType != null and  srcDateType != '' and srcDateType.equals('handle') ">
+				<if test="srcRequStartDate != null and  srcRequStartDate!= '' and srcRequEndDate != null and  srcRequEndDate !='' ">
+				AND A.HANDLE_DATE BETWEEN CONVERT(DATETIME,#{srcRequStartDate}) AND CONVERT(DATETIME,#{srcRequEndDate})+0.99999
+				</if>
+			</if>
+			<if test="repair_id != null and repair_id != '' ">
+			AND A.REPAIR_ID = #{repair_id}
+			</if>
+			<if test="userInfoDto.svcTypeCd != null and svcTypeCd != '' and ( userInfoDto.svcTypeCd.equals('VEN') or userInfoDto.svcTypeCd.equals('BUY') )">
+			AND A.REQ_USER_ID = #{userInfoDto.userId}
+			</if>
+			<if test="srcRepairType != null and  srcRepairType != ''">
+			AND A.REPAIR_TYPE = #{srcRepairType}
+			</if>
+			<if test="srcReqUserName != null and  srcReqUserName != ''">
+			AND dbo.FNS_USERNAME_BY_USERID(A.REQ_USER_ID,'1') LIKE '%'+ #{srcReqUserName} +'%'	
+			</if>
+	</sql>
+	
+	<select id="selectRepairManage_count" resultType="int">
+		/* board.selectRepairManage_count */
+		SELECT
+			COUNT(1)
+		FROM
+			REPAIR_MANAGE A WITH(NOLOCK) 
+		WHERE
+			1=1
+		<include refid="repairManageSql"/>
+	</select>
+	<select id="selectRepairManage" resultType="hashmap">
+		/* board.selectRepairManage*/
+		<![CDATA[
+		SELECT
+			A.REPAIR_ID,       A.VIEW_NM,     A.STATE,           A.REQ_CONTENTS,   A.REQ_BORG_ID,
+			A.HANDLE_CONTENTS, A.REQ_USER_ID, A.CONFIRM_USER_ID, A.HANDLE_USER_ID, A.ATTACH1_ID,
+			A.ATTACH2_ID,      A.REPAIR_TYPE, A.IS_IMPORTANT,    A.EXPECT_MAN_DAY,
+			D.CODENM1 AS STATE_NM,
+			E.CODENM1 AS TYPE_NM,
+			dbo.FNS_BorgNameByBorgID(A.REQ_BORG_ID) AS REQ_BORG_NAME,
+			dbo.FNS_USERNAME_BY_USERID(A.REQ_USER_ID,'1') + ' ( '
+		]]>
+		<if test="userInfoDto.svcTypeCd != null and userInfoDto.svcTypeCd.equals('ADM') ">
+			<![CDATA[
+			+ (
+				SELECT
+					ISNULL(MOBILE, ' ')
+				FROM
+					SMPUSERS
+				WHERE
+					USERID = A.REQ_USER_ID
+			) + ', '
+			]]>
+		</if>
+		<![CDATA[
+			+ CONVERT(VARCHAR(10), A.REQ_DATE, 121) +' ) ' AS REQ_USER_NAME,
+			(
+				CASE
+					WHEN
+						A.IS_IMPORTANT = 'Y'
+					THEN
+						'!' 
+					ELSE
+						' '
+				END
+			) AS IS_IMPORTANT_DISP,
+			dbo.FNS_USERNAME_BY_USERID(A.CONFIRM_USER_ID,'1') + (
+				CASE
+					WHEN
+						A.CONFIRM_USER_ID IS NOT NULL
+					THEN
+						' ( '+ CONVERT(VARCHAR(10), A.CONFIRM_DATE, 121) +' ) ' 
+					ELSE
+						''
+				END
+			) AS CONFIRM_USER_NAME,
+			dbo.FNS_USERNAME_BY_USERID(A.HANDLE_USER_ID,'1') + (
+				CASE
+					WHEN
+						A.HANDLE_USER_ID IS NOT NULL
+					THEN
+						' ( '+ CONVERT(VARCHAR(10), A.HANDLE_DATE, 121) +' ) ' 
+					ELSE
+						''
+				END
+			) AS HANDLE_USER_NAME,
+			B.ATTACH_FILE_PATH AS ATTACH_FILE_PATH1,
+			B.ATTACH_FILE_NAME AS ATTACH_FILE_NAME1,
+			C.ATTACH_FILE_PATH AS ATTACH_FILE_PATH2,
+			C.ATTACH_FILE_NAME AS ATTACH_FILE_NAME2
+		FROM
+			REPAIR_MANAGE          A WITH(NOLOCK)
+		LEFT OUTER JOIN ATTACHINFO B WITH(NOLOCK) ON A.ATTACH1_ID  = B.ATTACH_SEQ
+		LEFT OUTER JOIN ATTACHINFO C WITH(NOLOCK) ON A.ATTACH2_ID  = C.ATTACH_SEQ
+		INNER JOIN      SMPCODES   D WITH(NOLOCK) ON A.STATE       = D.CODEVAL1
+		INNER JOIN      SMPCODES   E WITH(NOLOCK) ON A.REPAIR_TYPE = E.CODEVAL1
+		WHERE
+			1=1
+		AND
+			D.CODETYPECD = 'REPAIR_STAT'
+		AND
+			E.CODETYPECD = 'REPAIR_TYPE'
+		]]>
+		<include refid="repairManageSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<update id="updateRepairManage">
+		/* board.updateRepairManage */
+		UPDATE	REPAIR_MANAGE
+		SET		VIEW_NM			= #{view_nm}	
+		,		STATE           = #{state}
+		,		REQ_CONTENTS    = #{req_contents}
+		,		ATTACH1_ID      = #{file_list1}
+		,		ATTACH2_ID      = #{file_list2}
+		,		UPDATE_USER_ID  = #{userInfoDto.userId}
+		,		UPDATE_DATE     = GETDATE()
+		,		REPAIR_TYPE     = #{type}
+		,		IS_IMPORTANT    = #{is_important}
+		,		EXPECT_MAN_DAY  = #{expect_man_day}
+		<choose>
+			<when test="state != null and state != '' and state == 0 ">
+		,		CONFIRM_USER_ID = null
+		,		CONFIRM_DATE    = null
+		,		HANDLE_USER_ID  = null
+		,		HANDLE_DATE     = null
+		,		HANDLE_CONTENTS = null
+			</when>
+			<when test="state != null and state != '' and state == 10 ">
+		,		CONFIRM_USER_ID = ISNULL(CONFIRM_USER_ID,#{userInfoDto.userId})
+		,		CONFIRM_DATE    = GETDATE()
+		,		HANDLE_USER_ID  = null
+		,		HANDLE_DATE     = null
+		,		HANDLE_CONTENTS = #{handle_contents}
+			</when>
+			<otherwise>
+		,		HANDLE_USER_ID  = #{userInfoDto.userId}
+		,		HANDLE_DATE     = GETDATE()
+		,		HANDLE_CONTENTS = #{handle_contents}
+			</otherwise>
+		</choose>
+		WHERE	REPAIR_ID = #{repair_id}
+	</update>
+	
+	<delete id="deleteRepairManage">
+		/* board.deleteRepairManage */
+		DELETE FROM REPAIR_MANAGE
+		WHERE	REPAIR_ID = #{repair_id}
+	</delete>
+	
+	<!-- 처리완료시 SMS 발송 대상 정보 조회 -->
+	<resultMap id="selectRepairManage90SmsMap" type="java.util.Map">
+ 		<result property="reqUserId"      column="REQ_USER_ID"      javaType="string"/>
+ 		<result property="confirmUserId"  column="CONFIRM_USER_ID"  javaType="string"/>
+ 		<result property="reqUserSms"     column="REQ_USER_SMS"     javaType="string"/>
+ 		<result property="confirmUserSms" column="CONFIRM_USER_SMS" javaType="string"/>
+ 	</resultMap>
+	<select id="selectRepairManage90SmsInfo" resultMap="selectRepairManage90SmsMap">
+		/* board.selectRepairManage90SmsInfo */
+		SELECT
+			REQ_USER_ID,
+			CONFIRM_USER_ID,
+      HANDLE_USER_ID,
+			(
+				SELECT
+					MOBILE
+				FROM
+					SMPUSERS
+				WHERE
+					USERID = A.REQ_USER_ID
+			) AS REQ_USER_SMS,
+			(
+				SELECT
+					MOBILE
+				FROM
+					SMPUSERS
+				WHERE
+					USERID = A.CONFIRM_USER_ID
+			) AS CONFIRM_USER_SMS
+		FROM
+			REPAIR_MANAGE A
+		WHERE
+			REPAIR_ID = #{repairId}
+	</select>
+	
+	<insert id="insertSmileManage">
+		/* board.insertSmileManage */
+		INSERT INTO SMILE_MANAGE(
+			SMILE_ID
+		,	EVAL_SVCTYPECD
+		,	TARGET_SVCTYPECD
+		,	EVAL_CONTENTS
+		,	ISUSE
+		,	EVAL_SORT
+		,	CREATE_USERID
+		,	CREATE_DATE
+		) VALUES (
+			#{id}
+		,	#{EVAL_SVCTYPECD}
+		,	#{TARGET_SVCTYPECD}
+		,	#{EVAL_CONTENTS}
+		,	#{ISUSE}
+		,	#{EVAL_SORT}
+		,	#{userInfoDto.userId}
+		,	GETDATE()
+		)
+	</insert>
+	
+	<sql id="smileManageSql">
+		FROM	SMILE_MANAGE A WITH(NOLOCK) 
+		WHERE	1=1
+			<if test="evalSvcTypeCd != null and evalSvcTypeCd != '' ">
+			AND	A.EVAL_SVCTYPECD = #{evalSvcTypeCd}
+			</if>
+	</sql>
+	
+	<select id="selectSmileManageList_count" resultType="int">
+		/* board.selectSmileManageList_count */
+		SELECT	COUNT(1)
+		<include refid="smileManageSql"/>			
+	</select>
+	 
+	<select id="selectSmileManageList" resultType="hashmap">
+		/* board.selectSmileManageList */
+		SELECT	A.SMILE_ID
+		,		A.EVAL_SVCTYPECD
+		,		A.TARGET_SVCTYPECD
+		,		A.EVAL_CONTENTS
+		,		A.ISUSE
+		,		A.EVAL_SORT
+		,		A.CREATE_USERID
+		,		A.CREATE_DATE
+		<include refid="smileManageSql"/>
+		ORDER BY A.EVAL_SORT ASC, A.CREATE_DATE DESC 
+	</select> 
+	
+	<update id="updateSmileManage">
+		/* board.updateSmileManage */
+		UPDATE	SMILE_MANAGE
+		SET		TARGET_SVCTYPECD	= #{TARGET_SVCTYPECD}
+		,		EVAL_CONTENTS		= #{EVAL_CONTENTS}
+		,		ISUSE				= #{ISUSE}
+		,		EVAL_SORT			= #{EVAL_SORT}
+		WHERE	SMILE_ID = #{id}
+	</update>
+	<delete id="deleteSmileManage">
+		/* board.deleteSmileManage */
+		DELETE FROM SMILE_MANAGE
+		WHERE	SMILE_ID = #{id}
+	</delete>
+	
+	<select id="selectSmileEvalList_count" resultType="int">
+		/* board.selectSmileEvalList_count */
+		select count(1)
+		from smile_eval WITH(NOLOCK) 
+	</select>
+	
+	<select id="selectSmileEvalList" resultType="hashmap">
+		/* board.selectSmileEvalList */
+		<![CDATA[
+		WITH WEEK_TABLE AS(
+				SELECT	AAA.TARGET_SVCTYPECD
+				,		AAA.EVAL_SVCTYPECD AS SVCTYPECD
+				,		ISNULL( CONVERT(VARCHAR,AVG(CASE WHEN AAA.WEEK='L' THEN AAA.EVAL END)),'-') AS LAST_EVAL
+				,		ISNULL( CONVERT(VARCHAR,AVG(CASE WHEN AAA.WEEK='T' THEN AAA.EVAL END)),'-') AS THIS_EVAL
+				FROM 
+				(
+						SELECT	CASE WHEN (A.CREATE_DATE >= LAST_WEEK_S )AND (A.CREATE_DATE < LAST_WEEK_E ) 
+									THEN 'L' 
+									WHEN (A.CREATE_DATE >= THIS_WEEK_S )AND (A.CREATE_DATE < THIS_WEEK_E ) 
+									THEN 'T' 
+								END AS WEEK
+						,		B.SVCTYPECD AS EVAL_SVCTYPECD
+						,		A.TARGET_SVCTYPECD
+						,		A.EVAL
+						FROM	SMILE_EVAL A WITH(NOLOCK) 
+						INNER JOIN SMPBORGS B WITH(NOLOCK) 
+							ON	A.EVAL_BORGID = B.BORGID,
+								(	select	convert(char(10),dateadd(d,datepart(dw,GETDATE()) * -1 - 5,GETDATE()),120) AS LAST_WEEK_S,
+									convert(char(10),dateadd(d,datepart(dw,GETDATE()) * -1 + 1,GETDATE()),120)+' 23:59:59' AS LAST_WEEK_E,
+									convert(char(10),dateadd(d,datepart(dw,GETDATE()) * -1 + 2,GETDATE()),120) AS THIS_WEEK_S,
+									convert(char(10),dateadd(d,datepart(dw,GETDATE()) * -1 + 8,GETDATE()),120)+' 23:59:59' AS THIS_WEEK_E 
+								)BB
+						WHERE	A.CREATE_DATE BETWEEN LAST_WEEK_S AND THIS_WEEK_E
+				) AAA
+				GROUP BY AAA.EVAL_SVCTYPECD
+				,		AAA.TARGET_SVCTYPECD
+		) 
+		]]>
+		SELECT	AAAA.TARGET_SVCTYPECD
+		,		AAAA.SVCTYPECD 
+		,		(CASE AAAA.TARGET_SVCTYPECD  WHEN  'ADM' THEN 'SK지수TS'
+											 WHEN'VEN' THEN '공급사 지수'
+				 END
+				)AS TARGET_SVCTYPECDNM
+		,		(CASE AAAA.SVCTYPECD	WHEN 'BUY' THEN '구매사 평가'  
+										WHEN 'VEN' THEN '공급사 평가'
+				 END
+				)AS SVCTYPECDNM
+		,		BBBB.LAST_EVAL
+		,		BBBB.THIS_EVAL
+		,		AAAA.M1
+		,		AAAA.M2
+		,		AAAA.M3
+		,		AAAA.M4
+		,		AAAA.M5
+		,		AAAA.M6
+		,		AAAA.M7
+		,		AAAA.M8
+		,		AAAA.M9
+		,		AAAA.M10
+		,		AAAA.M11
+		,		AAAA.M12
+		FROM	(
+				SELECT	AA.TARGET_SVCTYPECD,
+						BB.SVCTYPECD,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 1 THEN AA.EVAL END )),'-') AS M1,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 2 THEN AA.EVAL END )),'-') AS M2,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 3 THEN AA.EVAL END )),'-') AS M3,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 4 THEN AA.EVAL END )),'-') AS M4,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 5 THEN AA.EVAL END )),'-') AS M5,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 6 THEN AA.EVAL END )),'-') AS M6,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 7 THEN AA.EVAL END )),'-') AS M7,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 8 THEN AA.EVAL END )),'-') AS M8,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 9 THEN AA.EVAL END )),'-') AS M9,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 10 THEN AA.EVAL END )),'-') AS M10,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 11 THEN AA.EVAL END )),'-') AS M11,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 12 THEN AA.EVAL END )),'-') AS M12
+				FROM (
+						SELECT	DATEPART(MM,A.CREATE_DATE)AS MM
+						,		A.EVAL
+						,		A.TARGET_SVCTYPECD
+						,		A.TARGET_BORGID
+						,		A.EVAL_BORGID
+						FROM	SMILE_EVAL A WITH(NOLOCK) 
+						WHERE	A.CREATE_DATE BETWEEN CONVERT(DATETIME,#{srcYear}+'-01-01') AND CONVERT(DATETIME,#{srcYear}+'-12-31')+0.99999
+					) AA
+					INNER JOIN SMPBORGS BB ON AA.EVAL_BORGID = BB.BORGID
+				GROUP BY	AA.TARGET_SVCTYPECD,BB.SVCTYPECD 
+		) AAAA
+		LEFT OUTER JOIN WEEK_TABLE BBBB
+			ON	AAAA.TARGET_SVCTYPECD = BBBB.TARGET_SVCTYPECD
+			AND	AAAA.SVCTYPECD = BBBB.SVCTYPECD
+		ORDER BY TARGET_SVCTYPECD, SVCTYPECD
+	</select>
+	
+	<select id="selectSmileEvalDetileList_count" resultType="int">
+		/* board.selectSmileEvalDetileList_count */
+		select count(1)
+		from smile_eval WITH(NOLOCK) 
+	</select>
+	<select id="selectSmileEvalDetileList" resultType="hashmap">
+		/* board.selectSmileEvalDetileList */
+		WITH WEEK_TABLE AS(
+				SELECT	AAA.EVAL_BORGID
+				,		ISNULL( CONVERT(VARCHAR,AVG(CASE WHEN AAA.WEEK='L' THEN AAA.EVAL END)),'-') AS LAST_EVAL
+				,		ISNULL( CONVERT(VARCHAR,AVG(CASE WHEN AAA.WEEK='T' THEN AAA.EVAL END)),'-') AS THIS_EVAL
+				FROM 
+				(
+					<![CDATA[
+						SELECT	CASE WHEN (A.CREATE_DATE >= LAST_WEEK_S )AND (A.CREATE_DATE < LAST_WEEK_E ) 
+									THEN 'L' 
+									WHEN (A.CREATE_DATE >= THIS_WEEK_S )AND (A.CREATE_DATE < THIS_WEEK_E ) 
+									THEN 'T' 
+								END AS WEEK
+						,		A.EVAL_BORGID
+						,		A.EVAL
+						]]>
+						FROM	SMILE_EVAL A WITH(NOLOCK) 
+						INNER JOIN SMPBORGS B WITH(NOLOCK) 
+							ON	A.EVAL_BORGID = B.BORGID AND B.SVCTYPECD=#{evalSvcCd}
+								,(	select	convert(char(10),dateadd(d,datepart(dw,GETDATE()) * -1 - 5,GETDATE()),120) AS LAST_WEEK_S,
+									convert(char(10),dateadd(d,datepart(dw,GETDATE()) * -1 + 1,GETDATE()),120)+' 23:59:59' AS LAST_WEEK_E,
+									convert(char(10),dateadd(d,datepart(dw,GETDATE()) * -1 + 2,GETDATE()),120) AS THIS_WEEK_S,
+									convert(char(10),dateadd(d,datepart(dw,GETDATE()) * -1 + 8,GETDATE()),120)+' 23:59:59' AS THIS_WEEK_E 
+								)BB
+						WHERE	A.CREATE_DATE BETWEEN LAST_WEEK_S AND THIS_WEEK_E
+							AND A.TARGET_SVCTYPECD = #{targetSvcCd}
+		<if test="srcBorgNm != null and srcBorgNm != '' ">
+							AND B.BORGNM LIKE '%'+#{srcBorgNm}+'%'
+		</if>		
+				) AAA
+				GROUP BY AAA.EVAL_BORGID
+		) 
+		SELECT	AAAA.EVAL_BORGID
+		,		AAAA.BORGNM
+		,		BBBB.LAST_EVAL
+		,		BBBB.THIS_EVAL
+		,		AAAA.M1
+		,		AAAA.M2
+		,		AAAA.M3
+		,		AAAA.M4
+		,		AAAA.M5
+		,		AAAA.M6
+		,		AAAA.M7
+		,		AAAA.M8
+		,		AAAA.M9
+		,		AAAA.M10
+		,		AAAA.M11
+		,		AAAA.M12
+		FROM	(
+				SELECT	AA.EVAL_BORGID,
+						BB.BORGNM,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 1 THEN AA.EVAL END )),'-') AS M1,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 2 THEN AA.EVAL END )),'-') AS M2,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 3 THEN AA.EVAL END )),'-') AS M3,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 4 THEN AA.EVAL END )),'-') AS M4,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 5 THEN AA.EVAL END )),'-') AS M5,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 6 THEN AA.EVAL END )),'-') AS M6,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 7 THEN AA.EVAL END )),'-') AS M7,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 8 THEN AA.EVAL END )),'-') AS M8,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 9 THEN AA.EVAL END )),'-') AS M9,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 10 THEN AA.EVAL END )),'-') AS M10,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 11 THEN AA.EVAL END )),'-') AS M11,
+						ISNULL( CONVERT(VARCHAR,AVG( CASE AA.MM WHEN 12 THEN AA.EVAL END )),'-') AS M12
+				FROM (
+						SELECT	DATEPART(MM,A.CREATE_DATE)AS MM
+						,		A.EVAL
+						,		A.TARGET_SVCTYPECD
+						,		A.TARGET_BORGID
+						,		A.EVAL_BORGID
+						FROM	SMILE_EVAL A WITH(NOLOCK) 
+						WHERE	A.CREATE_DATE BETWEEN CONVERT(DATETIME,#{srcYear}+'-01-01') AND CONVERT(DATETIME,#{srcYear}+'-12-31')+0.99999
+							 AND A.TARGET_SVCTYPECD = #{targetSvcCd}
+					) AA
+				INNER JOIN SMPBORGS BB ON AA.EVAL_BORGID = BB.BORGID AND  BB.SVCTYPECD=#{evalSvcCd}
+		<if test="srcBorgNm != null  and srcBorgNm != '' ">
+										AND BB.BORGNM LIKE '%'+#{srcBorgNm}+'%'
+		</if>		
+				GROUP BY	AA.EVAL_BORGID,BB.BORGNM
+		) AAAA
+		LEFT OUTER JOIN WEEK_TABLE BBBB
+			ON	AAAA.EVAL_BORGID = BBBB.EVAL_BORGID
+		ORDER BY EVAL_BORGID
+		
+	</select>
+	
+	
+</mapper>

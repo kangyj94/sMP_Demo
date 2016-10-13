@@ -1,0 +1,1152 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="evaluation">
+
+    <sql id="selectItemListSql">
+     FROM SMPITEM A WITH(NOLOCK)
+    WHERE REGIDATE BETWEEN CONVERT(DATETIME, #{srcStartDate}) AND CONVERT(DATETIME, #{srcEndDate})+.99999999
+    <if test="@MybatisUtils@isNotEmpty(srcItemNm)">
+      AND (ITEMNM1 like '%' + #{srcItemNm} + '%' OR ITEMNM2 like '%' + #{srcItemNm} + '%' )
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcItemType1)">
+      AND ITEMTYPE1 = #{srcItemType1}
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcItemType2)">
+      AND ITEMTYPE2 = #{srcItemType2}
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcItemType3)">
+      AND ITEMTYPE3 = #{srcItemType3}
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcItemState)">
+      AND ITEMSTATE = #{srcItemState}
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcChargerNm)">
+      AND CHARGERNM like '%' + #{srcChargerNm} + '%'
+    </if>
+    </sql>
+    
+    <select id="selectItemList_count" resultType="int">
+        /* evalution.selectItemList_count */
+        SELECT COUNT(1) 
+        <include refid="selectItemListSql"/>
+    </select>
+    
+    <select id="selectItemList" resultType="hashmap">
+	    /* evalution.selectItemList */
+		SELECT ITEMID
+		     , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+		     , YEARLYSIZE
+		     , DEADLINEDATE
+		     , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE1 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE2 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE3 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+		     , GUIDEBOOKATTACHFILESEQ
+		     , dbo.FNS_ATTACH_FILE_NAME_PATH(GUIDEBOOKATTACHFILESEQ, 'NAME') AS GUIDEBOOKATTACHFILE
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(GUIDEBOOKATTACHFILESEQ, 'PATH') AS GUIDEBOOKATTACHFILE_PATH
+		     , SPECSATTACHFILESEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SPECSATTACHFILESEQ, 'NAME') AS SPECSATTACHFILE
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SPECSATTACHFILESEQ, 'PATH') AS SPECSATTACHFILE_PATH
+             , ITEMSTATE
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMSTATE = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMSTATE') AS ITEMSTATENM
+             , (SELECT COUNT(1) FROM SMPPARTAPPL B WITH(NOLOCK) WHERE B.ITEMID = A.ITEMID) AS APPLCNT
+		     , CHARGERNM
+		     , CONVERT(VARCHAR(10), REGIDATE, 121) AS REGIDATE
+        <include refid="selectItemListSql"/>
+         ORDER BY ${sidx} ${sord}
+    </select>
+    
+    <select id="selectItem" resultType="hashmap">
+        /* evalution.selectItem */
+        SELECT ITEMID
+             , ITEMNM1
+             , ITEMNM2
+             , YEARLYSIZE
+             , DEADLINEDATE
+             , ITEMTYPE1
+             , ITEMTYPE2
+             , ITEMTYPE3
+             , GUIDEBOOKATTACHFILESEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(GUIDEBOOKATTACHFILESEQ, 'NAME') AS GUIDEBOOKATTACHFILE
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(GUIDEBOOKATTACHFILESEQ, 'PATH') AS GUIDEBOOKATTACHFILE_PATH
+             , SPECSATTACHFILESEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SPECSATTACHFILESEQ, 'NAME') AS SPECSATTACHFILE
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SPECSATTACHFILESEQ, 'PATH') AS SPECSATTACHFILE_PATH
+             , ITEMSTATE
+             , CHARGERNM
+          FROM SMPITEM A WITH(NOLOCK)
+         WHERE ITEMID = ${itemId}
+    </select>
+    
+    <insert id="insertItem">
+        /* evalution.insertItem */
+        INSERT INTO SMPITEM (
+               ITEMID
+             , ITEMNM1
+             , ITEMNM2
+             , YEARLYSIZE
+             , DEADLINEDATE
+             , ITEMTYPE1
+             , ITEMTYPE2
+             , ITEMTYPE3
+             , GUIDEBOOKATTACHFILESEQ
+             , SPECSATTACHFILESEQ
+             , ITEMSTATE
+             , CHARGERID
+             , CHARGERNM
+             , REGIUSERID
+             , REGIDATE
+             , REGIIP
+             , MODIUSERID
+             , MODIDATE
+             , MODIIP
+        ) VALUES (
+               #{id}
+             , #{itemNm1}
+             , #{itemNm2}
+             , #{yearlySize}
+             , #{deadlineDate}
+             , #{itemType1}
+             , #{itemType2}
+             , #{itemType3}
+             , #{guidebookAttachFileSeq}
+             , #{specsAttachFileSeq}
+             , #{itemState}
+             , #{userInfoDto.userId}
+             , #{userInfoDto.userNm}
+             , #{userInfoDto.userId}
+             , getdate()
+             , #{userInfoDto.remoteIp}
+             , #{userInfoDto.userId}
+             , getdate()
+             , #{userInfoDto.remoteIp}
+        )
+    </insert>
+    
+    <update id="updateItem">
+        /* evalution.updateItem */
+        UPDATE SMPITEM
+           SET ITEMNM1            = #{itemNm1}
+             , ITEMNM2            = #{itemNm2}
+             , YEARLYSIZE         = #{yearlySize}
+             , DEADLINEDATE       = #{deadlineDate}
+             , ITEMTYPE1          = #{itemType1}
+             , ITEMTYPE2          = #{itemType2}
+             , ITEMTYPE3          = #{itemType3}
+             , GUIDEBOOKATTACHFILESEQ = #{guidebookAttachFileSeq}
+             , SPECSATTACHFILESEQ = #{specsAttachFileSeq}
+             , MODIUSERID         = #{userInfoDto.userId}
+             , MODIDATE           = getdate()
+             , MODIIP             = #{userInfoDto.remoteIp}
+         WHERE ITEMID             = ${itemId}
+    </update>
+    
+    <delete id="deleteItem">
+        /* evalution.deleteItem */
+        DELETE TOP (1) FROM SMPITEM
+         WHERE ITEMID = ${id}
+    </delete>
+    
+    <sql id="selectItemListForVSql">
+     FROM SMPITEM A WITH(NOLOCK)
+     LEFT JOIN SMPPARTAPPL E WITH(NOLOCK) ON E.ITEMID = A.ITEMID AND BUSINESSNUM = #{srcBusinessNum}
+    WHERE A.REGIDATE BETWEEN CONVERT(DATETIME, #{srcStartDate}) AND CONVERT(DATETIME, #{srcEndDate})+.99999999
+    <if test="@MybatisUtils@isNotEmpty(srcItemNm)">
+      AND (ITEMNM1 like '%' + #{srcItemNm} + '%' OR ITEMNM2 like '%' + #{srcItemNm} + '%' )
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcItemType1)">
+      AND ITEMTYPE1 = #{srcItemType1}
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcItemType2)">
+      AND ITEMTYPE2 = #{srcItemType2}
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcItemType3)">
+      AND ITEMTYPE3 = #{srcItemType3}
+    </if>
+    <if test="srcPartState == 'Y'.toString()">
+      AND PARTSTATE > ' '
+    </if>
+    <if test="srcPartState == 'N'.toString()">
+      AND PARTSTATE is null
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcItemState)">
+      AND ITEMSTATE = #{srcItemState}
+    </if>
+    <if test="@MybatisUtils@isNotEmpty(srcChargerNm)">
+      AND CHARGERNM like '%' + #{srcChargerNm} + '%'
+    </if>
+    </sql>
+    
+    <select id="selectItemListForV_count" resultType="int">
+        /* evalution.selectItemListForV_count */
+        SELECT COUNT(1) 
+        <include refid="selectItemListForVSql"/>
+    </select>
+    
+    <select id="selectItemListForV" resultType="hashmap">
+        /* evalution."selectItemListForV" */
+        SELECT A.ITEMID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , YEARLYSIZE
+             , DEADLINEDATE
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE1 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE2 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE3 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+             , GUIDEBOOKATTACHFILESEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(GUIDEBOOKATTACHFILESEQ, 'NAME') AS GUIDEBOOKATTACHFILE
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(GUIDEBOOKATTACHFILESEQ, 'PATH') AS GUIDEBOOKATTACHFILE_PATH
+             , SPECSATTACHFILESEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SPECSATTACHFILESEQ, 'NAME') AS SPECSATTACHFILE
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SPECSATTACHFILESEQ, 'PATH') AS SPECSATTACHFILE_PATH
+             , ITEMSTATE
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMSTATE = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMSTATE') AS ITEMSTATENM
+             , APPLID
+             , PARTSTATE
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE PARTSTATE = B.CODEVAL1 AND B.CODETYPECD = 'SMPPARTAPPL_PARTSTAT') AS PARTSTATENM
+             , CHARGERNM
+             , CONVERT(VARCHAR(10), A.REGIDATE, 121) AS REGIDATE
+        <include refid="selectItemListForVSql"/>
+         ORDER BY ${sidx} ${sord}
+    </select>
+    
+    <select id="selectPartAppl" resultType="hashmap">
+        /* evalution.selectPartAppl */
+        SELECT A.ITEMID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE1 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE2 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE3 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+             , APPLID
+             , PARTSTATE
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE PARTSTATE = B.CODEVAL1 AND B.CODETYPECD = 'SMPPARTAPPL_PARTSTAT') AS PARTSTATENM
+             , VENDORNM
+             , BUSINESSNUM
+             , VENDORBUSITYPE
+             , VENDORBUSICLAS
+             , PRESSENTNM
+             , PHONENUM
+             , BUSICHARGER
+             , BUSIPHONENUM
+             , BUSICHARGEREMAIL
+             , BUSINESSATTACHFILESEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'NAME') AS BUSINESSATTACHFILENAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'PATH') AS BUSINESSATTACHFILEPATH
+             , COMPINTROATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(COMPINTROATTACHSEQ, 'NAME') AS COMPINTROATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(COMPINTROATTACHSEQ, 'PATH') AS COMPINTROATTACHPATH
+             , PRODINTROATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(PRODINTROATTACHSEQ, 'NAME') AS PRODINTROATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(PRODINTROATTACHSEQ, 'PATH') AS PRODINTROATTACHPATH
+             , CREDITGRADE
+             , CREDITGRADEATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(CREDITGRADEATTACHSEQ, 'NAME') AS CREDITGRADEATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(CREDITGRADEATTACHSEQ, 'PATH') AS CREDITGRADEATTACHPATH
+             , FACTORYREGIDATE
+             , FACTORYREGIATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(FACTORYREGIATTACHSEQ, 'NAME') AS FACTORYREGIATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(FACTORYREGIATTACHSEQ, 'PATH') AS FACTORYREGIATTACHPATH
+             , LABREGIDATE
+             , LABREGATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(LABREGATTACHSEQ, 'NAME') AS LABREGATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(LABREGATTACHSEQ, 'PATH') AS LABREGATTACHPATH
+             , QCPOSSE
+             , QCCERTIATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QCCERTIATTACHSEQ, 'NAME') AS QCCERTIATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QCCERTIATTACHSEQ, 'PATH') AS QCCERTIATTACHPATH
+             , PRODTYPE
+             , DELIVERYRESULT
+             , DELIVERYCERTIATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(DELIVERYCERTIATTACHSEQ, 'NAME') AS DELIVERYCERTIATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(DELIVERYCERTIATTACHSEQ, 'PATH') AS DELIVERYCERTIATTACHPATH
+             , QUALITYVERIPOSSEATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QUALITYVERIPOSSEATTACHSEQ, 'NAME') AS QUALITYVERIPOSSEATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QUALITYVERIPOSSEATTACHSEQ, 'PATH') AS QUALITYVERIPOSSEATTACHPATH
+             , SECRETMEMOATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SECRETMEMOATTACHSEQ, 'NAME') AS SECRETMEMOATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SECRETMEMOATTACHSEQ, 'PATH') AS SECRETMEMOATTACHPATH
+             , COMMITMEMOATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(COMMITMEMOATTACHSEQ, 'NAME') AS COMMITMEMOATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(COMMITMEMOATTACHSEQ, 'PATH') AS COMMITMEMOATTACHPATH
+          FROM SMPITEM A WITH(NOLOCK)
+             , SMPPARTAPPL B WITH(NOLOCK)
+         WHERE B.ITEMID = A.ITEMID
+           AND B.APPLID = ${applId}
+    </select>
+    
+    <select id="selectPartAppl2" resultType="hashmap">
+        /* evalution.selectPartAppl2 */
+        SELECT TOP 1 A.ITEMID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE1 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE2 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT B.CODENM1 FROM SMPCODES B WITH(NOLOCK) WHERE A.ITEMTYPE3 = B.CODEVAL1 AND B.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+             , VENDORNM
+             , BUSINESSNUM
+             , VENDORBUSITYPE
+             , VENDORBUSICLAS
+             , PRESSENTNM
+             , PHONENUM
+             , BUSICHARGER
+             , BUSIPHONENUM
+             , BUSICHARGEREMAIL
+             , BUSINESSATTACHFILESEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'NAME') AS BUSINESSATTACHFILENAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(BUSINESSATTACHFILESEQ, 'PATH') AS BUSINESSATTACHFILEPATH
+          FROM SMPITEM A WITH(NOLOCK)
+          LEFT JOIN SMPPARTAPPL B WITH(NOLOCK)
+            ON B.BUSINESSNUM = #{businessNum}
+         WHERE A.ITEMID = ${itemId}
+         ORDER BY B.APPLID DESC
+    </select>
+    
+    <insert id="insertPartAppl">
+        /* evalution.insertPartAppl */
+        INSERT INTO SMPPARTAPPL (
+               APPLID
+             , ITEMID
+             , PARTSTATE
+             , VENDORNM
+             , BUSINESSNUM
+             , VENDORBUSITYPE
+             , VENDORBUSICLAS
+             , PRESSENTNM
+             , PHONENUM
+             , BUSICHARGER
+             , BUSIPHONENUM
+             , BUSICHARGEREMAIL
+             , BUSINESSATTACHFILESEQ
+             , COMPINTROATTACHSEQ
+             , PRODINTROATTACHSEQ
+             , CREDITGRADE
+             , CREDITGRADEATTACHSEQ
+             , FACTORYREGIDATE
+             , FACTORYREGIATTACHSEQ
+             , LABREGIDATE
+             , LABREGATTACHSEQ
+             , QCPOSSE
+             , QCCERTIATTACHSEQ
+             , PRODTYPE
+             <if test="@MybatisUtils@isNotEmpty(deliveryResult)">
+             , DELIVERYRESULT
+             </if>
+             , DELIVERYCERTIATTACHSEQ
+             , QUALITYVERIPOSSEATTACHSEQ
+             , SECRETMEMOATTACHSEQ
+             , COMMITMEMOATTACHSEQ
+             , REGIUSERID
+             , REGIDATE
+             , REGIIP
+             , MODIUSERID
+             , MODIDATE
+             , MODIIP
+        ) VALUES (
+               #{id}
+             , #{itemId}
+             , #{partState}
+             , #{vendorNm}
+             , #{businessNum}
+             , #{vendorBusiType}
+             , #{vendorBusiClas}
+             , #{pressentNm}
+             , #{phoneNum}
+             , #{busiCharger}
+             , #{busiPhoneNum}
+             , #{busiChargerEmail}
+             , #{businessAttachFileSeq}
+             , #{compIntroAttachSeq}
+             , #{prodIntroAttachSeq}
+             , #{creditGrade}
+             , #{creditGradeAttachSeq}
+             , #{factoryRegiDate1} + #{factoryRegiDate2}
+             , #{factoryRegiAttachSeq}
+             , #{labRegiDate1} + #{labRegiDate2}
+             , #{labRegAttachSeq}
+             , #{qcPosse}
+             , #{qcCertiAttachSeq}
+             , #{prodType}
+             <if test="@MybatisUtils@isNotEmpty(deliveryResult)">
+             , #{deliveryResult}
+             </if>
+             , #{deliveryCertiAttachSeq}
+             , #{qualityVeriPosseAttachSeq}
+             , #{secretMemoAttachSeq}
+             , #{commitMemoAttachSeq}
+             , #{userInfoDto.userId}
+             , getdate()
+             , #{userInfoDto.remoteIp}
+             , #{userInfoDto.userId}
+             , getdate()
+             , #{userInfoDto.remoteIp}
+        )
+    </insert>
+    
+    <update id="updatePartAppl">
+        /* evalution.updatePartAppl */
+        UPDATE SMPPARTAPPL
+           SET VENDORNM                  = #{vendorNm}                 
+             , BUSINESSNUM               = #{businessNum}              
+             , VENDORBUSITYPE            = #{vendorBusiType}           
+             , VENDORBUSICLAS            = #{vendorBusiClas}           
+             , PRESSENTNM                = #{pressentNm}               
+             , PHONENUM                  = #{phoneNum}                 
+             , BUSICHARGER               = #{busiCharger}              
+             , BUSIPHONENUM              = #{busiPhoneNum}             
+             , BUSICHARGEREMAIL          = #{busiChargerEmail}         
+             , BUSINESSATTACHFILESEQ     = #{businessAttachFileSeq}    
+             , COMPINTROATTACHSEQ        = #{compIntroAttachSeq}       
+             , PRODINTROATTACHSEQ        = #{prodIntroAttachSeq}       
+             , CREDITGRADE               = #{creditGrade}              
+             , CREDITGRADEATTACHSEQ      = #{creditGradeAttachSeq}     
+             , FACTORYREGIDATE           = #{factoryRegiDate1} + #{factoryRegiDate2}
+             , FACTORYREGIATTACHSEQ      = #{factoryRegiAttachSeq}     
+             , LABREGIDATE               = #{labRegiDate1} + #{labRegiDate2}
+             , LABREGATTACHSEQ           = #{labRegAttachSeq}          
+             , QCPOSSE                   = #{qcPosse}                  
+             , QCCERTIATTACHSEQ          = #{qcCertiAttachSeq}         
+             , PRODTYPE                  = #{prodType}                          
+		<if test="@MybatisUtils@isNotEmpty(deliveryResult)">
+             , DELIVERYRESULT            = #{deliveryResult}
+		</if>
+             , DELIVERYCERTIATTACHSEQ    = #{deliveryCertiAttachSeq}   
+             , QUALITYVERIPOSSEATTACHSEQ = #{qualityVeriPosseAttachSeq}
+             , SECRETMEMOATTACHSEQ       = #{secretMemoAttachSeq}   
+             , COMMITMEMOATTACHSEQ       = #{commitMemoAttachSeq}
+             , MODIUSERID                = #{userInfoDto.userId}       
+             , MODIDATE                  = getdate()                   
+             , MODIIP                    = #{userInfoDto.remoteIp}     
+         WHERE APPLID = ${applId}  
+    </update>
+    
+    <select id="getVendor" resultType="hashmap">
+        /* evalution.getVendor */
+        SELECT BUSINESSNUM
+             , VENDORNM
+             , VENDORBUSITYPE
+             , VENDORBUSICLAS 
+             , PRESSENTNM
+             , PHONENUM
+          FROM SMPVENDORS WITH(NOLOCK) 
+         WHERE VENDORCD = #{userInfoDto.borgCd}
+    </select>
+    
+    <select id="selectPartApplList_count" resultType="int">
+        /* evalution.selectPartApplList_count */
+        SELECT COUNT(1)  
+          FROM SMPPARTAPPL WITH(NOLOCK)
+         WHERE ITEMID = ${itemId}  
+    </select>
+    
+    <select id="selectPartApplList" resultType="hashmap">
+        /* evalution.selectPartApplList */
+		SELECT APPLID
+		     , PARTSTATE
+		     , VENDORNM
+		     , COMPINTROSCORE
+		     , CREDITGRADESCORE
+		     , FACTORYREGISCORE
+		     , LABSCORE
+		     , CASE WHEN QCINTRNTLSCORE*3+QCDOMESTCSCORE*2+QCETCSCORE &gt; 5 THEN 5 ELSE QCINTRNTLSCORE*3+QCDOMESTCSCORE*2+QCETCSCORE END AS QCSCORE
+		     , DELIVERYRESULTSCORE
+		     , OWNEQUIPSCORE
+		     , CAST((QUALITYEVALSCORE*30/100) AS DECIMAL(5, 1)) AS QUALITYMAGTSCORE
+		     , CREDITSCORE
+             , (CASE WHEN BUSIEVALSCORE > 70 THEN 70 ELSE BUSIEVALSCORE END) + CAST(ISNULL(QUALITYEVALSCORE*30/100, 0) AS DECIMAL(5, 1)) AS BUSIEVALSCORE
+		     , BUSIEVALSTATE
+		     , QUALITYEVALSTATE
+		     , MIDDLEEVALSTATE
+		     , PRODEVALSTATE
+		     , LASTEVALSTATE  
+             , BUSIEVALSTATE    AS BUSIEVALSTATENM    
+             , QUALITYEVALSTATE AS QUALITYEVALSTATENM
+             , MIDDLEEVALSTATE  AS MIDDLEEVALSTATENM 
+             , PRODEVALSTATE    AS PRODEVALSTATENM   
+             , LASTEVALSTATE    AS LASTEVALSTATENM     
+		  FROM SMPPARTAPPL WITH(NOLOCK)
+         WHERE ITEMID = ${itemId}  
+    </select>
+    
+    <select id="selectPartApplForBusi" resultType="hashmap">
+        /* evalution.selectPartApplForBusi */
+        SELECT APPLID
+             , A.ITEMID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE1 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE2 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE3 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+             , VENDORNM
+             , BUSINESSNUM
+             , BUSICHARGER
+             , BUSIPHONENUM
+             , BUSICHARGEREMAIL
+             , PARTSTATE
+             
+             , COMPINTROATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(COMPINTROATTACHSEQ, 'NAME') AS COMPINTROATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(COMPINTROATTACHSEQ, 'PATH') AS COMPINTROATTACHPATH
+             , PRODINTROATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(PRODINTROATTACHSEQ, 'NAME') AS PRODINTROATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(PRODINTROATTACHSEQ, 'PATH') AS PRODINTROATTACHPATH
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE B.CREDITGRADE = X.CODEVAL1 AND X.CODETYPECD = 'SMPPART_CREDIT') AS CREDITGRADE
+             , CREDITGRADEATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(CREDITGRADEATTACHSEQ, 'NAME') AS CREDITGRADEATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(CREDITGRADEATTACHSEQ, 'PATH') AS CREDITGRADEATTACHPATH
+             , FACTORYREGIDATE
+             , FACTORYREGIATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(FACTORYREGIATTACHSEQ, 'NAME') AS FACTORYREGIATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(FACTORYREGIATTACHSEQ, 'PATH') AS FACTORYREGIATTACHPATH
+             , LABREGIDATE
+             , LABREGATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(LABREGATTACHSEQ, 'NAME') AS LABREGATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(LABREGATTACHSEQ, 'PATH') AS LABREGATTACHPATH
+             , QCPOSSE
+             , QCCERTIATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QCCERTIATTACHSEQ, 'NAME') AS QCCERTIATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QCCERTIATTACHSEQ, 'PATH') AS QCCERTIATTACHPATH
+             , PRODTYPE
+             , ISNULL(FLOOR(DELIVERYRESULT / 3 / YEARLYSIZE * 100), 0) AS DELIVERYRATE
+             , DELIVERYRESULT
+             , DELIVERYCERTIATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(DELIVERYCERTIATTACHSEQ, 'NAME') AS DELIVERYCERTIATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(DELIVERYCERTIATTACHSEQ, 'PATH') AS DELIVERYCERTIATTACHPATH
+             , QUALITYVERIPOSSEATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QUALITYVERIPOSSEATTACHSEQ, 'NAME') AS QUALITYVERIPOSSEATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QUALITYVERIPOSSEATTACHSEQ, 'PATH') AS QUALITYVERIPOSSEATTACHPATH
+             , SECRETMEMOATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SECRETMEMOATTACHSEQ, 'NAME') AS SECRETMEMOATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(SECRETMEMOATTACHSEQ, 'PATH') AS SECRETMEMOATTACHPATH
+             , COMMITMEMOATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(COMMITMEMOATTACHSEQ, 'NAME') AS COMMITMEMOATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(COMMITMEMOATTACHSEQ, 'PATH') AS COMMITMEMOATTACHPATH
+             
+             , COMPINTROSCORE
+             , ISNULL(CREDITGRADESCORE, (SELECT X.CODEVAL2 FROM SMPCODES X WITH(NOLOCK) WHERE B.CREDITGRADE = X.CODEVAL1 AND X.CODETYPECD = 'SMPPART_CREDIT')) AS CREDITGRADESCORE  
+             , ISNULL(FACTORYREGISCORE, (CASE WHEN LEN(FACTORYREGIDATE) &lt; 6 THEN 0 
+                              WHEN DATEDIFF(YY, FACTORYREGIDATE + '01', GETDATE()) &gt;= 8 THEN 5
+                              WHEN DATEDIFF(YY, FACTORYREGIDATE + '01', GETDATE()) &gt;= 6 THEN 4
+                              WHEN DATEDIFF(YY, FACTORYREGIDATE + '01', GETDATE()) &gt;= 4 THEN 3
+                              WHEN DATEDIFF(YY, FACTORYREGIDATE + '01', GETDATE()) &gt;= 2 THEN 2
+                              ELSE 1 END)) AS FACTORYREGISCORE
+             , ISNULL(LABSCORE, (CASE WHEN LEN(LABREGIDATE) &lt; 6 THEN 0 
+                              WHEN DATEDIFF(YY, LABREGIDATE + '01', GETDATE()) &gt;= 8 THEN 5
+                              WHEN DATEDIFF(YY, LABREGIDATE + '01', GETDATE()) &gt;= 6 THEN 4
+                              WHEN DATEDIFF(YY, LABREGIDATE + '01', GETDATE()) &gt;= 4 THEN 3
+                              WHEN DATEDIFF(YY, LABREGIDATE + '01', GETDATE()) &gt;= 2 THEN 2
+                              ELSE 1 END)) AS LABSCORE
+             , LABSCORE
+             , QCINTRNTLSCORE
+             , QCDOMESTCSCORE
+             , QCETCSCORE
+             , ISNULL(DELIVERYRESULTSCORE, (CASE WHEN FLOOR(DELIVERYRESULT / 3 / YEARLYSIZE * 100) &gt;= 200 THEN 20
+                                                 WHEN FLOOR(DELIVERYRESULT / 3 / YEARLYSIZE * 100) &gt;= 150 THEN 16
+                                                 WHEN FLOOR(DELIVERYRESULT / 3 / YEARLYSIZE * 100) &gt;= 100 THEN 12
+                                                 WHEN FLOOR(DELIVERYRESULT / 3 / YEARLYSIZE * 100) &gt;= 50 THEN 8
+                                                 WHEN FLOOR(DELIVERYRESULT / 3 / YEARLYSIZE * 100) &gt;= 5 THEN 4
+                                                 ELSE 0 END) / CASE PRODTYPE WHEN '10' THEN 1 ELSE 2 END) AS DELIVERYRESULTSCORE 
+             , OWNEQUIPSCORE
+             , CREDITSCORE
+             
+             , BUSIEVALSTATE
+          FROM SMPITEM A WITH(NOLOCK)
+             , SMPPARTAPPL B WITH(NOLOCK)
+         WHERE B.ITEMID = A.ITEMID
+           AND B.APPLID = ${applId}
+    </select>
+    
+    <update id="updatePartApplForBusi">
+        /* evalution.updatePartApplForBusi */
+        UPDATE SMPPARTAPPL SET
+               COMPINTROSCORE      = #{compIntroScore}   
+             , CREDITGRADESCORE    = #{creditGradeScore}
+             , FACTORYREGISCORE    = #{factoryRegiScore}
+             , LABSCORE            = #{labScore}
+             , QCINTRNTLSCORE      = #{qcIntrntlScore}
+             , QCDOMESTCSCORE      = #{qcDomestcScore}
+             , QCETCSCORE          = #{qcEtcScore}
+             , DELIVERYRESULTSCORE = #{deliveryResultScore}
+             , OWNEQUIPSCORE       = #{ownEquipScore}
+             , CREDITSCORE         = #{creditScore}
+             , BUSIEVALSTATE       = #{busiEvalState}
+             , BUSIEVALID          = #{userInfoDto.userId}
+             , BUSIEVALDATE        = getdate()
+             , BUSIEVALSCORE       = ${compIntroScore}
+                                   + ${creditGradeScore}
+                                   + ${factoryRegiScore}
+                                   + ${labScore}
+                                   + CASE WHEN ${qcIntrntlScore}*3+${qcDomestcScore}*2+${qcEtcScore} &gt; 5 THEN 5 ELSE ${qcIntrntlScore}*3+${qcDomestcScore}*2+${qcEtcScore} END
+                                   + ${deliveryResultScore}
+                                   + ${ownEquipScore}
+                                   + ${creditScore}
+             , QUALITYEVALSTATE    = ISNULL(QUALITYEVALSTATE, 0)
+         WHERE APPLID              = ${applId} 
+    </update>
+    
+    <select id="selectPartApplForQuality" resultType="hashmap">
+        /* evalution.selectPartApplForQuality */
+        SELECT APPLID
+             , A.ITEMID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE1 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE2 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE3 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+             , VENDORNM
+             , BUSINESSNUM
+             , BUSICHARGER
+             , BUSIPHONENUM
+             , BUSICHARGEREMAIL
+             , PARTSTATE
+             
+             , QUALITYMAGTATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QUALITYMAGTATTACHSEQ, 'NAME') AS QUALITYMAGTATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(QUALITYMAGTATTACHSEQ, 'PATH') AS QUALITYMAGTATTACHPATH
+             , GENERAL1
+             , GENERAL2
+             , GENERAL3
+             , CAST((GENERAL1 + GENERAL2 + GENERAL3) / 30.0 * 5 AS DECIMAL(5,1)) AS GENERAL
+             , DOCUMNT1
+             , DOCUMNT2
+             , CAST((DOCUMNT1 + DOCUMNT2) / 20.0 * 5 AS DECIMAL(5,1)) AS DOCUMNT
+             , MATERIL1
+             , MATERIL2
+             , MATERIL3
+             , CAST((MATERIL1 + MATERIL2 + MATERIL3) / 30.0 * 15 AS DECIMAL(5,1)) AS MATERIL
+             , PRODUCE1
+             , PRODUCE2
+             , PRODUCE3
+             , PRODUCE4
+             , PRODUCE5
+             , PRODUCE6
+             , CAST((PRODUCE1 + PRODUCE2 + PRODUCE3 + PRODUCE4 + PRODUCE5 + PRODUCE6) / 60.0 * 20 AS DECIMAL(5,1)) AS PRODUCE
+             , EQUIPMT1
+             , EQUIPMT2
+             , EQUIPMT3
+             , CAST((EQUIPMT1 + EQUIPMT2 + EQUIPMT3) / 30.0 * 10 AS DECIMAL(5,1)) AS EQUIPMT
+             , TEST1
+             , TEST2
+             , TEST3
+             , CAST((TEST1 + TEST2 + TEST3) / 30.0 * 20 AS DECIMAL(5,1)) AS TEST
+             , SUITAB1
+             , SUITAB2
+             , SUITAB3
+             , CAST((SUITAB1 + SUITAB2 + SUITAB3) / 30.0 * 20 AS DECIMAL(5,1)) AS SUITAB
+             , ETC1
+             , ETC2
+             , CAST((ETC1 + ETC2) / 20.0 * 5 AS DECIMAL(5,1)) AS ETC
+             
+             , QUALITYEVALSTATE
+             , ISNULL(QUALITYEVALSCORE, 0) AS QUALITYEVALSCORE
+             , CAST(ISNULL(QUALITYEVALSCORE*30/100, 0) AS DECIMAL(5, 1)) AS QUALITYEVALSCORE2
+             , ISNULL((SELECT USERNM FROM SMPUSERS X WITH (NOLOCK) WHERE X.USERID = QUALITYEVALID), #{userInfoDto.userNm}) AS QUALITYEVALNM
+          FROM SMPITEM A WITH(NOLOCK)
+             , SMPPARTAPPL B WITH(NOLOCK)
+         WHERE B.ITEMID = A.ITEMID
+           AND B.APPLID = ${applId}
+    </select>
+    
+    <update id="updatePartApplForQuality">
+        /* evalution.updatePartApplForQuality */
+        UPDATE SMPPARTAPPL SET
+               QUALITYMAGTATTACHSEQ= #{qualityMagtAttachSeq}
+             , GENERAL1            = #{general1}
+             , GENERAL2            = #{general2}
+             , GENERAL3            = #{general3}
+             , DOCUMNT1            = #{documnt1}
+             , DOCUMNT2            = #{documnt2}
+             , MATERIL1            = #{materil1}
+             , MATERIL2            = #{materil2}
+             , MATERIL3            = #{materil3}
+             , PRODUCE1            = #{produce1}
+             , PRODUCE2            = #{produce2}
+             , PRODUCE3            = #{produce3}
+             , PRODUCE4            = #{produce4}
+             , PRODUCE5            = #{produce5}
+             , PRODUCE6            = #{produce6}
+             , EQUIPMT1            = #{equipmt1}
+             , EQUIPMT2            = #{equipmt2}
+             , EQUIPMT3            = #{equipmt3}
+             , TEST1               = #{test1}
+             , TEST2               = #{test2}
+             , TEST3               = #{test3}
+             , SUITAB1             = #{suitab1}
+             , SUITAB2             = #{suitab2}
+             , SUITAB3             = #{suitab3}
+             , ETC1                = #{etc1}
+             , ETC2                = #{etc2}
+             , QUALITYEVALSTATE    = #{qualityEvalState}
+             , QUALITYEVALID       = #{userInfoDto.userId}
+             , QUALITYEVALDATE     = getdate()
+             , QUALITYEVALSCORE    = CAST((${general1} + ${general2} + ${general3}) / 30.0 * 5 AS DECIMAL(5,1))
+                                   + CAST((${documnt1} + ${documnt2}) / 20.0 * 5 AS DECIMAL(5,1))
+                                   + CAST((${materil1} + ${materil2} + ${materil3}) / 30.0 * 15 AS DECIMAL(5,1))
+                                   + CAST((${produce1} + ${produce2} + ${produce3} + ${produce4} + ${produce5} + ${produce6}) / 60.0 * 20 AS DECIMAL(5,1))
+                                   + CAST((${equipmt1} + ${equipmt2} + ${equipmt3}) / 30.0 * 10 AS DECIMAL(5,1))
+                                   + CAST((${test1} + ${test2} + ${test3}) / 30.0 * 20 AS DECIMAL(5,1))
+                                   + CAST((${suitab1} + ${suitab2} + ${suitab3}) / 30.0 * 20 AS DECIMAL(5,1))
+                                   + CAST((${etc1} + ${etc2}) / 20.0 * 5 AS DECIMAL(5,1))
+             , MIDDLEEVALSTATE     = ISNULL(MIDDLEEVALSTATE, 0)
+         WHERE APPLID              = ${applId} 
+    </update>
+    
+    <select id="selectPartApplForMiddle" resultType="hashmap">
+        /* evalution.selectPartApplForMiddle */
+        SELECT APPLID
+             , A.ITEMID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE1 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE2 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE3 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+             , VENDORNM
+             , BUSINESSNUM
+             , BUSICHARGER
+             , BUSIPHONENUM
+             , BUSICHARGEREMAIL
+             , PARTSTATE
+             , CASE WHEN BUSIEVALSCORE > 70 THEN 70 ELSE BUSIEVALSCORE END AS BUSIEVALSCORE
+             , (SELECT COUNT(1) FROM SMPPARTAPPL X WITH(NOLOCK) WHERE X.ITEMID = A.ITEMID AND X.BUSIEVALSCORE &gt;= B.BUSIEVALSCORE) AS BUSIRANK
+             , CAST((QUALITYEVALSCORE*30/100) AS DECIMAL(5, 1)) AS QUALITYEVALSCORE
+             , (SELECT COUNT(1) FROM SMPPARTAPPL X WITH(NOLOCK) WHERE X.ITEMID = A.ITEMID AND X.QUALITYEVALSCORE &gt;= B.QUALITYEVALSCORE) AS QUALITYRANK
+             , (SELECT COUNT(1) FROM SMPPARTAPPL X WITH(NOLOCK) WHERE X.ITEMID = A.ITEMID) AS APPLCNT
+             , MIDDLEEVAL
+             , MIDDLE1APPRVID
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = MIDDLE1APPRVID) AS MIDDLE1APPRVNM
+             , MIDDLE1APPRVSTATE
+             , (SELECT X.CODEVAL2 FROM SMPCODES X WITH(NOLOCK) WHERE B.MIDDLE1APPRVSTATE = X.CODEVAL1 AND X.CODETYPECD = 'SMPPART_APPRVSTATE') AS MIDDLE1APPRVSTATENM
+             , MIDDLE1APPRVCOMMENT
+             , MIDDLE2APPRVID
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = MIDDLE2APPRVID) AS MIDDLE2APPRVNM
+             , MIDDLE2APPRVSTATE
+             , (SELECT X.CODEVAL2 FROM SMPCODES X WITH(NOLOCK) WHERE B.MIDDLE2APPRVSTATE = X.CODEVAL1 AND X.CODETYPECD = 'SMPPART_APPRVSTATE') AS MIDDLE2APPRVSTATENM
+             , MIDDLE2APPRVCOMMENT
+             
+             , MIDDLEEVALSTATE
+             , #{userInfoDto.userId} AS USERID
+          FROM SMPITEM A WITH(NOLOCK)
+             , SMPPARTAPPL B WITH(NOLOCK)
+         WHERE B.ITEMID = A.ITEMID
+           AND B.APPLID = ${applId}
+    </select>
+    
+    <update id="updatePartApplForMiddle">
+        /* evalution.updatePartApplForMiddle */
+        UPDATE SMPPARTAPPL SET
+               MIDDLEEVAL          = #{middleEval}
+             , MIDDLE1APPRVID      = #{middle1ApprvId}
+             , MIDDLE1APPRVSTATE   = <if test="@MybatisUtils@isNotEmpty(middle1ApprvId)">'9'</if><if test="@MybatisUtils@isEmpty(middle1ApprvId)">null</if>
+             , MIDDLE1APPRVCOMMENT = null
+             , MIDDLE2APPRVID      = #{middle2ApprvId}
+             , MIDDLE2APPRVSTATE   = <if test="@MybatisUtils@isNotEmpty(middle2ApprvId)">'9'</if><if test="@MybatisUtils@isEmpty(middle2ApprvId)">null</if>
+             , MIDDLE2APPRVCOMMENT = null
+             , MIDDLEEVALSTATE     = <if test="@MybatisUtils@isEmpty(middle1ApprvId) and @MybatisUtils@isEmpty(middle2ApprvId)"><if test="middleEval == 'PASS'">'90'</if><if test="middleEval == 'FAIL'">'99'</if></if>
+                                     <if test="@MybatisUtils@isNotEmpty(middle1ApprvId) or @MybatisUtils@isNotEmpty(middle2ApprvId)">'9'</if>
+             , LASTEVALSTATE       = <if test="@MybatisUtils@isEmpty(middle1ApprvId) and @MybatisUtils@isEmpty(middle2ApprvId) and middleEval == 'FAIL'">'99'</if>
+                                     <if test="@MybatisUtils@isNotEmpty(middle1ApprvId) or @MybatisUtils@isNotEmpty(middle2ApprvId) or middleEval == 'PASS'">NULL</if>
+             , PARTSTATE           = <if test="@MybatisUtils@isEmpty(middle1ApprvId) and @MybatisUtils@isEmpty(middle2ApprvId) and middleEval == 'FAIL'">'99'</if>
+                                     <if test="@MybatisUtils@isNotEmpty(middle1ApprvId) or @MybatisUtils@isNotEmpty(middle2ApprvId) or middleEval == 'PASS'">PARTSTATE</if>
+             , MIDDLEEVALID        = #{userInfoDto.userId}
+             , MIDDLEEVALDATE      = getdate()
+             , BUSIEVALSTATE       = '10'
+             , QUALITYEVALSTATE    = '10'
+             , PRODEVALSTATE       = <if test="@MybatisUtils@isEmpty(middle1ApprvId) and @MybatisUtils@isEmpty(middle2ApprvId) and middleEval == 'PASS'">'0'</if>
+                                     <if test="not (@MybatisUtils@isEmpty(middle1ApprvId) and @MybatisUtils@isEmpty(middle2ApprvId) and middleEval == 'PASS')">NULL</if>
+         WHERE APPLID              = ${applId} 
+    </update>
+    
+    <update id="updatePartApplForMiddleApproval">
+        /* evalution.updatePartApplForMiddleApproval */
+        UPDATE SMPPARTAPPL SET
+               ${apprvCol}APPRVSTATE    = '90'
+             , ${apprvCol}APPRVCOMMENT  = #{apprvComment}
+             , MIDDLEEVALSTATE          = <if test="isLast == 'Y'.toString()">(CASE MIDDLEEVAL WHEN 'PASS' THEN '90' ELSE '99' END)</if><if test="isLast == 'N'.toString()">MIDDLEEVALSTATE</if>
+             , PRODEVALSTATE            = <if test="isLast == 'Y'.toString()">(CASE MIDDLEEVAL WHEN 'PASS' THEN '0' ELSE NULL END)</if><if test="isLast == 'N'.toString()">PRODEVALSTATE</if>
+             , LASTEVALSTATE            = <if test="isLast == 'Y'.toString()">(CASE MIDDLEEVAL WHEN 'FAIL' THEN '99' ELSE NULL END)</if><if test="isLast == 'N'.toString()">LASTEVALSTATE</if>
+             , PARTSTATE                = <if test="isLast == 'Y'.toString()">(CASE MIDDLEEVAL WHEN 'FAIL' THEN '99' ELSE NULL END)</if><if test="isLast == 'N'.toString()">PARTSTATE</if>
+         WHERE APPLID                   = ${applId} 
+    </update>
+    
+    <update id="updatePartApplForMiddleReturn">
+        /* evalution.updatePartApplForMiddleApproval */
+        UPDATE SMPPARTAPPL SET
+               ${apprvCol}APPRVSTATE    = '2'
+             , ${apprvCol}APPRVCOMMENT  = #{apprvComment}
+             , BUSIEVALSTATE            = '1'
+             , QUALITYEVALSTATE         = '1'
+             , MIDDLEEVALSTATE          = '2'
+         WHERE APPLID                   = ${applId} 
+    </update>
+    
+    <select id="selectPartApplForProd" resultType="hashmap">
+        /* evalution.selectPartApplForProd */
+        SELECT APPLID
+             , A.ITEMID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE1 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE2 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE3 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+             , VENDORNM
+             , BUSINESSNUM
+             , BUSICHARGER
+             , BUSIPHONENUM
+             , BUSICHARGEREMAIL
+             , PARTSTATE
+             
+             , EVALSTARTDATE
+             , EVALENDDATE
+             , EVALLOCATION
+             , TESTARTICLE
+             , PASS
+             , FAIL
+             , TESTRESULTATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(TESTRESULTATTACHSEQ, 'NAME') AS TESTRESULTATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(TESTRESULTATTACHSEQ, 'PATH') AS TESTRESULTATTACHSEQPATH
+             , TESTREPORTATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(TESTREPORTATTACHSEQ, 'NAME') AS TESTREPORTATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(TESTREPORTATTACHSEQ, 'PATH') AS TESTREPORTATTACHPATH
+             
+             , PRODEVALSTATE
+          FROM SMPITEM A WITH(NOLOCK)
+             , SMPPARTAPPL B WITH(NOLOCK)
+         WHERE B.ITEMID = A.ITEMID
+           AND B.APPLID = ${applId}
+    </select>
+    
+    <update id="updatePartApplForProd">
+        /* evalution.updatePartApplForProd */
+        UPDATE SMPPARTAPPL SET
+               EVALSTARTDATE       = #{evalStartDate}
+             , EVALENDDATE         = #{evalEndDate}
+             , EVALLOCATION        = #{evalLocation}
+             , TESTARTICLE         = #{testArticle}
+             , PASS                = #{pass}
+             , FAIL                = #{fail}
+             , TESTRESULTATTACHSEQ = #{testResultAttachSeq}
+             , TESTREPORTATTACHSEQ = #{testReportAttachSeq}
+             , PRODEVALSTATE       = #{prodEvalState}
+             , MIDDLEEVALID        = #{userInfoDto.userId}
+             , MIDDLEEVALDATE      = getdate()
+             , LASTEVALSTATE       = ISNULL(LASTEVALSTATE, 0)
+         WHERE APPLID              = ${applId} 
+    </update>
+    
+    <select id="selectPartApplForLast" resultType="hashmap">
+        /* evalution.selectPartApplForLast */
+        
+        SELECT APPLID
+             , A.ITEMID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE1 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE1') AS ITEMTYPE1
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE2 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE2') AS ITEMTYPE2
+             , (SELECT X.CODENM1 FROM SMPCODES X WITH(NOLOCK) WHERE A.ITEMTYPE3 = X.CODEVAL1 AND X.CODETYPECD = 'SMPITEM_ITEMTYPE3') AS ITEMTYPE3
+             , VENDORNM
+             , BUSINESSNUM
+             , BUSICHARGER
+             , BUSIPHONENUM
+             , BUSICHARGEREMAIL
+             , PARTSTATE
+             
+             , CASE WHEN BUSIEVALSCORE > 70 THEN 70 ELSE BUSIEVALSCORE END AS BUSIEVALSCORE
+             , (SELECT COUNT(1) FROM SMPPARTAPPL X WITH(NOLOCK) WHERE X.ITEMID = A.ITEMID AND X.BUSIEVALSCORE &gt;= B.BUSIEVALSCORE) AS BUSIRANK
+             , CAST((QUALITYEVALSCORE*30/100) AS DECIMAL(5, 1)) AS QUALITYEVALSCORE
+             , (SELECT COUNT(1) FROM SMPPARTAPPL X WITH(NOLOCK) WHERE X.ITEMID = A.ITEMID AND X.QUALITYEVALSCORE &gt;= B.QUALITYEVALSCORE) AS QUALITYRANK
+             , (SELECT COUNT(1) FROM SMPPARTAPPL X WITH(NOLOCK) WHERE X.ITEMID = A.ITEMID) AS APPLCNT
+             , TESTARTICLE
+             , PASS
+             , FAIL
+             
+             , LASTEVAL
+             , EVALBASIS
+             , LAST1APPRVID
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = LAST1APPRVID) AS LAST1APPRVNM
+             , LAST1APPRVSTATE
+             , (SELECT X.CODEVAL2 FROM SMPCODES X WITH(NOLOCK) WHERE B.LAST1APPRVSTATE = X.CODEVAL1 AND X.CODETYPECD = 'SMPPART_APPRVSTATE') AS LAST1APPRVSTATENM
+             , LAST1APPRVCOMMENT
+             , LAST2APPRVID
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = LAST2APPRVID) AS LAST2APPRVNM
+             , LAST2APPRVSTATE
+             , (SELECT X.CODEVAL2 FROM SMPCODES X WITH(NOLOCK) WHERE B.LAST2APPRVSTATE = X.CODEVAL1 AND X.CODETYPECD = 'SMPPART_APPRVSTATE') AS LAST2APPRVSTATENM
+             , LAST2APPRVCOMMENT
+             
+             , LASTEVALSTATE
+             , #{userInfoDto.userId} AS USERID
+          FROM SMPITEM A WITH(NOLOCK)
+             , SMPPARTAPPL B WITH(NOLOCK)
+         WHERE B.ITEMID = A.ITEMID
+           AND B.APPLID = ${applId}
+    </select>
+    
+    <update id="updatePartApplForLast">
+        /* evalution.updatePartApplForLast */
+        UPDATE SMPPARTAPPL SET
+               LASTEVAL          = #{lastEval}
+             , EVALBASIS         = #{evalBasis}
+             , LAST1APPRVID      = #{last1ApprvId}
+             , LAST1APPRVSTATE   = <if test="@MybatisUtils@isNotEmpty(last1ApprvId)">'9'</if><if test="@MybatisUtils@isEmpty(last1ApprvId)">null</if>
+             , LAST1APPRVCOMMENT = null
+             , LAST2APPRVID      = #{last2ApprvId}
+             , LAST2APPRVSTATE   = <if test="@MybatisUtils@isNotEmpty(last2ApprvId)">'9'</if><if test="@MybatisUtils@isEmpty(last2ApprvId)">null</if>
+             , LASTEVALSTATE     = <if test="@MybatisUtils@isEmpty(last1ApprvId) and @MybatisUtils@isEmpty(last2ApprvId)"><if test="lastEval == 'PASS'">'90'</if><if test="lastEval == 'FAIL'">'99'</if></if>
+                                   <if test="@MybatisUtils@isNotEmpty(last1ApprvId) or @MybatisUtils@isNotEmpty(last2ApprvId)">'9'</if>
+             , LAST2APPRVCOMMENT = null
+             , PARTSTATE         = <if test="@MybatisUtils@isEmpty(last1ApprvId) and @MybatisUtils@isEmpty(last2ApprvId)"><if test="lastEval == 'PASS'">'90'</if><if test="lastEval == 'FAIL'">'99'</if></if>
+                                   <if test="@MybatisUtils@isNotEmpty(last1ApprvId) or @MybatisUtils@isNotEmpty(last2ApprvId)">PARTSTATE</if>
+             , LASTEVALID        = #{userInfoDto.userId}
+             , LASTEVALDATE      = getdate()
+             , PRODEVALSTATE     = '10'
+         WHERE APPLID            = ${applId} 
+    </update>
+    
+    <update id="updatePartApplForLastApproval">
+        /* evalution.updatePartApplForLastApproval */
+        UPDATE SMPPARTAPPL SET
+               ${apprvCol}APPRVSTATE    = '90'
+             , ${apprvCol}APPRVCOMMENT  = #{apprvComment}
+             , LASTEVALSTATE            = <if test="isLast == 'Y'.toString()">(CASE LASTEVAL WHEN 'PASS' THEN '90' ELSE '99' END)</if><if test="isLast == 'N'.toString()">LASTEVALSTATE</if>
+             , PARTSTATE                = <if test="isLast == 'Y'.toString()">(CASE LASTEVAL WHEN 'PASS' THEN '90' ELSE '99' END)</if><if test="isLast == 'N'.toString()">PARTSTATE</if>
+         WHERE APPLID                   = ${applId} 
+    </update>
+    
+    <update id="updatePartApplForLastReturn">
+        /* evalution.updatePartApplForLastReturn */
+        UPDATE SMPPARTAPPL SET
+               ${apprvCol}APPRVSTATE    = '2'
+             , ${apprvCol}APPRVCOMMENT  = #{apprvComment}
+             , PRODEVALSTATE            = '1'
+             , LASTEVALSTATE            = '2'
+         WHERE APPLID                   = ${applId} 
+    </update>
+    
+    <select id="selectLastEvalAttachList" resultType="hashmap">
+        /* evalution.selectLastEvalAttachList */
+        SELECT ATTACHSEQ
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(ATTACHSEQ, 'NAME') AS ATTACHNAME
+             , dbo.FNS_ATTACH_FILE_NAME_PATH(ATTACHSEQ, 'PATH') AS ATTACHPATH
+         FROM SMPLASTEVALATTACH WITH(NOLOCK) 
+         WHERE APPLID            = ${applId}
+         ORDER BY ATTACHSEQ ASC
+    </select>
+    
+    <delete id="deleteLastEvalAttach">
+        /* evalution.deleteLastEvalAttach */
+        DELETE FROM SMPLASTEVALATTACH
+         WHERE APPLID            = ${applId}
+    </delete>
+    
+    <insert id="insertLiastEvalAttach">
+        /* evalution.insertLiastEvalAttach */
+        INSERT INTO SMPLASTEVALATTACH (
+               ATTACHID
+             , ATTACHSEQ
+             , APPLID
+        ) VALUES (
+               #{id}
+             , #{attachSeq}
+             , #{applId}
+        )
+    </insert>
+    
+    <select id="selectPartApplForComplete" resultType="int">
+        /* evalution.selectPartApplForComplete */
+	    SELECT COUNT(1)
+		  FROM SMPPARTAPPL WITH(NOLOCK)  
+		 WHERE ITEMID = (
+		    SELECT ITEMID 
+		      from SMPPARTAPPL WITH(NOLOCK) 
+		     WHERE APPLID = ${applId} )
+		   AND PARTSTATE &lt; 90
+    </select>
+    
+    <update id="updateItemForComplete">
+        /* evalution.updateItemForComplete */
+        UPDATE SMPITEM
+           SET ITEMSTATE   = 90
+         WHERE ITEMID = (
+            SELECT ITEMID 
+              from SMPPARTAPPL WITH(NOLOCK) 
+             WHERE APPLID = ${applId} )
+    </update>
+    
+    <update id="updateItemForEval">
+        /* evalution.updateItemForEval */
+        UPDATE SMPITEM
+           SET ITEMSTATE   = 20
+         WHERE DEADLINEDATE = CONVERT(VARCHAR(10), GETDATE()-1, 121) 
+    </update>
+    
+    <update id="updatePartApplForEval">
+        /* evalution.updatePartApplForEval */
+	    UPDATE SMPPARTAPPL 
+		   SET PARTSTATE     = 20
+		     , BUSIEVALSTATE = 0
+		 WHERE ITEMID in (SELECT ITEMID FROM SMPITEM  WITH(NOLOCK) WHERE DEADLINEDATE = CONVERT(VARCHAR(10), GETDATE()-1, 121))
+    </update>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    <sql id="selectPassApplListSql">
+          FROM SMPPARTAPPL A WITH(NOLOCK)
+             , SMPITEM     B WITH(NOLOCK)
+             , SMPUSERS    C WITH(NOLOCK)
+         WHERE A.ITEMID        = B.ITEMID
+           AND A.LASTEVALSTATE = '90'
+           AND A.REGIUSERID    = C.USERID 
+        <if test="@MybatisUtils@isNotEmpty(srcItemNm)">
+          AND (ITEMNM1 like '%' + #{srcItemNm} + '%' OR ITEMNM2 like '%' + #{srcItemNm} + '%' )
+        </if>
+	    <if test="@MybatisUtils@isNotEmpty(srcVendorNm)">
+	      AND A.VENDORNM like '%' + #{srcVendorNm} + '%'
+	    </if>
+        <if test="@MybatisUtils@isNotEmpty(srcBusinessNum)">
+          AND A.BUSINESSNUM = #{srcBusinessNum}
+        </if>
+    </sql>
+    
+    <select id="selectPassApplList_count" resultType="int">
+        /* evalution.selectPassApplList_count */
+        SELECT COUNT(1) 
+        <include refid="selectPassApplListSql"/>
+    </select>
+    
+    <select id="selectPassApplList" resultType="hashmap">
+        /* evalution.selectPassApplList */
+        SELECT APPLID
+             , VENDORNM 
+             , BUSINESSNUM 
+             , (SELECT TOP 1 'Y' FROM SMPVENDORS X WITH (NOLOCK) WHERE X.BUSINESSNUM = A.BUSINESSNUM) AS REGVENDOR
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , CONVERT(VARCHAR(16), LASTEVALDATE, 121) AS LASTEVALDATE
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = A.LASTEVALID) AS LASTEVALNM
+        <include refid="selectPassApplListSql"/>
+         ORDER BY ${sidx} ${sord}
+    </select>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    <sql id="selectApprovalApplListSql">
+          FROM SMPPARTAPPL A WITH(NOLOCK)
+             , SMPITEM     B WITH(NOLOCK)
+         WHERE A.ITEMID     = B.ITEMID
+           AND DEADLINEDATE BETWEEN #{srcStartDate} AND #{srcEndDate}
+           AND (A.MIDDLE1APPRVID = #{userInfoDto.userId} OR A.MIDDLE2APPRVID = #{userInfoDto.userId} OR A.LAST1APPRVID = #{userInfoDto.userId} OR A.LAST2APPRVID = #{userInfoDto.userId})
+        <if test="@MybatisUtils@isNotEmpty(srcItemNm)">
+          AND (ITEMNM1 like '%' + #{srcItemNm} + '%' OR ITEMNM2 like '%' + #{srcItemNm} + '%' )
+        </if>
+        <if test="@MybatisUtils@isNotEmpty(srcVendorNm)">
+          AND A.VENDORNM like '%' + #{srcVendorNm} + '%'
+        </if>
+        <if test="@MybatisUtils@isNotEmpty(srcChargerNm)">
+          AND B.CHARGERNM = #{srcChargerNm}
+        </if>
+        <if test="srcApproval == 'Y'.toString()">
+          AND (
+             (A.MIDDLE1APPRVSTATE = '9' AND A.MIDDLE1APPRVID = #{userInfoDto.userId})
+          OR (A.MIDDLE1APPRVSTATE = '90' AND A.MIDDLE2APPRVSTATE = '9' AND A.MIDDLE2APPRVID = #{userInfoDto.userId})
+          OR (A.LAST1APPRVSTATE = '9' AND A.LAST1APPRVID = #{userInfoDto.userId})
+          OR (A.LAST1APPRVSTATE = '90' AND A.LAST2APPRVSTATE = '9' AND A.LAST2APPRVID = #{userInfoDto.userId})
+          )
+        </if>
+        <if test="srcApproval == 'N'.toString()">
+          AND (
+             (A.MIDDLE1APPRVSTATE != '9' AND A.MIDDLE1APPRVID = #{userInfoDto.userId})
+          OR (A.MIDDLE1APPRVSTATE = '9' AND A.MIDDLE2APPRVID = #{userInfoDto.userId})
+          OR (A.LAST1APPRVSTATE != '9' AND A.LAST1APPRVID = #{userInfoDto.userId})
+          OR (A.LAST1APPRVSTATE = '9' AND A.LAST2APPRVID = #{userInfoDto.userId})
+          )
+        </if>
+    </sql>
+    
+    <select id="selectApprovalApplList_count" resultType="int">
+        /* evalution.selectApprovalApplList_count */
+        SELECT COUNT(1) 
+        <include refid="selectApprovalApplListSql"/>
+    </select>
+    
+    <select id="selectApprovalApplList" resultType="hashmap">
+        /* evalution.selectApprovalApplList */
+        SELECT APPLID
+             , ITEMNM1 + ',' + ITEMNM2 AS ITEMNM
+             , YEARLYSIZE
+             , CONVERT(VARCHAR(10), B.REGIDATE, 121) AS REGIDATE
+             , DEADLINEDATE
+             , CHARGERNM
+             , VENDORNM 
+             , A.MIDDLE1APPRVID
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = A.MIDDLE1APPRVID) AS MIDDLE1APPRVNM
+             , A.MIDDLE1APPRVSTATE
+             , A.MIDDLE2APPRVID
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = A.MIDDLE2APPRVID) AS MIDDLE2APPRVNM
+             , A.MIDDLE2APPRVSTATE
+             , A.LAST1APPRVID
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = A.LAST1APPRVID) AS LAST1APPRVNM
+             , A.LAST1APPRVSTATE
+             , A.LAST2APPRVID
+             , (SELECT USERNM FROM SMPUSERS X WITH(NOLOCK) WHERE X.USERID = A.LAST2APPRVID) AS LAST2APPRVNM
+             , A.LAST2APPRVSTATE
+        <include refid="selectApprovalApplListSql"/>
+         ORDER BY ${sidx} ${sord}
+    </select>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    <sql id="selectNonUserListSql">
+          FROM SMPNONUSERS A WITH(NOLOCK)
+         WHERE 1 = 1
+        <if test="@MybatisUtils@isNotEmpty(srcBusinessNm)">
+          AND A.BUSSINESSNM like '%' + #{srcBusinessNm} + '%'
+        </if>
+        <if test="@MybatisUtils@isNotEmpty(srcBusinessNum)">
+          AND A.BUSINESSNUM = #{srcBusinessNum}
+        </if>
+    </sql>
+    
+    <select id="selectNonUserList_count" resultType="int">
+        /* evalution.selectNonUserList_count */
+        SELECT COUNT(1) 
+        <include refid="selectNonUserListSql"/>
+    </select>
+    
+    <select id="selectNonUserList" resultType="hashmap">
+        /* evalution.selectNonUserList */
+        SELECT NONUSERID
+             , BUSSINESSNM
+             , BUSINESSNUM
+             , (SELECT TOP 1 'Y' FROM SMPVENDORS X WITH (NOLOCK) WHERE X.BUSINESSNUM = A.BUSINESSNUM) AS REGVENDOR
+             , LOGINCNT
+             , CONVERT(VARCHAR(16), LOGINDATE, 121) AS LOGINDATE
+        <include refid="selectNonUserListSql"/>
+         ORDER BY ${sidx} ${sord}
+    </select>
+    
+    <update id="updateNonUsers">
+        /* evalution.updateNonUsers */
+        UPDATE SMPNONUSERS
+           SET PWD        = #{pwd}
+         WHERE NONUSERID  = #{nonUserId}
+    </update>
+	
+</mapper>

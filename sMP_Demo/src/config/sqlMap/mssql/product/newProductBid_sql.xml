@@ -1,0 +1,816 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="product.newProductBid">
+
+	<sql id="selectNewProductRequestSql">
+		FROM MCNEWGOODREQUEST GOODREQ WITH(NOLOCK)
+        LEFT OUTER JOIN ATTACHINFO ATT1  WITH(NOLOCK) ON GOODREQ.FIRSTATTACHSEQ  = ATT1.attach_seq
+        LEFT OUTER JOIN ATTACHINFO ATT2  WITH(NOLOCK) ON GOODREQ.SECONDATTACHSEQ  = ATT2.attach_seq
+        LEFT OUTER JOIN ATTACHINFO ATT3  WITH(NOLOCK) ON GOODREQ.THIRDATTACHSEQ  = ATT3.attach_seq 
+		LEFT OUTER JOIN MCBID BID  WITH(NOLOCK) ON   BID.NEWGOODID = GOODREQ.NEWGOODID
+		, 	 SMPUSERS  WITH(NOLOCK) 
+		WHERE GOODREQ.insert_user_id = SMPUSERS.USERID
+		AND	GOODREQ.delete_state = '0'
+		<if test="srcGroupId != null and  srcGroupId != '' and srcGroupId neq '0'.toString() ">
+		AND	GOODREQ.insert_borgid IN (SELECT BORGID FROM SMPBORGS  WITH(NOLOCK) WHERE GROUPID = #{srcGroupId} AND BORGTYPECD = 'BCH')
+		</if>
+		<if test="srcClientId != null and  srcClientId != '' and srcClientId neq '0'.toString() ">
+		AND	GOODREQ.insert_borgid IN (SELECT BORGID FROM SMPBORGS  WITH(NOLOCK) WHERE CLIENTID = #{srcClientId} AND BORGTYPECD = 'BCH')
+		</if>
+		<if test="srcBranchId != null and  srcBranchId != '' and srcBranchId neq '0'.toString() ">
+		AND	GOODREQ.insert_borgid = #{srcBranchId}
+		</if>
+		<if test="srcInsert_FromDt != null and  srcInsert_FromDt != ''">
+		AND GOODREQ.insert_date &gt;= CONVERT(DATETIME, #{srcInsert_FromDt})
+		</if>
+		<if test="srcInsert_EndDt != null and  srcInsert_EndDt != ''">
+		AND GOODREQ.insert_date &lt;= CONVERT(DATETIME, #{srcInsert_EndDt})+1
+		</if>
+		<if test="srcStand_good_name != null and srcStand_good_name != ''">
+		AND	GOODREQ.stand_good_name LIKE '%' + #{srcStand_good_name} + '%'
+		</if>
+		<if test="srcState != null and srcState != ''">
+		AND	GOODREQ.state = #{srcState}
+		</if>
+		<if test="srcStand_good_spec_desc != null and srcStand_good_spec_desc != ''">
+		AND	GOODREQ.stand_good_spec_desc LIKE '%' + #{srcStand_good_spec_desc} + '%'
+		</if>
+		<if test="srcInsertUserId != null and srcInsertUserId != ''">
+		AND	GOODREQ.insert_user_id = #{srcInsertUserId}
+		</if>
+	</sql>
+	<select id="selectNewProductRequestListCnt" resultType="int">
+		/* product.newProductBid.selectNewProductRequestListCnt */
+		SELECT COUNT(*) 
+		from (
+		select 1 as cnt
+		   <include refid="selectNewProductRequestSql"/>
+			<if  test="srcSvcTypeCd == 'BUY' ">
+			group by GOODREQ.stand_good_name 
+			, 		 GOODREQ.stand_good_spec_desc 
+			, 		 CONVERT(VARCHAR(10), GOODREQ.insert_date, 121)  
+			, 		 GOODREQ.state
+            ,       GOODREQ.note
+            ,       GOODREQ.insert_borgid
+			,		 GOODREQ.good_iden_numb
+			, 		 dbo.FNS_CODENM1BYCODEVAL1('NEW_PROD_STATE',GOODREQ.state)  
+			,		dbo.FNS_BORG_STRING(GOODREQ.insert_borgid) 
+			,       SMPUSERS.USERNM 
+			,		GOODREQ.newgoodid
+			,		GOODREQ.request_type	
+            ,       ATT1.attach_seq
+            ,       ATT2.attach_seq
+            ,       ATT3.attach_seq
+            ,       ATT1.attach_file_name
+            ,       ATT2.attach_file_name
+            ,       ATT3.attach_file_name
+            ,       ATT1.attach_file_path
+            ,       ATT2.attach_file_path
+            ,       ATT3.attach_file_path   				
+			</if>
+		) a
+	</select>
+	<select id="selectNewProductRequestList" resultType="kr.co.bitcube.product.dto.McNewGoodRequestDto">
+		/* product.newProductBid.selectNewProductRequestList */
+		SELECT	A.*
+		FROM
+		(
+				select 	GOODREQ.stand_good_name 
+				, 		GOODREQ.stand_good_spec_desc 
+				, 		CONVERT(VARCHAR(10), GOODREQ.insert_date, 121) AS INSERT_DATE 
+				, 		GOODREQ.state
+				,       GOODREQ.note
+				,		GOODREQ.good_iden_numb
+                ,       GOODREQ.insert_user_id
+				,       dbo.FNS_BorgNameByBorgID( GOODREQ.insert_borgid ) AS userBorgNm 
+				,       GOODREQ.insert_borgid 
+		        ,       ATT1.attach_seq AS firstattachseq
+		        ,       ATT2.attach_seq AS secondattachseq
+		        ,       ATT3.attach_seq AS thirdattachseq
+		        ,       ATT1.attach_file_name AS firstAttachName
+		        ,       ATT2.attach_file_name AS secondAttachName
+		        ,       ATT3.attach_file_name AS thirdAttachName
+		        ,       ATT1.attach_file_path AS attach_file_path1
+		        ,       ATT2.attach_file_path AS attach_file_path2
+		        ,       ATT3.attach_file_path AS attach_file_path3
+				, 		dbo.FNS_CODENM1BYCODEVAL1('NEW_PROD_STATE',GOODREQ.state) AS stateNm 
+				<if  test="srcSvcTypeCd == 'ADM' ">
+				,	ISNULL(BID.bidid , '' ) AS BIDID
+				</if>
+				<if  test="srcSvcTypeCd == 'BUY' ">
+				,	ISNULL(max(BID.bidid) , '' ) AS BIDID
+				</if>
+				,		dbo.FNS_BORG_STRING(GOODREQ.insert_borgid) AS borgNms
+				,       SMPUSERS.USERNM AS userId
+				,		GOODREQ.newgoodid
+				,		GOODREQ.request_type
+				<include refid="selectNewProductRequestSql"/>
+				
+				<if  test="srcSvcTypeCd == 'BUY' ">
+				group by GOODREQ.stand_good_name 
+				, 		 GOODREQ.stand_good_spec_desc 
+				, 		 CONVERT(VARCHAR(10), GOODREQ.insert_date, 121)  
+				, 		 GOODREQ.state
+                ,        GOODREQ.note
+                ,        GOODREQ.insert_user_id
+                ,        GOODREQ.insert_borgid
+				,		 GOODREQ.good_iden_numb
+				, 		 dbo.FNS_CODENM1BYCODEVAL1('NEW_PROD_STATE',GOODREQ.state)  
+				,		dbo.FNS_BORG_STRING(GOODREQ.insert_borgid) 
+				,       SMPUSERS.USERNM 
+				,		GOODREQ.newgoodid
+				,		GOODREQ.request_type		
+                ,       ATT1.attach_seq
+                ,       ATT2.attach_seq
+                ,       ATT3.attach_seq
+                ,       ATT1.attach_file_name
+                ,       ATT2.attach_file_name
+                ,       ATT3.attach_file_name
+                ,       ATT1.attach_file_path
+                ,       ATT2.attach_file_path
+                ,       ATT3.attach_file_path			
+				</if>
+
+				
+		) A
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectRequestProductDetailInfo" resultType="kr.co.bitcube.product.dto.McNewGoodRequestDto">
+		/*	product.newProductBid.selectRequestProductDetailInfo*/
+		SELECT	REQPROD.NEWGOODID
+		,		REQPROD.STAND_GOOD_NAME
+		,		REQPROD.REQUEST_TYPE
+		,		REQPROD.STAND_GOOD_SPEC_DESC
+		,		REQPROD.NOTE
+		,		REQPROD.STATE
+		,		REQPROD.INSERT_USER_ID
+		,		REQPROD.INSERT_BORGID
+		,		CONVERT(VARCHAR, REQPROD.INSERT_DATE , 23) AS INSERT_DATE
+		,		REQPROD.SET_USER_ID
+		,		REQPROD.SET_DATE
+		,		REQPROD.GOOD_IDEN_NUMB
+		,		GOOD.GOOD_NAME
+		,		dbo.FNS_BORG_STRING(REQPROD.INSERT_BORGID) AS BORGNMS
+		,		ATT1.attach_seq AS firstattachseq
+		,		ATT2.attach_seq AS secondattachseq
+		,		ATT3.attach_seq AS thirdattachseq
+		,		ATT1.attach_file_name AS firstAttachName
+		,		ATT2.attach_file_name AS secondAttachName
+		,		ATT3.attach_file_name AS thirdAttachName
+		,		ATT1.attach_file_path AS firstAttachPath
+		,		ATT2.attach_file_path AS secondAttachPath
+		,		ATT3.attach_file_path AS thirdAttachPath
+		FROM MCNEWGOODREQUEST REQPROD WITH(NOLOCK) 
+				LEFT OUTER JOIN ATTACHINFO ATT1  WITH(NOLOCK) ON REQPROD.FIRSTATTACHSEQ  = ATT1.attach_seq
+				LEFT OUTER JOIN ATTACHINFO ATT2  WITH(NOLOCK) ON REQPROD.SECONDATTACHSEQ  = ATT2.attach_seq
+				LEFT OUTER JOIN ATTACHINFO ATT3  WITH(NOLOCK) ON REQPROD.THIRDATTACHSEQ  = ATT3.attach_seq
+				LEFT OUTER JOIN MCGOOD GOOD  WITH(NOLOCK) ON REQPROD.GOOD_IDEN_NUMB = GOOD.GOOD_IDEN_NUMB
+		WHERE	REQPROD.newgoodid = #{newgoodid}
+	</select>
+	
+	<sql id="selectNewProductBidAdmSql">
+	FROM	MCBID WITH(NOLOCK) 
+	,		SMPUSERS WITH(NOLOCK) 
+	WHERE MCBID.insert_user_id = SMPUSERS.USERID
+	</sql>
+	<sql id="selectNewProductBidSql">
+		FROM	MCBID WITH(NOLOCK) 
+		,		SMPUSERS WITH(NOLOCK) 
+		,		MCBIDAUCTION WITH(NOLOCK) 
+		WHERE MCBID.insert_user_id = SMPUSERS.USERID
+		AND	MCBID.BIDID = MCBIDAUCTION.BIDID
+		<if test="srcBidid != null and srcBidid != ''">
+		AND	MCBID.BIDID LIKE '%' + #{srcBidid} + '%'
+		</if>
+		<if test="srcBidname != null and srcBidname != ''">
+		AND	MCBID.BIDNAME LIKE '%' + #{srcBidname} + '%'
+		</if>
+		<if test="srcBidState != null and srcBidState != ''">
+		AND	MCBID.BIDSTATE = #{srcBidState}
+		</if>
+		<if test="srcStand_good_name != null and srcStand_good_name != ''">
+		AND	MCBID.STAND_GOOD_NAME LIKE '%' + #{srcStand_good_name} + '%'
+		</if>
+		<if test="srcInsert_FromDt != null and srcInsert_FromDt != ''">
+		AND	MCBID.INSERT_DATE &gt;= CONVERT(DATETIME, #{srcInsert_FromDt})
+		</if>
+		<if test="srcInsert_EndDt != null and srcInsert_EndDt != ''">
+		AND	MCBID.INSERT_DATE &lt;= CONVERT(DATETIME, #{srcInsert_EndDt})+1
+		</if>
+		<if test="srcStand_good_spec_desc != null and srcStand_good_spec_desc != ''">
+		AND	MCBID.STAND_GOOD_SPEC_DESC LIKE '%' + #{srcStand_good_spec_desc} + '%'
+		</if>
+		<if test="srcVendorid != null and  srcVendorid != '' and srcVendorid neq '0'.toString() ">
+		AND	MCBIDAUCTION.VENDORID = #{srcVendorid}
+		</if>
+		<if test="bidClassify != null and  bidClassify != '' ">
+		AND	MCBID.BID_CLASSIFY = #{bidClassify}
+		</if>
+		GROUP BY	MCBID.BIDID
+		,		MCBID.BIDNAME
+		,		MCBID.STAND_GOOD_NAME
+		,		MCBID.STAND_GOOD_SPEC_DESC
+		,		MCBID.BIDSTATE
+		,		DBO.FNS_CODENM1BYCODEVAL1('BIDSTATE',MCBID.BIDSTATE)
+		,		CONVERT(VARCHAR(16), MCBID.BIDENDDATE, 120)
+		,		SMPUSERS.USERNM
+		,		CONVERT(VARCHAR(16), MCBID.INSERT_DATE, 121)
+		,		MCBID.IS_USE_CERTIFICATE
+		,		MCBID.INSERT_DATE
+		<if test="srcVendorid != null and srcVendorid != '' ">
+		,		MCBIDAUCTION.VENDORID
+		</if>
+		,		MCBID.BID_CLASSIFY
+	</sql>
+	<select id="selectNewProductBidListCntAdm" resultType="int">
+		/* product.newProductBid.selectNewProductBidListCntAdm */
+		SELECT COUNT(1)
+		FROM	MCBID WITH(NOLOCK) 
+		,		SMPUSERS WITH(NOLOCK) 
+		WHERE MCBID.insert_user_id = SMPUSERS.USERID
+	</select>
+	<select id="selectNewProductBidListCntVen" resultType="int">
+		/* product.newProductBid.selectNewProductBidListCntVen */
+		SELECT COUNT(1)
+		FROM	MCBID WITH(NOLOCK) 
+		,		SMPUSERS WITH(NOLOCK) 
+		,		MCBIDAUCTION		 WITH(NOLOCK) 
+		WHERE MCBID.insert_user_id = SMPUSERS.USERID
+		AND	MCBID.BIDID = MCBIDAUCTION.BIDID
+		AND	MCBIDAUCTION.VENDORID = #{srcVendorid}
+		<if test="srcBidid != null and srcBidid != ''">
+		AND	MCBID.BIDID LIKE '%' + #{srcBidid} + '%'
+		</if>
+		<if test="srcBidname != null and srcBidname != ''">
+		AND	MCBID.BIDNAME LIKE '%' + #{srcBidname} + '%'
+		</if>
+		<if test="srcBidState != null and srcBidState != ''">
+		AND	MCBID.BIDSTATE = #{srcBidState}
+		</if>
+		<if test="srcStand_good_name != null and srcStand_good_name != ''">
+		AND	MCBID.STAND_GOOD_NAME LIKE '%' + #{srcStand_good_name} + '%'
+		</if>
+		<if test="srcInsert_FromDt != null and srcInsert_FromDt != ''">
+		AND	MCBID.INSERT_DATE &gt;= CONVERT(DATETIME, #{srcInsert_FromDt})
+		</if>
+		<if test="srcInsert_EndDt != null and srcInsert_EndDt != ''">
+		AND	MCBID.INSERT_DATE &lt;= CONVERT(DATETIME, #{srcInsert_EndDt})+1
+		</if>
+		<if test="srcStand_good_spec_desc != null and srcStand_good_spec_desc != ''">
+		AND	MCBID.STAND_GOOD_SPEC_DESC LIKE '%' + #{srcStand_good_spec_desc} + '%'
+		</if>
+		<if test="srcVendorid != null and  srcVendorid != '' and srcVendorid neq '0'.toString() ">
+		AND	MCBIDAUCTION.VENDORID = #{srcVendorid}
+		</if>
+		<if test="bidClassify != null and  bidClassify != '' ">
+		AND	MCBID.BID_CLASSIFY = #{bidClassify}
+		</if>
+	</select>
+	<select id="selectNewProductBidList" resultType="kr.co.bitcube.product.dto.McBidDto">
+		/* product.newProductBid.selectNewProductBidList */
+		SELECT	A.BIDID
+		,		A.BIDNAME
+		,		A.STAND_GOOD_NAME
+		,		A.STAND_GOOD_SPEC_DESC
+		,		A.BIDSTATE
+		,		A.BIDSTATENM
+		,		A.BIDENDDATE
+		,		A.INSERT_USER_ID
+		, 		A.INSERT_DATE
+		,		A.IS_USE_CERTIFICATE
+		<if test="srcVendorid != null and srcVendorid != '' and srcVendorid neq '0'.toString() ">
+		,		A.VENDORID
+		</if>
+		,		A.VENDORBIDSTATE
+		,		CASE WHEN (B.CODENM1 IS NULL OR B.CODENM1 = '') THEN '공용'
+					 ELSE B.CODENM1
+				END BID_CLASSIFY
+		FROM(
+			SELECT	MCBID.BIDID
+			,		MCBID.BIDNAME
+			,		MCBID.STAND_GOOD_NAME
+			,		MCBID.STAND_GOOD_SPEC_DESC
+			,		MCBID.BIDSTATE
+			,		dbo.FNS_CODENM1BYCODEVAL1('BIDSTATE',MCBID.BIDSTATE) AS BIDSTATENM
+			,		CONVERT(VARCHAR(16), MCBID.BIDENDDATE, 120) AS BIDENDDATE
+			,		SMPUSERS.USERNM AS INSERT_USER_ID
+			, 		CONVERT(VARCHAR(16), MCBID.INSERT_DATE, 121) AS INSERT_DATE
+			,		MCBID.IS_USE_CERTIFICATE
+			<if test="srcVendorid != null and srcVendorid != '' and srcVendorid neq '0'.toString() ">
+			,		MCBIDAUCTION.VENDORID
+			</if>
+			,		MAX(MCBIDAUCTION.VENDORBIDSTATE) VENDORBIDSTATE
+			,		MCBID.BID_CLASSIFY
+			<include refid="selectNewProductBidSql"/>
+		)A
+		LEFT OUTER JOIN SMPCODES B
+			ON A.BID_CLASSIFY = B.CODEVAL1
+			AND CODETYPECD = 'BID_CLASSIFY'
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<insert id="insertNewProductRequest" >
+		/*	product.newProductBid.insertNewProductRequest*/
+		INSERT INTO mcnewgoodrequest
+		   (
+		       newgoodid
+		     , stand_good_name
+		     , request_type
+		     , stand_good_spec_desc
+		     , note
+		     , state
+		     , insert_user_id
+		     , insert_borgid
+		     , insert_date
+		     , firstattachseq
+		     , secondattachseq
+		     , thirdattachseq
+		     , delete_state
+		   )
+		   VALUES
+		  (  #{newgoodid}
+		   , #{stand_good_name}
+		   , #{request_type}
+		   , #{stand_good_spec_desc}
+		   , #{note}
+		   , #{state}
+		   , #{insert_user_id}
+		   , #{insert_borgid}
+		   , getdate()
+		   , #{firstattachseq}
+		   , #{secondattachseq}
+		   , #{thirdattachseq}
+		   , #{delete_state}
+		)
+	</insert>
+	
+	<update id="updateNewProductRequest">
+		/*	product.newProductBid.updateNewProductRequest */
+		UPDATE	MCNEWGOODREQUEST
+		SET	STAND_GOOD_NAME = #{stand_good_name}
+		,		REQUEST_TYPE = #{request_type}
+		,		STAND_GOOD_SPEC_DESC = #{stand_good_spec_desc}
+		,		NOTE = #{note}
+		,		STATE = #{state}
+		,		FIRSTATTACHSEQ = #{firstattachseq}
+		,		SECONDATTACHSEQ = #{secondattachseq}
+		,		THIRDATTACHSEQ = #{thirdattachseq}
+		,		INSERT_USER_ID = #{insert_user_id}
+		,		INSERT_BORGID = #{insert_borgid}
+		,		INSERT_DATE = GETDATE()
+		,		DELETE_STATE = #{delete_state}
+		WHERE	NEWGOODID = #{newgoodid}
+	</update>
+	
+	<update id="updateExistsProductProcess">
+		/*	product.newProductBid.updateExistsProductProcess*/
+		UPDATE	mcnewgoodrequest
+		SET	state = #{state}
+		,		set_user_id = #{insert_user_id}
+		,		set_date = GETDATE()
+		,		good_iden_numb = #{good_iden_numb}
+		 WHERE  newgoodid     = #{newgoodid}
+	</update>
+	
+	<insert id="insertNewProductRequestHistByNewgoodid">
+		/* product.newProductBid.insertNewProductRequestHistByNewgoodid*/
+			INSERT
+			  INTO dbo.mcnewgoodrequest_hist
+			       (
+			           newgood_hist_id
+			         , newgoodid
+			         , stand_good_name
+			         , stand_good_spec_desc
+			         , note
+			         , state
+			         , insert_user_id
+			         , insert_borgid
+			         , insert_date
+			         , set_user_id
+			         , set_date
+			         , good_iden_numb
+			         , delete_state
+			       )
+			SELECT #{newgood_hist_id}
+			     , a.newgoodid
+			     , a.stand_good_name
+			     , a.stand_good_spec_desc
+			     , a.note
+			     , a.state
+			     , a.insert_user_id
+			     , a.insert_borgid
+			     , a.insert_date
+			     , a.set_user_id
+			     , a.set_date
+			     , a.good_iden_numb
+			     , #{delete_state}
+			  FROM mcnewgoodrequest a WITH(NOLOCK) 
+			 WHERE a.newgoodid = #{newgoodid}
+	</insert>
+	
+	<update id="updateNewProductRequestState">
+		/*	product.newProductBid.updateNewProductRequestState */
+		UPDATE	MCNEWGOODREQUEST
+		SET	STATE = #{state}
+		,		SET_USER_ID = #{insert_user_id}
+		,		SET_DATE = GETDATE()
+		WHERE	NEWGOODID = #{newgoodid}
+	</update>
+	
+	<insert id="insertBid">
+		/*	product.newProductBid.insertBid */
+		INSERT INTO MCBID (
+				BIDID
+		,		BIDNAME
+		,		BIDSTATE
+		,		STAND_GOOD_NAME
+		,		STAND_GOOD_SPEC_DESC
+		,		IS_USE_CERTIFICATE
+		,		HOPE_SALE_PRICE
+		,		BIDNOTE
+		,		FIRSTATTACHSEQ
+		,		SECONDATTACHSEQ
+		,		THIRDATTACHSEQ
+		,		BIDENDDATE
+		,		NEWGOODID
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		,		BID_CLASSIFY
+		) VALUES (
+				#{bidid}
+		,		#{bidname}
+		,		#{bidstate}
+		,		#{stand_good_name}
+		,		#{stand_good_spec_desc}
+		,		#{is_use_certificate}
+		,		#{hope_sale_price}
+		,		#{bidnote}
+		,		#{firstattachseq}
+		,		#{secondattachseq}
+		,		#{thirdattachseq}
+		,		#{bidenddate}
+		,		#{newgoodid}
+		,		#{insert_user_id}
+		,		#{bidStartdate}
+		,		#{bidClassify}
+		)
+	</insert>
+	
+	<insert id="insertBidHist">
+		/*	product.newProductBid.insertBidHist */
+		INSERT INTO MCBID_HIST (
+				BID_HIST_ID
+		,		BIDID
+		,		BIDNAME
+		,		BIDSTATE
+		,		STAND_GOOD_NAME
+		,		STAND_GOOD_SPEC_DESC
+		,		IS_USE_CERTIFICATE
+		,		HOPE_SALE_PRICE
+		,		BIDNOTE
+		,		FIRSTATTACHSEQ
+		,		SECONDATTACHSEQ
+		,		THIRDATTACHSEQ
+		,		BIDENDDATE
+		,		NEWGOODID
+		,		GOOD_IDEN_NUMB
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		) SELECT #{bid_hist_id}
+		,		A.BIDID
+		,		A.BIDNAME
+		,		A.BIDSTATE
+		,		A.STAND_GOOD_NAME
+		,		A.STAND_GOOD_SPEC_DESC
+		,		A.IS_USE_CERTIFICATE
+		,		A.HOPE_SALE_PRICE
+		,		A.BIDNOTE
+		,		A.FIRSTATTACHSEQ
+		,		A.SECONDATTACHSEQ
+		,		A.THIRDATTACHSEQ
+		,		A.BIDENDDATE
+		,		A.NEWGOODID
+		,		A.GOOD_IDEN_NUMB
+		,		A.INSERT_USER_ID
+		,		A.INSERT_DATE
+		FROM MCBID A WITH(NOLOCK) 
+		WHERE A.BIDID = #{bidid}	 
+	</insert>
+	
+	<insert id="insertBidAuction">
+		/*	product.newProductBid.insertBidAuction */
+		INSERT INTO MCBIDAUCTION (
+				BIDID
+		,		VENDORID
+		,		VENDORBIDSTATE
+		,		IS_REG_GODD
+		,		CONFIRM_DATE
+		,		CONFIRM_USER_ID
+		) VALUES (
+				#{bidid}
+		,		#{vendorid}
+		,		#{vendorbidstate}
+		,		#{IS_REG_GODD}
+		,		GETDATE()
+		,		#{insert_user_id}
+		)
+	</insert>
+	
+	<insert id="insertBidAuctionHist">
+		/*	product.newProductBid.insertBidAuctionHist */
+		INSERT INTO MCBIDAUCTION_HIST (
+				BID_HIST_ID
+		,		BIDID
+		,		VENDORID
+		,		VENDORBIDSTATE
+		,		GOOD_NAME
+		,		GOOD_SPEC_DESC
+		,		ORDE_CLAS_CODE
+		,		SALE_UNIT_PRICE
+		,		DELI_MINI_DAY
+		,		DELI_MINI_QUAN
+		,		MAKE_COMP_NAME
+		,		ORIGINAL_IMG_PATH
+		,		LARGE_IMG_PATH
+		,		MIDDLE_IMG_PATH
+		,		SMALL_IMG_PATH
+		,		GOOD_DESC
+		,		GOOD_SAME_WORD
+		,		FIRSTATTACHSEQ
+		,		SECONDATTACHSEQ
+		,		THIRDATTACHSEQ
+		,		IS_REG_GODD
+		,		BIDDING_DATE
+		,		BIDDING_USER_ID
+		,		CONFIRM_DATE
+		,		CONFIRM_USER_ID
+		) SELECT #{bid_hist_id}
+		,		A.BIDID
+		,		A.VENDORID
+		,		A.VENDORBIDSTATE
+		,		A.GOOD_NAME
+		,		A.GOOD_SPEC_DESC
+		,		A.ORDE_CLAS_CODE
+		,		A.SALE_UNIT_PRICE
+		,		A.DELI_MINI_DAY
+		,		A.DELI_MINI_QUAN
+		,		A.MAKE_COMP_NAME
+		,		A.ORIGINAL_IMG_PATH
+		,		A.LARGE_IMG_PATH
+		,		A.MIDDLE_IMG_PATH
+		,		A.SMALL_IMG_PATH
+		,		A.GOOD_DESC
+		,		A.GOOD_SAME_WORD
+		,		A.FIRSTATTACHSEQ
+		,		A.SECONDATTACHSEQ
+		,		A.THIRDATTACHSEQ
+		,		A.IS_REG_GODD
+		,		A.BIDDING_DATE
+		,		A.BIDDING_USER_ID
+		,		A.CONFIRM_DATE
+		,		A.CONFIRM_USER_ID
+		FROM MCBIDAUCTION A WITH(NOLOCK) 
+		WHERE A.BIDID = #{bidid}
+		AND	A.VENDORID = #{vendorid}
+	</insert>
+	
+	<select id="selectBidAuctionDetailInfo" resultType="kr.co.bitcube.product.dto.McBidAuctionDto">
+		/* product.newProductBid.selectBidAuctionDetailInfo */
+		SELECT	BIDID
+		,		VENDORID
+		,		VENDORBIDSTATE
+		,		GOOD_SPEC_DESC
+		,		ORDE_CLAS_CODE
+		,		SALE_UNIT_PRICE
+		,		DELI_MINI_DAY
+		,		DELI_MINI_QUAN
+		,		MAKE_COMP_NAME
+		,		ORIGINAL_IMG_PATH
+		,		LARGE_IMG_PATH
+		,		MIDDLE_IMG_PATH
+		,		SMALL_IMG_PATH
+		,		GOOD_DESC
+		,		GOOD_SAME_WORD
+		,		FIRSTATTACHSEQ
+		,		SECONDATTACHSEQ
+		,		THIRDATTACHSEQ
+		,		IS_REG_GODD
+		,		BIDDING_DATE
+		,		BIDDING_USER_ID
+		,		CONFIRM_DATE
+		,		CONFIRM_USER_ID
+		FROM	MCBIDAUCTION WITH(NOLOCK) 
+		WHERE	bidid = #{bidid}
+		AND	vendorid = #{vendorid}
+	</select>
+	
+	<select id="selectBidProductDetailInfo" resultType="kr.co.bitcube.product.dto.McBidDto">
+		/*	product.newProductBid.selectBidProductDetailInfo */
+		SELECT	BID.bidid
+		,		BID.bidname
+		,		BID.bidstate
+		,		BID.stand_good_name
+		,		BID.stand_good_spec_desc
+		,		BID.is_use_certificate
+		,		BID.hope_sale_price
+		,		BID.bidnote
+		,		BID.FIRSTATTACHSEQ
+		,		BID.SECONDATTACHSEQ
+		,		BID.THIRDATTACHSEQ
+		,		BID.bidenddate
+		,		BID.newgoodid
+		,		BID.good_iden_numb
+		,		BID.insert_user_id
+		,		BID.insert_date
+		,		ATT1.attach_seq AS firstattachseq
+		,		ATT2.attach_seq AS secondattachseq
+		,		ATT3.attach_seq AS thirdattachseq 
+		,		ATT1.attach_file_name AS firstAttachName
+		,		ATT2.attach_file_name AS secondAttachName
+		,		ATT3.attach_file_name AS thirdAttachName
+		,		ATT1.attach_file_path AS firstAttachPath
+		,		ATT2.attach_file_path AS secondAttachPath
+		,		ATT3.attach_file_path AS thirdAttachPath
+		,		BID.BID_CLASSIFY
+		FROM	MCBID BID WITH(NOLOCK) 
+			LEFT OUTER JOIN ATTACHINFO ATT1 WITH(NOLOCK)  ON BID.FIRSTATTACHSEQ = ATT1.attach_seq
+			LEFT OUTER JOIN ATTACHINFO ATT2 WITH(NOLOCK)  ON BID.SECONDATTACHSEQ = ATT2.attach_seq
+			LEFT OUTER JOIN ATTACHINFO ATT3 WITH(NOLOCK)  ON BID.THIRDATTACHSEQ = ATT3.attach_seq
+		WHERE BID.bidid = #{bidid}
+	</select>
+	
+	<select id="selectNewProductBidAuctionListCnt" resultType="int">
+		/* product.newProductBid.selectNewProductBidAuctionListCnt */
+		SELECT COUNT(1)
+		FROM	MCBIDAUCTION BIDAUC WITH(NOLOCK) 
+		,		SMPVENDORS VEN WITH(NOLOCK) 
+		WHERE	BIDAUC.VENDORID = VEN.VENDORID
+		AND	BIDAUC.BIDID = #{bidid}
+	</select>
+	
+	<select id="selectNewProductBidAuctionList" resultType="kr.co.bitcube.product.dto.McBidAuctionDto">
+		/* product.newProductBid.selectNewProductBidAuctionList */
+		SELECT	BIDAUC.BIDID
+		,		BIDAUC.VENDORID
+		,		CONVERT(VARCHAR, BIDAUC.BIDDING_DATE , 23) AS BIDDING_DATE
+		,		BIDAUC.SALE_UNIT_PRICE
+		,		CASE WHEN LEN(BIDAUC.ORIGINAL_IMG_PATH) > 1 THEN 'Y' ELSE 'N' END AS ISSETIMAGE
+		,		CASE WHEN LEN(BIDAUC.GOOD_DESC) > 1 THEN 'Y' ELSE 'N' END AS ISSETDESC
+		,		BIDAUC.IS_REG_GODD
+		,		BIDAUC.VENDORBIDSTATE
+		,		VEN.VENDORNM
+		,		VEN.VENDORCD
+		,		VEN.PRESSENTNM
+		,		VEN.PHONENUM
+		,		BID.GOOD_IDEN_NUMB
+		FROM	MCBIDAUCTION BIDAUC WITH(NOLOCK) 
+		,		SMPVENDORS VEN,	MCBID BID WITH(NOLOCK) 
+		WHERE	BIDAUC.vendorid = VEN.VENDORID
+		AND	BIDAUC.bidid = BID.bidid
+		AND	BIDAUC.bidid = #{bidid}
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectBidAuctionProductDetailInfo" resultType="kr.co.bitcube.product.dto.McBidAuctionDto">
+		/*	product.newProductBid.selectBidAuctionProductDetailInfo */
+		SELECT	VEN.VENDORNM
+		,		BIDAUC.bidid
+		,		BIDAUC.vendorid
+		,		BIDAUC.vendorbidstate
+		,		BIDAUC.good_name
+		,		BIDAUC.good_st_spec_desc
+		,		BIDAUC.good_spec_desc
+		,		BIDAUC.orde_clas_code
+		,		BIDAUC.sale_unit_price
+		,		BIDAUC.deli_mini_day
+		,		BIDAUC.deli_mini_quan
+		,		BIDAUC.make_comp_name
+		,		BIDAUC.original_img_path
+		,		BIDAUC.large_img_path
+		,		BIDAUC.middle_img_path
+		,		BIDAUC.small_img_path
+		,		BIDAUC.good_desc
+		,		BIDAUC.good_same_word
+		,		BIDAUC.FIRSTATTACHSEQ
+		,		BIDAUC.SECONDATTACHSEQ
+		,		BIDAUC.THIRDATTACHSEQ
+		,		BIDAUC.IS_REG_GODD
+		,		CONVERT(VARCHAR, BIDAUC.bidding_date , 23) AS bidding_date
+		,		BIDAUC.bidding_user_id
+		,		CONVERT(VARCHAR, BIDAUC.confirm_date , 23) AS confirm_date
+		,		BIDAUC.confirm_user_id
+		,		ATT1.attach_seq AS firstattachseq
+		,		ATT2.attach_seq AS secondattachseq
+		,		ATT3.attach_seq AS thirdattachseq
+		,		ATT1.attach_file_name AS firstAttachName
+		,		ATT2.attach_file_name AS secondAttachName
+		,		ATT3.attach_file_name AS thirdAttachName
+		,		ATT1.attach_file_path AS firstAttachPath
+		,		ATT2.attach_file_path AS secondAttachPath
+		,		ATT3.attach_file_path AS thirdAttachPath
+		FROM	MCBIDAUCTION BIDAUC WITH(NOLOCK) 
+			LEFT OUTER JOIN ATTACHINFO ATT1  WITH(NOLOCK) ON BIDAUC.FIRSTATTACHSEQ = ATT1.attach_seq
+			LEFT OUTER JOIN ATTACHINFO ATT2  WITH(NOLOCK) ON BIDAUC.SECONDATTACHSEQ = ATT2.attach_seq
+			LEFT OUTER JOIN ATTACHINFO ATT3  WITH(NOLOCK) ON BIDAUC.THIRDATTACHSEQ = ATT3.attach_seq
+		,	SMPVENDORS VEN WITH(NOLOCK) 
+		WHERE	BIDAUC.vendorid = VEN.vendorid
+		AND	BIDAUC.bidid = #{bidid}
+		AND	BIDAUC.vendorid = #{vendorid}
+	</select>
+	
+	<update id="updateBidAuction">
+		/*	product.newProductBid.updateBidAuction */
+		UPDATE	MCBIDAUCTION
+		SET	VENDORBIDSTATE = #{vendorbidstate}
+		,		GOOD_NAME = #{good_name}
+		,		GOOD_SPEC_DESC = #{good_spec_desc}
+		,		ORDE_CLAS_CODE = #{orde_clas_code}
+		,		SALE_UNIT_PRICE = #{sale_unit_price}
+		,		DELI_MINI_DAY = #{deli_mini_day}
+		,		DELI_MINI_QUAN = #{deli_mini_quan}
+		,		MAKE_COMP_NAME = #{make_comp_name}
+		,		ORIGINAL_IMG_PATH = #{original_img_path}
+		,		LARGE_IMG_PATH = #{large_img_path}
+		,		MIDDLE_IMG_PATH = #{middle_img_path}
+		,		SMALL_IMG_PATH = #{small_img_path}
+		,		GOOD_DESC = #{good_desc}
+		,		GOOD_SAME_WORD = #{good_same_word}
+		,		FIRSTATTACHSEQ = #{FIRSTATTACHSEQ}
+		,		SECONDATTACHSEQ = #{SECONDATTACHSEQ}
+		,		THIRDATTACHSEQ = #{THIRDATTACHSEQ}
+		,		BIDDING_DATE = GETDATE()
+		,		BIDDING_USER_ID = #{bidding_user_id}
+		WHERE	BIDID = #{bidid}
+		AND	VENDORID = #{vendorid}
+	</update>
+	
+	<update id="updateBidAuctionState">
+		/*	product.newProductBid.updateBidAuctionState */
+		UPDATE	MCBIDAUCTION
+		SET	VENDORBIDSTATE = #{vendorbidstate}
+		,		CONFIRM_DATE = GETDATE()
+		,		CONFIRM_USER_ID = #{insert_user_id}
+		WHERE	BIDID = #{bidid}
+		AND	VENDORID = #{vendorid}
+	</update>
+	
+	<update id="updateBidState">
+		/*	product.newProductBid.updateBidState */
+		UPDATE	MCBID
+		SET	BIDSTATE = #{bidstate}
+		,		INSERT_USER_ID = #{insert_user_id}
+		WHERE	BIDID = #{bidid}
+	</update>
+	
+	<update id="updateRegistratGoodIdenNumb">
+		/*	product.newProductBid.updateRegistratGoodIdenNumb */
+		UPDATE	mcbidauction
+		   SET	IS_REG_GODD = '1'
+		 WHERE	BIDID 		= #{bidid}
+		   AND  vendorid 	= #{bid_vendor}
+	</update>
+	
+	<select id="selectReqAndBidInfo"  resultType="kr.co.bitcube.product.dto.McBidDto">
+		/*	product.newProductBid.selectReqAndBidInfo */
+		SELECT BID.good_iden_numb 
+		     , ISNULL (BID.good_iden_numb , 0    ) AS bid_good_iden_numb
+		     , ISNULL (NEWGOOD.newgoodid  , 0    ) AS newgoodid 
+			 , ISNULL (NEWGOOD.good_iden_numb , 0) AS newgood_good_iden_numb
+		  FROM mcbid BID  WITH(NOLOCK) 
+		  LEFT OUTER JOIN mcnewgoodrequest NEWGOOD  WITH(NOLOCK) 
+		  	ON BID.newgoodid = NEWGOOD.newgoodid 
+		 WHERE BID.bidid  = #{bidid} ;
+	</select>
+	
+	<update id="updateBidGoodIdenNumb">
+		/*	product.newProductBid.updateBidGoodIdenNumb */
+		UPDATE mcbid 
+		   SET good_iden_numb = #{good_iden_numb}
+		 WHERE bidid          = #{bidid}		
+	</update>
+  
+	<update id="updateNewProdGoodIdenNumb">
+		/*	product.newProductBid.updateNewProdGoodIdenNumb */
+		UPDATE mcnewgoodrequest 
+		   SET state          = #{mcnewgoodState}
+		     , good_iden_numb = #{good_iden_numb}
+		 WHERE newgoodid      = #{newgoodid}	
+	</update>
+	
+	<update id="newProductCancel">
+		/* product.newProductBid.newProductCancel */
+		UPDATE MCNEWGOODREQUEST SET
+			SET_USER_ID = #{userId}
+		,	STATE = #{state}
+		,	SET_DATE = GETDATE()
+		WHERE NEWGOODID = #{newGoodId}
+	</update>
+</mapper>

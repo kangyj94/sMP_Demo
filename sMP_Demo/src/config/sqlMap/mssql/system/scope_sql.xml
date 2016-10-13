@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="system.scope">
+	<select id="selectScopeList" resultType="kr.co.bitcube.system.dto.ScopesDto">
+		/* system.scope.selectScopeList */
+		SELECT  
+		        A.SCOPEID
+		,       A.SCOPECD
+		,       A.SCOPENM
+		,       A.SCOPEDESC
+		,       A.ISUSE
+		,       A.SVCTYPECD
+		,		dbo.FNS_ROLE_STRING(A.SCOPEID) AS ROLENMS
+		FROM    SMPSCOPES A WITH(NOLOCK)
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="srcSvcTypeCd != null and srcSvcTypeCd != ''">
+				AND A.SVCTYPECD = #{srcSvcTypeCd}
+			</if>
+		</trim>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectScopeCnt" resultType="int">
+		/* system.scope.selectScopeCnt */
+		SELECT COUNT(1) FROM SMPSCOPES WITH(NOLOCK) WHERE SCOPECD = #{scopeCd}
+	</select>
+	
+	<insert id="insertScope">
+		/* system.scope.insertScope */
+		INSERT INTO SMPSCOPES (SCOPEID, SCOPECD, SCOPENM, SCOPEDESC, ISUSE, SVCTYPECD)
+		VALUES(#{scopeId}, #{scopeCd}, #{scopeNm}, #{scopeDesc}, #{isUse}, #{svcTypeCd})
+	</insert>
+	
+	<update id="updateScope">
+		/* system.scope.updateScope */
+		UPDATE	SMPSCOPES
+		SET		SCOPENM = #{scopeNm}
+		,		SCOPEDESC = #{scopeDesc}
+		,		ISUSE = #{isUse}
+		,		SVCTYPECD = #{svcTypeCd}
+		WHERE	SCOPEID = #{scopeId}
+	</update>
+	
+	<update id="deleteScope">
+		/* system.scope.deleteScope */
+		DELETE SMPSCOPES WHERE SCOPEID = #{scopeId}
+	</update>
+	
+	<select id="selectScopeMenuActivityList" resultType="kr.co.bitcube.system.dto.MenuActivityDto">
+		/* system.scope.selectScopeMenuActivityList */
+		<![CDATA[
+		WITH MENU_TABLE AS
+		(
+				SELECT	A.MENUID,   A.MENUCD,     A.MENUNM,     A.MENULEVEL, A.PARMENUID,
+						A.DISORDER, B.ACTIVITYID, B.ACTIVITYCD, B.ACTIVITYNM,
+						A.ISUSE AS menuIsUse,
+						B.ISUSE AS activityIsUse,
+						A.ISFIXED,
+						(
+								SELECT	1
+								FROM	SMPSCOPES_ACTIVITIES X WITH(NOLOCK)
+								WHERE	X.ACTIVITYID = B.ACTIVITYID
+								AND		X.MENUID     = A.MENUID
+								AND		X.SCOPEID    = #{srcScopeId}
+						) AS ISCHECK,
+						CONVERT(VARCHAR, DBO.LPAD(CONVERT(VARCHAR,A.DISORDER),5,'0')) AS SortKey
+				FROM	SMPMENUS A WITH(NOLOCK)
+				INNER JOIN SMPMENUS_ACTIVITIES C WITH(NOLOCK) ON A.MENUID = C.MENUID
+				INNER JOIN SMPACTIVITIES       B WITH(NOLOCK) ON B.ACTIVITYID = C.ACTIVITYID
+				WHERE	A.SVCTYPECD = #{srcSvcTypeCd}
+				AND 	A.MENULEVEL = 0
+				UNION ALL
+				SELECT	E.MENUID,   E.MENUCD,     E.MENUNM,     E.MENULEVEL, E.PARMENUID,
+						E.DISORDER, G.ACTIVITYID, G.ACTIVITYCD, G.ACTIVITYNM,
+						E.ISUSE AS menuIsUse,
+						G.ISUSE AS activityIsUse,
+						E.ISFIXED,
+						(
+								SELECT 	1
+								FROM 	SMPSCOPES_ACTIVITIES X WITH(NOLOCK)
+								WHERE	X.ACTIVITYID = G.ACTIVITYID
+								AND		X.MENUID     = E.MENUID
+								AND		X.SCOPEID    = #{srcScopeId}
+						) AS ISCHECK,
+						CONVERT(VARCHAR, I.SortKey + CONVERT(VARCHAR,E.DISORDER)) AS SortKey
+				FROM	SMPMENUS            E WITH(NOLOCK)
+				,		MENU_TABLE          I
+				,		SMPMENUS_ACTIVITIES F WITH(NOLOCK)
+				INNER 	JOIN SMPACTIVITIES G WITH(NOLOCK) ON G.ACTIVITYID = F.ACTIVITYID
+				WHERE	E.SVCTYPECD = #{srcSvcTypeCd}
+				AND 	E.MENUID    = F.MENUID
+				AND 	E.PARMENUID = I.MENUID
+		)
+		SELECT	AA.MENULEVEL
+		,		AA.MENUNM
+		,		AA.MENUID
+		,		AA.MENUCD
+		,		AA.menuIsUse
+		, 		AA.ACTIVITYID
+		, 		AA.ACTIVITYCD
+		,		AA.ACTIVITYNM
+		, 		AA.activityIsUse
+		, 		AA.ISCHECK
+		, 		AA.ISFIXED
+		FROM	MENU_TABLE AA
+		GROUP BY AA.SortKey, 
+				AA.MENULEVEL,
+				AA.MENUNM,
+				AA.MENUID, 
+				AA.MENUCD, 
+				AA.menuIsUse, 
+				AA.ACTIVITYID, 
+				AA.ACTIVITYCD, 
+				AA.ACTIVITYNM, 
+				AA.activityIsUse, 
+				AA.ISCHECK, 
+				AA.ISFIXED 
+		]]>
+	</select>
+	
+	<insert id="insertScopeActivity">
+		/* system.scope.insertScopeActivity */
+		INSERT INTO SMPSCOPES_ACTIVITIES ( SCOPEID, MENUID, ACTIVITYID, MENUCD, ACTIVITYCD, SCOPECD)
+		VALUES ( #{scopeId}, #{menuId}, #{activityId}, 
+			(SELECT MENUCD FROM SMPMENUS WITH(NOLOCK) WHERE MENUID = #{menuId}), 
+			(SELECT ACTIVITYCD FROM SMPACTIVITIES WITH(NOLOCK) WHERE ACTIVITYID = #{activityId}),
+			(SELECT SCOPECD FROM SMPSCOPES WITH(NOLOCK) WHERE SCOPEID = #{scopeId})
+		)
+	</insert>
+	
+	<delete id="deleteScopeActivity">
+		/* system.scope.deleteScopeActivity */
+		DELETE 	SMPSCOPES_ACTIVITIES 
+		WHERE 	SCOPEID = #{scopeId}
+		AND		MENUID = #{menuId}
+		AND		ACTIVITYID = #{activityId}
+	</delete>
+</mapper>

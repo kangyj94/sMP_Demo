@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="common.webChat">
+	<!-- 채팅 내용을 등록(2012-06-20, tytolee) -->
+	<insert id="insertWebChatInfo" parameterType="java.util.Map">
+		/*common.webChat.insertWebChatInfo*/
+		INSERT INTO SMPCHAT(
+				CHATID
+		,		FROMID
+		,		TOID
+		, 		MESSAGE
+		,		CREATEDATE
+		,		FROMNAME
+		,		TONAME
+		)
+		SELECT	#{chatId}
+		,		#{fromId}
+		, 		#{toId}
+		, 		#{message}
+		, 		GETDATE()
+		,		(SELECT USERNM FROM SMPUSERS WITH(NOLOCK) WHERE USERID = #{fromId} AND ISUSE   = '1' AND ISLOGIN = '1')
+		,		(SELECT USERNM FROM SMPUSERS WITH(NOLOCK) WHERE USERID = #{toId} AND ISUSE   = '1' AND ISLOGIN = '1' )
+	</insert>
+	
+	<sql id="selectWebChatMessageListSql">
+		FROM	SMPCHAT WITH(NOLOCK)
+		WHERE	FROMID IN (#{fromId} ,#{toId})
+		AND		TOID IN (#{fromId} ,#{toId})
+		<if test="fromDate == null">
+		AND		CONVERT(VARCHAR(10), CREATEDATE , 120) &gt;= CONVERT(VARCHAR(10), GETDATE() - 7 , 120)
+		</if>
+		<if test="fromDate != null and fromDate != ''">
+		AND		CONVERT(VARCHAR(10), CREATEDATE , 120) &gt;= #{fromDate}
+		AND		CONVERT(VARCHAR(10), CREATEDATE , 120) &lt;= #{toDate}
+		</if>
+	</sql>
+	<!-- 사용자의 채팅 내용리스트 카운트를 조회(2012-06-20, tytolee) -->
+	<select id="selectWebChatMessageListCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		/*common.webChat.selectWebChatMessageListCount*/
+		SELECT	COUNT(1)
+		<include refid="selectWebChatMessageListSql"/>
+	</select>
+	<!-- 사용자의 채팅 내용리스트를 조회(2012-06-20, tytolee) -->
+	<select id="selectWebChatMessageList" parameterType="java.util.Map" resultType="java.util.HashMap">
+		/*common.webChat.selectWebChatMessageList*/
+		SELECT	FROMNAME
+		,		TONAME
+		,		MESSAGE
+		,		CONVERT(VARCHAR(19), CREATEDATE, 120) as 'CREATE_DATE'
+		<include refid="selectWebChatMessageListSql"/>
+	</select>
+</mapper>

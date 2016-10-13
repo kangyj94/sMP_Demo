@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="evaluate">
+	<select id="selectEvalRow" resultType="kr.co.bitcube.evaluate.dto.EvaluateDto">
+		SELECT	CODEVAL1	AS EVALTYPECD
+		,		CODENM1		AS EVALTYPENM
+		,		CODENM2 	AS EVALTYPEDESC	
+		FROM	SMPCODES  WITH(NOLOCK) 
+		WHERE	CODETYPECD = 'EVALTYPECD' 
+		AND		ISUSE = '1'
+		ORDER BY DISORDER
+	</select>
+	
+	<select id="selectEvalCol" resultType="kr.co.bitcube.evaluate.dto.EvaluateDto">
+		SELECT	CODEVAL1	AS EVALSELCD
+		,		CODENM1		AS EVALSELNM
+		FROM	SMPCODES WITH(NOLOCK)  
+		WHERE	CODETYPECD = 'EVALSELCD' 
+		AND		ISUSE = '1'
+		ORDER BY DISORDER
+	</select>
+	
+	<select id="selectEvalUsers" resultType="kr.co.bitcube.evaluate.dto.EvaluateDto">
+		SELECT 	CODEVAL1 AS USERID
+		,		CODENM1  AS USERNM
+		FROM 	SMPCODES WITH(NOLOCK)  
+		WHERE 	CODETYPECD = 'EVALUSERID'
+		AND		ISUSE = '1'
+		ORDER BY DISORDER
+	</select>
+	
+	<insert id="insertEvaluate">
+		MERGE INTO SMPEVALUATE AS MT
+		USING (
+			VALUES	(	#{userId}
+					,	#{branchId}
+					,	#{evalUser}
+					,	#{evalSelCd}
+					, 	#{evalTypeCd}
+					,	CONVERT(VARCHAR(6), GETDATE(), 112 ) 
+					,	#{evalDesc}
+					)
+				) 
+			AS SOURCE	(	USERID
+						,	BRANCHID
+						,	EVALUSER
+						,	EVALSELCD
+						, 	EVALTYPECD
+						,	EVALDATE
+						,	EVALDESC
+					 	)
+		ON 	MT.EVALTYPECD = SOURCE.EVALTYPECD
+		AND	MT.USERID = SOURCE.USERID
+		AND	MT.BRANCHID = SOURCE.BRANCHID
+		AND	MT.EVALUSERID = SOURCE.EVALUSER
+		AND MT.EVALTYPECD = SOURCE.EVALTYPECD
+		AND	CONVERT(VARCHAR(6), MT.EVALDATE, 112 ) = SOURCE.EVALDATE
+		WHEN MATCHED  
+		THEN
+			UPDATE SET 
+				MT.EVALSELCD = SOURCE.EVALSELCD
+			, 	MT.EVALDATE = GETDATE()
+			,	MT.EVALDESC =  SOURCE.EVALDESC
+		WHEN NOT MATCHED THEN 
+			INSERT (
+				  EVALID
+				, USERID
+				, GROUPID
+				, CLIENTID
+				, BRANCHID
+				, EVALUSERID
+				, EVALTYPECD
+				, EVALDESC
+				, EVALSELCD
+				, EVALDATE
+			)VALUES(
+				  #{evalId}
+				, #{userId}
+				, #{groupId}
+				, #{clientId}
+				, #{branchId}
+				, #{evalUser}
+				, #{evalTypeCd}
+				, #{evalDesc}
+				, #{evalSelCd}
+				, GETDATE()
+			);
+	</insert>
+	
+	<select id="selectEvaluateList" resultType="java.util.HashMap">
+		SELECT	XX.*
+		FROM
+		(
+			SELECT 	MAX(AA.BRANCHNM) AS branchNm 
+			,		MAX(AA.WORKNM) AS workNm
+			,		AA.userNm
+			,		AA.evalUserNm
+			<if test="subQuery1 != null and subQuery1 != ''">
+				${subQuery1}
+			</if>
+			,		MAX(AA.EVALDATE) AS evalDate
+			,		MAX(AA.SRCEVALDATE) AS SRCEVALDATE
+			FROM
+			(
+				SELECT 	ROW_NUMBER() OVER (PARTITION BY A.EVALUSERID ORDER BY A.EVALTYPECD ASC) AS COLID
+				,		B1.USERNM
+				,		B2.USERNM AS EVALUSERNM
+				,		dbo.FNS_BORG_STRING(A.BRANCHID) AS BRANCHNM
+				,		D.WORKNM
+				
+				<if test="subQuery2 != null and subQuery2 != ''">
+					${subQuery2}
+				</if>			
+				,		CONVERT(VARCHAR(10), A.EVALDATE, 120) AS EVALDATE
+				,		CONVERT(VARCHAR(6), A.EVALDATE, 112) AS SRCEVALDATE  
+				from 	SMPEVALUATE  A WITH(NOLOCK) 
+				,		SMPUSERS B1 WITH(NOLOCK) 
+				,		SMPUSERS B2 WITH(NOLOCK) 
+				,		SMPBRANCHS C WITH(NOLOCK) 
+						LEFT OUTER JOIN
+						SMPWORKINFO D WITH(NOLOCK) 
+						ON C.WORKID = D.WORKID
+				WHERE 	A.USERID = B1.USERID
+				AND 	A.EVALUSERID = B2.USERID
+				AND 	A.BRANCHID = C.BRANCHID
+				<if test="srcWorkId != null and srcWorkId != ''">
+				AND 	D.WORKID = #{srcWorkId}
+				</if>
+				<if test="srcEvalUserNm != null and srcEvalUserNm != ''">
+				AND 	A.EVALUSERID = #{srcEvalUserNm}
+				</if>			
+			)AA 
+			WHERE 	1 = 1
+			<if test="srcBranchNm != null and srcBranchNm != ''">
+			AND 	AA.BRANCHNM LIKE '%' + #{srcBranchNm} + '%'
+			</if>
+			<if test="srcUserNm != null and srcUserNm != ''">
+			AND 	AA.USERNM LIKE '%' + #{srcUserNm} + '%'
+			</if>
+			<if test="srcEvalDate != null and srcEvalDate != ''">
+			AND 	AA.SRCEVALDATE = #{srcEvalDate}
+			</if>
+			GROUP BY AA.evalUserNm, AA.USERNM
+		)XX
+		<if test="orderString != null and orderString != ''">
+		ORDER BY ${orderString}
+		</if>		
+	</select> 
+	
+	<select id="selectEvaluateListCnt" resultType="int">
+		SELECT	COUNT(1)
+		FROM
+		(
+			SELECT 	MAX(AA.BRANCHNM) AS branchNm 
+			,		MAX(AA.WORKNM) AS workNm
+			,		AA.userNm
+			,		AA.evalUserNm
+			,		MAX(AA.EVALDATE) AS evalDate
+			,		MAX(AA.SRCEVALDATE) AS SRCEVALDATE			
+			FROM
+			(
+				SELECT 	ROW_NUMBER() OVER (PARTITION BY A.EVALUSERID ORDER BY A.EVALTYPECD ASC) AS COLID
+				,		B1.USERNM
+				,		B2.USERNM AS EVALUSERNM
+				,		dbo.FNS_BORG_STRING(A.BRANCHID) AS BRANCHNM
+				,		D.WORKNM
+				,		CONVERT(VARCHAR(10), A.EVALDATE, 120) AS EVALDATE 
+				,		CONVERT(VARCHAR(6), A.EVALDATE, 112) AS SRCEVALDATE  
+				from 	SMPEVALUATE  A WITH(NOLOCK) 
+				,		SMPUSERS B1 WITH(NOLOCK) 
+				,		SMPUSERS B2 WITH(NOLOCK) 
+				,		SMPBRANCHS C WITH(NOLOCK) 
+						LEFT OUTER JOIN
+						SMPWORKINFO D WITH(NOLOCK) 
+						ON C.WORKID = D.WORKID
+				WHERE 	A.USERID = B1.USERID
+				AND 	A.EVALUSERID = B2.USERID
+				AND 	A.BRANCHID = C.BRANCHID
+				<if test="srcWorkId != null and srcWorkId != ''">
+				AND 	D.WORKID = #{srcWorkId}
+				</if>		
+				<if test="srcEvalUserNm != null and srcEvalUserNm != ''">
+				AND 	A.EVALUSERID = #{srcEvalUserNm}
+				</if>							
+			)AA 
+			WHERE 	1 = 1
+			<if test="srcBranchNm != null and srcBranchNm != ''">
+			AND 	AA.BRANCHNM LIKE '%' + #{srcBranchNm} + '%'
+			</if>
+			<if test="srcUserNm != null and srcUserNm != ''">
+			AND 	AA.USERNM LIKE '%' + #{srcUserNm} + '%'
+			</if>
+			<if test="srcEvalDate != null and srcEvalDate != ''">
+			AND 	AA.SRCEVALDATE = #{srcEvalDate}
+			</if>			
+			GROUP BY AA.evalUserNm, AA.USERNM	
+		)XX
+	</select>
+	
+	<select id="selectEvaluateListExcel" resultType="java.util.HashMap">
+		SELECT	AA.*
+		FROM
+		(
+			SELECT 	ROW_NUMBER() OVER (PARTITION BY A.EVALUSERID, A.USERID ORDER BY A.EVALTYPECD ASC, EVALDATE DESC) AS COLID
+			,		B1.userNm
+			,		B2.USERNM AS evalUserNm
+			,		dbo.FNS_BORG_STRING(A.BRANCHID) AS branchNm
+			,		D.workNm
+			,		A.EVALTYPECD
+			,		dbo.FNS_CODENM1BYCODEVAL1('EVALTYPECD', A.EVALTYPECD) AS evalTypeNm
+			,		A.EVALSELCD
+			<if test="subQuery1 != null and subQuery1 != ''">
+			${subQuery1}							
+			</if>
+			,		CONVERT(VARCHAR(10), A.EVALDATE, 120) AS evalDate
+			,		CONVERT(VARCHAR(6), A.EVALDATE, 112) AS SRCEVALDATE  
+			,		A.evalDesc 
+			from 	SMPEVALUATE  A WITH(NOLOCK) 
+			,		SMPUSERS B1 WITH(NOLOCK) 
+			,		SMPUSERS B2 WITH(NOLOCK) 
+			,		SMPBRANCHS C WITH(NOLOCK) 
+					LEFT OUTER JOIN
+					SMPWORKINFO D WITH(NOLOCK) 
+					ON C.WORKID = D.WORKID
+			WHERE 	A.USERID = B1.USERID
+			AND 	A.EVALUSERID = B2.USERID
+			AND 	A.BRANCHID = C.BRANCHID
+			<if test="srcWorkId != null and srcWorkId != ''">
+			AND 	D.WORKID = #{srcWorkId}
+			</if>		
+			<if test="srcEvalUserNm != null and srcEvalUserNm != ''">
+			AND 	A.EVALUSERID = #{srcEvalUserNm}
+			</if>			
+		)AA
+		WHERE 	1 = 1
+		<if test="srcBranchNm != null and srcBranchNm != ''">
+		AND 	AA.BRANCHNM LIKE '%' + #{srcBranchNm} + '%'
+		</if>
+		<if test="srcUserNm != null and srcUserNm != ''">
+		AND 	AA.USERNM LIKE '%' + #{srcUserNm} + '%'
+		</if>
+		<if test="srcEvalDate != null and srcEvalDate != ''">
+		AND 	AA.SRCEVALDATE = #{srcEvalDate}
+		</if>		
+	</select>
+	
+	<insert id="insertSmileEval">
+		/* evaluate.insertSmileEval */
+		INSERT INTO SMILE_EVAL(
+			SMILE_ID
+		,	TARGET_SVCTYPECD
+		,	TARGET_BORGID
+		,	EVAL_BORGID
+		,	EVAL_USERID
+		,	EVAL
+		,	CREATE_USERID
+		,	CREATE_DATE
+		,	REMOTEIP
+		) VALUES (
+			#{SMILE_ID}
+		,	#{TARGET_SVCTYPECD}
+		,	#{TARGET_BORGID}
+		,	#{userInfoDto.borgId}
+		,	#{userInfoDto.userId}
+		,	#{EVAL}
+		,	#{userInfoDto.userId}
+		,	GETDATE()
+		,	#{userInfoDto.remoteIp}
+		)
+	</insert>
+	
+	<select id="selectSmileEvalValid" resultType="hashmap">
+		/* evaluate.selectSmileEvalValid */
+		SELECT	A.Q_CNT
+		,			B.A_CNT
+		,			C.ADM_CNT
+		<if test="userInfoDto.svcTypeCd != null and ( userInfoDto.svcTypeCd eq 'BUY'.toString() ) ">
+		,			D.VEN_CNT		
+		,			E.RECE_CNT
+		</if>
+		FROM	(
+				SELECT	COUNT(1) AS Q_CNT
+				FROM	SMILE_MANAGE WITH(NOLOCK)  
+				WHERE	ISUSE = '1'
+			)A,
+			(	select	COUNT(1) AS A_CNT
+				from	SMILE_EVAL WITH(NOLOCK) 
+				where	EVAL_USERID=#{userInfoDto.userId}
+					and	CREATE_DATE BETWEEN
+								CONVERT(DATETIME,CONVERT(varchar(10), GETDATE() - (DATEPART(dw, CONVERT(varchar(10), GETDATE(), 121)) - 1), 121))
+								AND
+								CONVERT(DATETIME,CONVERT(varchar(10), GETDATE() - (DATEPART(dw, CONVERT(varchar(10), GETDATE(), 121)) - 8), 121))+0.99999 
+			)B,
+			(
+				SELECT	COUNT(1) AS ADM_CNT
+				FROM	SMILE_MANAGE C WITH(NOLOCK) 
+				WHERE	TARGET_SVCTYPECD = 'ADM'
+					AND 	EVAL_SVCTYPECD = #{userInfoDto.svcTypeCd }
+					AND ISUSE = '1'
+			)C
+		<if test="userInfoDto.svcTypeCd != null and (userInfoDto.svcTypeCd eq 'BUY'.toString() ) ">
+			,(
+				SELECT	COUNT(1) AS VEN_CNT
+				FROM	SMILE_MANAGE C WITH(NOLOCK) 
+				WHERE	TARGET_SVCTYPECD = 'VEN'
+					AND 	EVAL_SVCTYPECD = 'BUY'
+					AND 	ISUSE = '1'
+			)D
+			,(	SELECT	COUNT(1) RECE_CNT
+				FROM		MRORDTLIST WITH(NOLOCK) 
+				WHERE	BRANCHID = #{userInfoDto.borgId}
+					AND	ORDE_USER_ID = #{userInfoDto.userId}
+					AND 	RECE_REGI_DATE 
+								BETWEEN  dateadd(d,datepart(dw,GETDATE()) * -1 - 12, CONVERT(VARCHAR(10),GETDATE(),121)) 
+								AND	dateadd(d,datepart(dw,GETDATE()) * -1 + 1,CONVERT(VARCHAR(10),GETDATE(),121))+0.99999 
+			)E
+		</if>	
+	</select>
+	
+	<select id="selectSmileManageList"  resultType="hashmap">
+		/* evaluate.selectSmileManageList */
+		SELECT	A.SMILE_ID
+		,			A.TARGET_SVCTYPECD 
+		,			A.EVAL_CONTENTS
+		FROM		SMILE_MANAGE A WITH(NOLOCK) 
+		WHERE	A.EVAL_SVCTYPECD = #{EVAL_SVCTYPECD}
+			AND	A.ISUSE = '1'
+		ORDER BY	A.TARGET_SVCTYPECD ASC, EVAL_SORT ASC
+	</select>
+	
+	<select id="selectTargetVenInfo" resultType="hashmap">
+		/* evaluate.selectTargetVenInfo */
+		SELECT	TOP(1)
+					A.VENDORID
+		,			B.VENDORNM
+		FROM	MRORDTLIST A WITH(NOLOCK) 
+			INNER JOIN SMPVENDORS B  WITH(NOLOCK) ON A.VENDORID = B.VENDORID
+			LEFT OUTER JOIN (
+				SELECT	CC.TARGET_BORGID 
+				,		COUNT(1) EVAL_CNT
+				FROM SMILE_EVAL CC WITH(NOLOCK) 
+				WHERE	CC.EVAL_USERID =  #{userInfoDto.userId}
+					AND CC.CREATE_DATE BETWEEN  DATEADD(mm, -1, getdate()) AND GETDATE()
+				GROUP BY CC.TARGET_BORGID
+			)C ON A.VENDORID = C.TARGET_BORGID
+		WHERE	A.BRANCHID = #{userInfoDto.borgId}
+			AND A.ORDE_USER_ID = #{userInfoDto.userId}
+			AND A.RECE_REGI_DATE 
+					BETWEEN  dateadd(d,datepart(dw,GETDATE()) * -1 - 5, CONVERT(VARCHAR(10),GETDATE(),121)) 
+						AND	dateadd(d,datepart(dw,GETDATE()) * -1 + 1,CONVERT(VARCHAR(10),GETDATE(),121))+0.99999 
+		ORDER BY C.EVAL_CNT DESC 
+	</select>
+	
+	
+</mapper>

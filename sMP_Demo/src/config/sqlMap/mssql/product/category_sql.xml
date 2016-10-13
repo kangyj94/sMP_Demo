@@ -1,0 +1,946 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="category">
+	<sql id="selectCategoryListSql">
+		FROM	MCCATEGORYMASTER A WITH(NOLOCK)
+        INNER JOIN TMP_TABLE C 
+            ON A.cate_id = C.CATE_ID
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="ref_Cate_Seq != null and ref_Cate_Seq != ''">
+				AND A.REF_CATE_SEQ = #{ref_Cate_Seq}
+			</if>
+			<if test="cate_Level != null and cate_Level != ''">
+				AND A.CATE_LEVEL = #{cate_Level}
+			</if>
+		</trim>
+	</sql>
+	
+	<sql id="selectDisplayListSql">
+		FROM	MCDISPLAYMASTER A  WITH(NOLOCK) 
+		LEFT OUTER JOIN MCCATEGORYBORG B  WITH(NOLOCK) 
+			ON A.CATE_DISP_ID = B.CATE_DISP_ID  
+		WHERE 1=1
+		   	<if test="(srcGroupId neq '0'.toString() ) or  (srcClientId neq '0'.toString()) or (srcBranchId neq '0'.toString())">
+		   AND	B.GROUPID = #{srcGroupId}
+			AND	B.CLIENTID = #{srcClientId}
+			AND	B.BRANCHID = #{srcBranchId} 
+		   	</if>
+
+		<if test="srcCateDispName != null and srcCateDispName != ''">
+			AND A.CATE_DISP_NAME LIKE '%${srcCateDispName}%'
+		</if>
+	</sql>
+	
+	<sql id="selectDisplayCategoryListSql">
+		FROM	MCDISPLAYCATEGORY A WITH(NOLOCK)
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="cateDispId != null and cateDispId != ''">
+				AND A.CATE_DISP_ID = #{cateDispId}
+			</if>
+			<if test="cateId != null and cateId != ''">
+				AND A.CATE_ID = #{cateId}
+			</if>
+		</trim>
+	</sql>
+	
+	<sql id="selectCategoryBorgListSql">
+		FROM	MCCATEGORYBORG CATEBORG WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPBORGS GROUPS WITH(NOLOCK) 
+			ON		CATEBORG.groupid = GROUPS.BORGID
+		LEFT OUTER JOIN	SMPBORGS CLIENTS WITH(NOLOCK) 
+			ON		CATEBORG.clientid = CLIENTS.BORGID
+		LEFT OUTER JOIN	SMPBORGS BRANCHS WITH(NOLOCK) 
+			ON		CATEBORG.branchid = BRANCHS.BORGID
+		WHERE	1 = 1
+		<if test="srcCateDispId != null and srcCateDispId != ''">
+			AND	CATEBORG.CATE_DISP_ID = #{srcCateDispId}
+		</if>
+		<if test="groupId != null and  groupId != '' and groupId neq '0'.toString() ">
+			AND	CATEBORG.GROUPID = #{groupId}
+		</if>
+		<if test="clientId != null and  clientId != '' and clientId neq '0'.toString() ">
+			AND	CATEBORG.CLIENTID = #{clientId}
+		</if>
+		<if test="branchId != null and  branchId != '' and branchId neq '0'.toString() ">
+			AND	CATEBORG.BRANCHID = #{branchId}
+		</if>
+	</sql>
+	
+	<sql id="selectCategoryInfoListSql">
+		FROM	MCCATEGORYMASTER CATEMST WITH(NOLOCK) 
+		,		MCDISPLAYCATEGORY DISPCATE WITH(NOLOCK) 
+		,		MCDISPLAYMASTER DISPMST WITH(NOLOCK) 
+		,		MCCATEGORYBORG CATEBORG WITH(NOLOCK) 
+		LEFT OUTER JOIN	SMPBORGS GROUPS WITH(NOLOCK) 
+			ON		CATEBORG.groupid = GROUPS.BORGID
+		LEFT OUTER JOIN	SMPBORGS CLIENTS WITH(NOLOCK) 
+			ON		CATEBORG.clientid = CLIENTS.BORGID
+		LEFT OUTER JOIN	SMPBORGS BRANCHS WITH(NOLOCK) 
+			ON		CATEBORG.branchid = BRANCHS.BORGID
+		WHERE	CATEMST.CATE_ID = DISPCATE.CATE_ID
+		AND		DISPCATE.CATE_DISP_ID = DISPMST.CATE_DISP_ID
+		AND		DISPMST.CATE_DISP_ID = CATEBORG.CATE_DISP_ID
+		<if test="srcCateId != null and srcCateId != ''">
+			AND	CATEMST.CATE_ID = #{srcCateId}
+		</if>
+	</sql>
+	
+	<select id="selectCategoryList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectCategoryList */
+        WITH TMP_TABLE 
+               ( 
+                   cate_id , 
+                   majo_code_name , 
+                   LEV , 
+                   FULL_CATE_NAME 
+               ) AS 
+               (SELECT cate_id , 
+                      majo_code_name , 
+                      CONVERT (INT , CATE_LEVEL )  AS LEV , 
+                      CONVERT (VARCHAR(255) , '' ) 
+                 FROM mccategorymaster MASTERCATE WITH(NOLOCK)  
+                WHERE CATE_ID = 0
+                   UNION ALL 
+               SELECT OL.cate_id , 
+                      OL.majo_code_name , 
+                      CTE.LEV+1 , 
+                      CONVERT (VARCHAR(255) , 
+                      CASE 
+                          WHEN CTE.LEV+1 = 1 
+                          THEN OL.majo_code_name 
+                          ELSE CTE.FULL_CATE_NAME + ' > ' + OL.majo_code_name 
+                      END ) 
+                 FROM mccategorymaster OL  WITH(NOLOCK) , 
+                      TMP_TABLE CTE 
+                WHERE OL.REF_CATE_SEQ = CTE.CATE_ID 
+               )
+		SELECT	A.CATE_ID
+		,		A.MAJO_CODE_NAME
+		,		A.CATE_CD
+		,		A.MOJO_CODE_DESC
+		,		A.REF_CATE_SEQ
+		,		A.CATE_LEVEL
+		,		A.ORD_NUM
+		,		C.FULL_CATE_NAME
+		<include refid="selectCategoryListSql"/>
+		ORDER BY A.ORD_NUM
+	</select>
+	
+	<select id="selectOneCategoryByCateCd" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectCategoryList */
+		SELECT	A.CATE_ID
+		,		A.MAJO_CODE_NAME
+		,		A.CATE_CD
+		,		A.MOJO_CODE_DESC
+		,		A.REF_CATE_SEQ
+		,		A.CATE_LEVEL
+		,		A.ORD_NUM
+		,		A.INSERT_USER_ID
+		,		A.INSERT_DATE
+		,		A.UPDATE_USER_ID
+		,		A.UPDATE_DATE
+		,		A.REMOTEIP
+		FROM    mccategorymaster A WITH(NOLOCK)  
+	    WHERE   A.CATE_LEVEL = '3'
+	      AND   A.CATE_CD = #{cate_cd}
+	</select>
+	
+	
+	<select id="selectCategoryTreeExcel" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectCategoryTreeExcel */
+		WITH TREE_ORG(CATE_ID,REF_CATE_SEQ,MAJO_CODE_NAME,CATE_CD,MOJO_CODE_DESC,CATE_LEVEL,ORG_LEVEL,SORT_COL) AS (
+			SELECT	CATE_ID
+			,		REF_CATE_SEQ
+			,		MAJO_CODE_NAME
+			,		CATE_CD
+			,		MOJO_CODE_DESC
+			,		CATE_LEVEL
+			,		0 AS ORG_LEVEL
+			,		CONVERT(VARCHAR(200), CATE_ID)
+			FROM	MCCATEGORYMASTER WITH(NOLOCK) 
+			WHERE	CATE_ID = '0'
+			UNION ALL
+			SELECT	A.CATE_ID
+			,		A.REF_CATE_SEQ
+			,		A.MAJO_CODE_NAME
+			,		A.CATE_CD
+			,		A.MOJO_CODE_DESC
+			,		A.CATE_LEVEL
+			,		B.ORG_LEVEL + 1 AS ORG_LEVEL
+			,		CONVERT(VARCHAR(200), SORT_COL + ' ' + DBO.FNS_LPAD( CONVERT(VARCHAR , A.CATE_ID ), 6, '0' ))
+			FROM	MCCATEGORYMASTER A WITH(NOLOCK) 
+			INNER JOIN TREE_ORG B ON A.REF_CATE_SEQ = B.CATE_ID
+		)
+		SELECT	CATE_ID
+		,		REF_CATE_SEQ
+		,		CASE WHEN CATE_LEVEL = '1' THEN MAJO_CODE_NAME ELSE '' END AS MAJO_CODE_NAME1
+		,		CASE WHEN CATE_LEVEL = '2' THEN MAJO_CODE_NAME ELSE '' END AS MAJO_CODE_NAME2
+		,		CASE WHEN CATE_LEVEL = '3' THEN MAJO_CODE_NAME ELSE '' END AS MAJO_CODE_NAME3
+		,		CATE_CD
+		,		MOJO_CODE_DESC
+		,		CATE_LEVEL
+		,		ORG_LEVEL
+		,		SORT_COL
+		FROM	TREE_ORG
+		WHERE CATE_LEVEL > 0
+		ORDER BY SORT_COL
+	</select>
+	
+	<select id="selectCategoryMasterCnt" resultType="int">
+		/* category.selectCategoryMasterCnt */
+		SELECT	COUNT(1)
+		FROM	MCCATEGORYMASTER WITH(NOLOCK)
+		WHERE	CATE_CD = #{cateCd}
+	</select>
+	
+	
+	<insert id="insertCategoryMaster">
+		/* category.insertCategoryMaster */
+		INSERT INTO MCCATEGORYMASTER (
+				CATE_ID
+		,		MAJO_CODE_NAME
+		,		CATE_CD
+		,		MOJO_CODE_DESC
+		,		REF_CATE_SEQ
+		,		CATE_LEVEL
+		,		ORD_NUM
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		,		REMOTEIP
+		) VALUES (
+				#{cateId}
+		,		#{majoCodeName}
+		,		#{cateCd}
+		,		#{mojoCodeDesc}
+		,		#{refCateSeq}
+		,		#{cateLevel}
+		,		#{ordNum}
+		,		#{insertUserId}
+		,		GETDATE()
+		,		#{remoteIp}
+		)
+	</insert>
+	
+	<update id="updateCategoryMaster">
+		/* category.updateCategoryMaster */
+		UPDATE	MCCATEGORYMASTER
+		SET		MAJO_CODE_NAME = #{majoCodeName}
+		,		CATE_CD = #{cateCd}
+		,		MOJO_CODE_DESC = #{mojoCodeDesc}
+		,		ORD_NUM = #{ordNum}
+		,		UPDATE_USER_ID = #{insertUserId}
+		,		UPDATE_DATE = GETDATE()
+		,		REMOTEIP = #{remoteIp}
+		WHERE	CATE_ID = #{cateId}
+	</update>
+	
+	<select id="selectDisplayListCnt" resultType="int">
+		/* category.selectDisplayListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectDisplayListSql"/>
+	</select>
+	
+	<select id="selectDisplayList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectDisplayList */
+		SELECT	A.CATE_DISP_ID
+		,		A.CATE_DISP_NAME
+		,		A.CATE_DISP_DESC
+		,		A.IS_DISP_USE
+		,		A.INSERT_USER_ID
+		,		A.INSERT_DATE
+		,		A.UPDATE_USER_ID
+		,		A.update_date
+		,		A.REMOTE_IP
+		<include refid="selectDisplayListSql"/>
+		 GROUP BY A.CATE_DISP_ID        
+		     , A.CATE_DISP_NAME        
+		     , A.CATE_DISP_DESC        
+		     , A.IS_DISP_USE        
+		     , A.INSERT_USER_ID        
+		     , A.INSERT_DATE        
+		     , A.UPDATE_USER_ID        
+		     , A.update_date        
+		     , A.REMOTE_IP 
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<insert id="insertDisplayMaster">
+		/* category.insertDisplayMaster */
+		INSERT INTO MCDISPLAYMASTER (
+				CATE_DISP_ID
+		,		CATE_DISP_NAME
+		,		CATE_DISP_DESC
+		,		IS_DISP_USE
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		,		REMOTE_IP
+		) VALUES (
+				#{cateDispId}
+		,		#{cateDispName}
+		,		#{cateDispDesc}
+		,		#{isDispUse}
+		,		#{insertUserId}
+		,		GETDATE()
+		,		#{remoteIp}
+		)
+	</insert>
+	
+	<insert id="insertDisplayMasterHistory">
+		/* category.insertDisplayMasterHistory */
+		INSERT INTO MCDISPLAYMASTER_HIST (
+				GOOD_HIST_ID
+		,		CATE_DISP_ID
+		,		CATE_DISP_NAME
+		,		CATE_DISP_DESC
+		,		IS_DISP_USE
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		,		REMOTE_IP
+		) VALUES (
+				#{goodHistId}
+		,		#{cateDispId}
+		,		#{cateDispName}
+		,		#{cateDispDesc}
+		,		#{isDispUse}
+		,		#{insertUserId}
+		,		GETDATE()
+		,		#{remoteIp}
+		)
+	</insert>
+	
+	<update id="updateDisplayMaster">
+		/* category.updateDisplayMaster */
+		UPDATE	MCDISPLAYMASTER
+		SET		CATE_DISP_NAME = #{cateDispName}
+		,		CATE_DISP_DESC = #{cateDispDesc}
+		,		IS_DISP_USE = #{isDispUse}
+		,		UPDATE_USER_ID = #{insertUserId}
+		,		UPDATE_DATE = GETDATE()
+		,		REMOTE_IP = #{remoteIp}
+		WHERE	CATE_DISP_ID = #{cateDispId}
+	</update>
+	
+	<delete id="deleteDisplayMaster">
+		/* category.deleteDisplayMaster */
+		DELETE FROM MCDISPLAYMASTER  WHERE CATE_DISP_ID = #{cateDispId}
+	</delete>
+	
+	<select id="selectDisplayCategoryListCnt" resultType="int">
+		/* category.selectDisplayCategoryListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectDisplayCategoryListSql"/>
+	</select>
+	
+	<insert id="insertDisplayCategory">
+		/* category.insertDisplayCategory */
+		<if test="lastSt == false">
+			WITH TMP_CATE( CATE_ID,REF_CATE_ID,CATE_LEVEL,REF_CATE_SEQ ) AS (
+				SELECT	CONVERT (INT , #{cateId})
+				,		CONVERT (INT, NULL)
+				,		CONVERT (VARCHAR(2) , '')
+				,		CONVERT (INT , NULL)
+				UNION ALL
+				SELECT A.cate_id
+				,		A.ref_cate_seq
+				,		A.cate_level
+				,		A.ref_cate_seq
+				FROM	MCCATEGORYMASTER A WITH(NOLOCK) 
+				,		TMP_CATE B
+				WHERE	B.CATE_ID = A.REF_CATE_SEQ
+			)
+			INSERT INTO	MCDISPLAYCATEGORY (
+					CATE_DISP_ID
+			,		CATE_ID
+			,		INSERT_USER_ID
+			,		INSERT_DATE
+			,		REMOTEIP
+			,		REF_CATE_SEQ
+			)
+			SELECT	CONVERT (VARCHAR(10), #{cateDispId}) AS CATE_DISP_ID
+			,		TMP.cate_id
+			,		CONVERT (VARCHAR(10), #{insertUserId}) AS USERT_ID
+			,		GETDATE()
+			,		CONVERT (VARCHAR(20), #{remoteIp}) AS REMOTEIP
+			,		TMP.REF_CATE_ID
+			FROM	TMP_CATE TMP
+			WHERE	TMP.cate_level = '3'
+			AND	NOT EXISTS (
+					SELECT '1'
+					FROM MCDISPLAYCATEGORY DISPCATE WITH(NOLOCK) 
+					WHERE DISPCATE.cate_disp_id = #{cateDispId}
+					AND DISPCATE.CATE_ID = TMP.CATE_ID
+			)
+		</if>
+		<if test="lastSt == true">
+			INSERT INTO MCDISPLAYCATEGORY (
+					CATE_DISP_ID
+			,		CATE_ID
+			,		REF_CATE_SEQ
+			,		INSERT_USER_ID
+			,		INSERT_DATE
+			,		REMOTEIP
+			) VALUES (
+					#{cateDispId}
+			,		#{cateId}
+			,		#{refCateSeq}
+			,		#{insertUserId}
+			,		GETDATE()
+			,		#{remoteIp}
+			)
+		</if>
+	</insert>
+	
+	<insert id="insertDisplayCategoryHistory">
+		/* category.insertDisplayCategoryHistory */
+		INSERT INTO MCDISPLAYCATEGORY_HIST (
+				GOOD_HIST_ID
+		,		CATE_DISP_ID
+		,		CATE_ID
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		,		REMOTE_IP
+		) VALUES (
+				#{goodHistId}
+		,		#{cateDispId}
+		,		#{cateId}
+		,		#{insertUserId}
+		,		GETDATE()
+		,		#{remoteIp}
+		)
+	</insert>
+	
+	<delete id="deleteDisplayCategory">
+		/* category.deleteDisplayCategory */
+		<if test="lastSt == false">
+			WITH TMP_CATE( CATE_ID,REF_CATE_ID,CATE_LEVEL ) AS (
+				SELECT	CONVERT (INT , #{cateId})
+				,		CONVERT (INT , NULL)
+				,		CONVERT (VARCHAR(2) , '')
+				UNION ALL
+				SELECT A.CATE_ID
+				,		A.REF_CATE_SEQ
+				,		A.CATE_LEVEL
+				FROM	MCCATEGORYMASTER A WITH(NOLOCK) 
+				,		TMP_CATE B
+				WHERE	B.CATE_ID = A.REF_CATE_SEQ
+			)
+			DELETE FROM MCDISPLAYCATEGORY
+			WHERE	CATE_DISP_ID = #{cateDispId}
+			AND	CATE_ID IN (
+				SELECT CATE_ID
+				FROM TMP_CATE
+				WHERE CATE_LEVEL = '3'
+			)
+		</if>
+		<if test="lastSt == true">
+			DELETE FROM MCDISPLAYCATEGORY
+			WHERE	CATE_DISP_ID = #{cateDispId}
+			AND 	CATE_ID = #{cateId}
+		</if>
+	</delete>
+	
+	<select id="selectDisplayCategoryList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectDisplayCategoryList */
+		<if test="lastSt == false">
+			WITH TMP_CATE( REF_CATE_SEQ,CATE_ID,MAJO_CODE_NAME,MOJO_CODE_DESC,CATE_LEVEL,ORD_NUM ) AS (
+				SELECT	DISTINCT	DISPCATE.REF_CATE_SEQ
+				,		CONVERT (INT , '' )
+				,		CONVERT (VARCHAR(200) , '' )
+				,		CONVERT (VARCHAR(200) , '' )
+				,		CONVERT (VARCHAR(2) , '' )
+				,		CONVERT (VARCHAR(2) , '' )
+				FROM	MCDISPLAYCATEGORY DISPCATE WITH(NOLOCK) 
+				WHERE	DISPCATE.CATE_DISP_ID = #{cate_Disp_Id}
+				UNION ALL
+				SELECT	A.REF_CATE_SEQ
+				,		A.CATE_ID
+				,		A.MAJO_CODE_NAME
+				,		A.MOJO_CODE_DESC
+				,		A.CATE_LEVEL
+				,		A.ORD_NUM
+				FROM	MCCATEGORYMASTER A WITH(NOLOCK) 
+				,		TMP_CATE B
+				WHERE	A.CATE_ID = B.REF_CATE_SEQ
+				/* AND	A.REF_CATE_SEQ != 0 */
+			)
+			SELECT DISTINCT REF_CATE_SEQ , CATE_ID , MAJO_CODE_NAME , MOJO_CODE_DESC , CATE_LEVEL , ORD_NUM 
+			  FROM TMP_CATE
+			 WHERE REF_CATE_SEQ = #{cate_Id}
+			 ORDER BY ORD_NUM 
+		</if>
+		<if test="lastSt == true">
+			SELECT	MCMASTER.CATE_ID
+			,		MCMASTER.MAJO_CODE_NAME
+			,		MCMASTER.MOJO_CODE_DESC
+			,		MCMASTER.REF_CATE_SEQ
+			,		MCMASTER.CATE_LEVEL
+			,		MCMASTER.ORD_NUM
+			FROM	MCDISPLAYCATEGORY DISPCATE WITH(NOLOCK) 
+			,		MCCATEGORYMASTER MCMASTER WITH(NOLOCK) 
+			WHERE	DISPCATE.CATE_ID = MCMASTER.CATE_ID
+			AND	DISPCATE.cate_disp_id = #{cate_Disp_Id}
+			AND	DISPCATE.ref_cate_seq = #{cate_Id}
+		</if>
+	</select>
+	
+	<select id="selectCategoryBorgListCnt" resultType="int">
+		/* category.selectCategoryBorgListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectCategoryBorgListSql"/>
+	</select>
+	
+	<select id="selectCategoryBorgListOverLap" resultType="int">
+		/* category.selectCategoryBorgListOverLap */
+		SELECT	COUNT(1)
+		FROM	MCCATEGORYBORG WITH(NOLOCK) 
+		WHERE	GROUPID = #{groupId}
+		AND   CLIENTID = #{clientId}
+		AND   BRANCHID = #{branchId}
+	</select>
+	
+	<select id="selectCategoryBorgListOverLapList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectCategoryBorgListOverLapList */
+		SELECT	DISPMST.CATE_DISP_NAME
+		FROM		MCCATEGORYBORG CATEBORG WITH(NOLOCK) 
+		,			MCDISPLAYMASTER DISPMST WITH(NOLOCK) 
+		WHERE CATEBORG.cate_disp_id = DISPMST.cate_disp_id
+		AND	CATEBORG.GROUPID = #{groupId}
+		AND   CATEBORG.CLIENTID = #{clientId}
+		AND   CATEBORG.BRANCHID = #{branchId}
+	</select>
+	
+	
+	<select id="selectBorgListOverLapList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+        /* category.selectBorgListOverLapList */
+        SELECT  BORGNM
+        FROM    SMPBORGS WITH(NOLOCK) 
+        WHERE   BORGID = #{borgId}
+    </select>
+	
+	<select id="selectCategoryBorgList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectCategoryBorgList */
+		SELECT	dbo.FNS_CODENM1BYCODEVAL1('BORGTYPECD',
+						CASE	WHEN BRANCHS.BORGTYPECD > '' THEN BRANCHS.BORGTYPECD
+								WHEN BRANCHS.BORGTYPECD IS NULL AND CLIENTS.BORGTYPECD > '' THEN CLIENTS.BORGTYPECD
+								WHEN BRANCHS.BORGTYPECD IS NULL AND CLIENTS.BORGTYPECD IS NULL AND GROUPS.BORGTYPECD > '' THEN GROUPS.BORGTYPECD
+						END
+					) AS BORGTYPENM
+		,		dbo.FNS_BORG_STRING(
+					CASE	WHEN BRANCHS.BORGID > '' THEN BRANCHS.BORGID
+							WHEN BRANCHS.BORGID IS NULL AND CLIENTS.BORGID > '' THEN CLIENTS.BORGID
+							WHEN BRANCHS.BORGID IS NULL AND CLIENTS.BORGID IS NULL AND GROUPS.BORGID > '' THEN GROUPS.BORGID
+					END
+				) AS BORGNMS
+		,		CASE	WHEN BRANCHS.BORGCD > '' THEN BRANCHS.BORGCD
+						WHEN BRANCHS.BORGCD IS NULL AND CLIENTS.BORGCD > '' THEN CLIENTS.BORGCD
+						WHEN BRANCHS.BORGCD IS NULL AND CLIENTS.BORGCD IS NULL AND GROUPS.BORGCD > '' THEN GROUPS.BORGCD
+				END AS BORGCD
+		,		CASE	WHEN BRANCHS.BORGID > '' THEN BRANCHS.BORGID
+						WHEN BRANCHS.BORGID IS NULL AND CLIENTS.BORGID > '' THEN CLIENTS.BORGID
+						WHEN BRANCHS.BORGID IS NULL AND CLIENTS.BORGID IS NULL AND GROUPS.BORGID > '' THEN GROUPS.BORGID
+				END AS BORGID
+		,		GROUPS.BORGID AS GROUPID
+		,		CLIENTS.BORGID AS CLIENTID
+		,		BRANCHS.BORGID AS BRANCHID
+		,		CATEBORG.CATE_DISP_ID
+		<include refid="selectCategoryBorgListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectStandardCategoryList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		WITH TMP_TABLE 
+		       ( 
+		           cate_id 
+		         , majo_code_name 
+		         , mojo_code_desc 
+		         , ref_cate_seq 
+		         , cate_level 
+		         , ord_num 
+		         , insert_user_id 
+		         , insert_date 
+		         , update_user_id 
+		         , update_date 
+		         , remoteip 
+		         , LEV 
+		         , FULL_CATE_NAME 
+		       ) AS 
+		       (SELECT cate_id 
+		            , majo_code_name 
+		            , mojo_code_desc 
+		            , CONVERT (VARCHAR , '-1')  
+		            , cate_level 
+		            , ord_num 
+		            , insert_user_id 
+		            , insert_date 
+		            , update_user_id 
+		            , update_date 
+		            , remoteip 
+		            , 0 AS LEV 
+		            , CONVERT (VARCHAR(1024) , '' ) 
+		         FROM mccategorymaster MASTERCATE WITH(NOLOCK)  
+		        WHERE CATE_ID = '0' 
+		           UNION ALL 
+		       SELECT OL.cate_id 
+		            , OL.majo_code_name 
+		            , OL.mojo_code_desc 
+		            , CONVERT (VARCHAR ,OL.ref_cate_seq ) 
+		            , OL.cate_level 
+		            , OL.ord_num 
+		            , OL.insert_user_id 
+		            , OL.insert_date 
+		            , OL.update_user_id 
+		            , OL.update_date 
+		            , OL.remoteip 
+		            , CTE.LEV+1 
+		            , CONVERT (VARCHAR(1024) , CASE 
+		                  WHEN CTE.LEV+1 = 1 
+		                  THEN OL.majo_code_name 
+		                  ELSE CTE.FULL_CATE_NAME + ' > ' + OL.majo_code_name 
+		              END ) 
+		         FROM mccategorymaster OL WITH(NOLOCK)  
+		            , TMP_TABLE CTE 
+		        WHERE OL.REF_CATE_SEQ = CTE.CATE_ID 
+		       ) 
+		SELECT cate_id
+		     , majo_code_name
+		     , mojo_code_desc
+		     , ref_cate_seq
+		     , cate_level
+		     , ord_num
+		     , insert_user_id
+		     , insert_date
+		     , update_user_id
+		     , update_date
+		     , remoteip
+		     , LEV
+		     , FULL_CATE_NAME 
+		  FROM TMP_TABLE    
+
+	</select>
+	<insert id="insertCategoryBorg">
+		/* category.insertCategoryBorg */
+		INSERT INTO MCCATEGORYBORG (
+				CATE_DISP_ID
+		,		GROUPID
+		,		CLIENTID
+		,		BRANCHID
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		,		REMOTEIP
+		) VALUES (
+				#{cateDispId}
+		,		#{groupId}
+		,		#{clientId}
+		,		#{branchId}
+		,		#{insertUserId}
+		,		GETDATE()
+		,		#{remoteIp}
+		)
+	</insert>
+	
+	<insert id="insertCategoryBorgHistory">
+		/* category.insertCategoryBorgHistory */
+		INSERT INTO MCCATEGORYBORG_HIST (
+				GOOD_HIST_ID
+		,		CATE_DISP_ID
+		,		GROUPID
+		,		CLIENTID
+		,		BRANCHID
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		,		REMOTEIP
+		) VALUES (
+				#{goodHistId}
+		,		#{cateDispId}
+		,		#{groupId}
+		,		#{clientId}
+		,		#{branchId}
+		,		#{insertUserId}
+		,		GETDATE()
+		,		#{remoteIp}
+		)
+	</insert>
+	
+	<delete id="deleteCategoryBorg">
+		/* category.deleteCategoryBorg */
+		DELETE FROM MCCATEGORYBORG
+		WHERE CATE_DISP_ID = #{cateDispId}
+		AND	GROUPID = #{groupId}
+		AND	CLIENTID = #{clientId}
+		<if test="branchId neq '0'.toString() ">
+		AND	BRANCHID = #{branchId}
+		</if>
+	</delete>
+	
+	<select id="selectCategoryInfoListCnt" resultType="int">
+		/* category.selectCategoryInfoListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectCategoryInfoListSql"/>
+	</select>
+	
+	<select id="selectCategoryInfoList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectCategoryInfoList */
+		SELECT	CATEMST.CATE_ID
+		,		DISPMST.CATE_DISP_NAME
+		,		dbo.FNS_BORG_STRING(
+					CASE	WHEN BRANCHS.BORGID > '' THEN BRANCHS.BORGID
+							WHEN BRANCHS.BORGID IS NULL AND CLIENTS.BORGID > '' THEN CLIENTS.BORGID
+							WHEN BRANCHS.BORGID IS NULL AND CLIENTS.BORGID IS NULL AND GROUPS.BORGID > '' THEN GROUPS.BORGID
+					END
+				) AS BORGNMS
+		,		DISPMST.IS_DISP_USE
+		<include refid="selectCategoryInfoListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectBuyerDisplayCategoryInfoList" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/*	category.selectBuyerDisplayCategoryInfoList	*/
+		WITH TMP_TABLE 
+		       (   cate_id ,majo_code_name ,mojo_code_desc ,ref_cate_seq ,cate_level ,ord_num ,insert_user_id ,insert_date ,update_user_id ,update_date ,remoteip ,LEV ,FULL_CATE_NAME ) AS 
+		       (SELECT cate_id ,
+		              majo_code_name ,
+		              mojo_code_desc ,
+		              CONVERT (VARCHAR ,'-1') ,
+		              cate_level ,
+		              ord_num ,
+		              insert_user_id ,
+		              insert_date ,
+		              update_user_id ,
+		              update_date ,
+		              remoteip ,
+		              0 AS LEV ,
+		              CONVERT (VARCHAR(1024) ,'' ) 
+		         FROM mccategorymaster MASTERCATE WITH(NOLOCK)  
+		        WHERE CATE_ID = '0'    
+		           UNION ALL 
+		       SELECT OL.cate_id ,
+		              OL.majo_code_name ,
+		              OL.mojo_code_desc ,
+		              CONVERT (VARCHAR ,OL.ref_cate_seq ) ,
+		              OL.cate_level ,
+		              OL.ord_num ,
+		              OL.insert_user_id ,
+		              OL.insert_date ,
+		              OL.update_user_id ,
+		              OL.update_date ,
+		              OL.remoteip ,
+		              CTE.LEV+1 ,
+		              CONVERT (VARCHAR(1024) ,
+		              CASE 
+		                  WHEN CTE.LEV+1 = 1 
+		                  THEN OL.majo_code_name 
+		                  ELSE CTE.FULL_CATE_NAME + ' > ' + OL.majo_code_name 
+		              END ) 
+		         FROM mccategorymaster OL  WITH(NOLOCK) ,
+		              TMP_TABLE CTE 
+		        WHERE OL.REF_CATE_SEQ = CTE.CATE_ID 
+		       ) ,
+		       tmpTable (CATE_ID , REF_CATE_SEQ) as 
+		       (SELECT DISTINCT CONVERT(INT ,DISPCATE.cate_id ) AS CATE_ID ,
+		              CONVERT(INT ,DISPCATE.cate_id ) AS REF_CATE_SEQ 
+		         FROM mccategoryborg CARTBORG WITH(NOLOCK)  ,
+		              mcdisplaycategory DISPCATE  WITH(NOLOCK) 
+		        WHERE CARTBORG.cate_disp_id = DISPCATE.cate_disp_id 
+		          AND ( 
+		                  (   CARTBORG.groupid = #{groupId} AND CARTBORG.clientid = #{clientId} AND CARTBORG.branchid = #{branchId}  ) OR   
+		                  (   CARTBORG.groupid = #{groupId} AND CARTBORG.clientid = #{clientId} AND CARTBORG.branchid = '0'  ) OR   
+		                  (   CARTBORG.groupid = #{groupId} AND CARTBORG.clientid = '0' AND CARTBORG.branchid = '0'  )      
+		              )                                                                                                                                                                                                                                       
+		        UNION ALL 
+		       SELECT CONVERT(INT ,CATEMASTER.cate_id ) ,
+		              CONVERT(INT ,CATEMASTER.ref_cate_seq ) 
+		         FROM tmpTable CATEGORY ,
+		              mccategorymaster CATEMASTER WITH(NOLOCK)  
+		        WHERE CATEGORY.ref_cate_seq = CATEMASTER.CATE_ID 
+		       ) 
+		SELECT T1.CATE_ID        
+		     , MAJO_CODE_NAME   
+		     , MOJO_CODE_DESC
+		     , REF_CATE_SEQ
+		     , CATE_LEVEL
+		     , ORD_NUM
+		     , insert_USER_ID
+		     , insert_DATE
+		     , update_USER_ID
+		     , update_DATE
+		     , REMOTEIP
+		     , LEV
+		     , FULL_CATE_NAME 
+		     <if test="schRefCateSeq != null and schRefCateSeq != ''">
+		     , dbo.FNS_PRODUCTCNT_BY_CATEGORYID(T1.CATE_ID  ,#{groupId} , #{clientId} , #{branchId}  ) AS product_Count
+		     </if>
+		  FROM TMP_TABLE T1 
+		     , (SELECT distinct tmpTable.CATE_ID FROM tmpTable ) T2   
+		WHERE T1.cate_id = T2.CATE_ID  
+		<if test="schRefCateSeq != null and schRefCateSeq != ''">
+		  AND T1.REF_CATE_SEQ = #{schRefCateSeq}
+		  AND dbo.FNS_PRODUCTCNT_BY_CATEGORYID(T1.CATE_ID  ,#{groupId} , #{clientId} , #{branchId}  ) > 0
+		</if>
+	</select>
+	
+	<select id="selectBorgUserCateGoryCount" resultType="int" >
+		/*	category.selectBorgUserCateGoryCount	*/
+		SELECT COUNT(*) 
+		  FROM mrborgusercategory USERCATE WITH(NOLOCK) 
+		 WHERE USERCATE.groupid  =  #{groupId}  
+		   AND USERCATE.clientid =  #{clientId} 
+		   AND USERCATE.branchid =  #{branchId} 
+		   AND USERCATE.cate_id  =  #{cate_id}
+	</select>
+	
+	<select id="insertBorgUserCateGory">
+		/*	category.insertBorgUserCateGory	*/
+		INSERT INTO dbo.mrborgusercategory 
+		   ( 
+		       groupid
+		     , clientid
+		     , branchid
+		     , cate_id
+		     , regi_user_id
+		     , regi_date_time 
+		   ) 
+		   VALUES 
+		   (   #{groupId}        /* groupid           */  
+		     , #{clientId}       /* clientid          */  
+		     , #{branchId}       /* branchid          */  
+		     , #{cate_id}        /* cate_id           */  
+		     , #{userId}         /* userid            */  
+		     , getdate()         /* regi_date_time    */        
+		   )                
+	</select>
+	
+	<delete id="deleteBorgUserCateGory">
+		/*	category.deleteBorgUserCateGory	*/
+        DELETE 
+          FROM mrborgusercategory
+         WHERE groupid      = #{groupId} 
+           AND clientid     = #{clientId}
+           AND branchid     = #{branchId}
+           AND cate_id      = #{cate_id} 
+	</delete>
+	
+	
+	<select id="selectMyCategoryListCnt" resultType="int">
+		/* category.selectMyCategoryListCnt */
+		SELECT count(*) 
+		  FROM mrborgusercategory BORGCATE WITH(NOLOCK) 
+                     , 
+						(
+							SELECT DISTINCT DISPCART.cate_id 
+							  FROM mccategoryborg CATEBORG WITH(NOLOCK) 
+								 , mcdisplaymaster DISPMASTER WITH(NOLOCK) 
+								 , mcdisplaycategory DISPCART  WITH(NOLOCK) 
+							 WHERE CATEBORG.cate_disp_id = DISPMASTER.cate_disp_id
+							   AND DISPMASTER.cate_disp_id = DISPCART.cate_disp_id
+							   AND DISPMASTER.is_disp_use = '1' 
+							   AND  (
+										( CATEBORG.groupid = #{groupId} AND CATEBORG.clientid = #{clientId} AND CATEBORG.branchid = #{branchId} ) OR 
+										( CATEBORG.groupid = #{groupId} AND CATEBORG.clientid = #{clientId} AND CATEBORG.branchid = '0' ) OR 
+										( CATEBORG.groupid = #{groupId} AND CATEBORG.clientid = '0' AND CATEBORG.branchid = '0' )
+									)
+						) DISPBORGCART 
+		 WHERE DISPBORGCART.CATE_ID = BORGCATE.cate_id  
+		   AND BORGCATE.groupid   = #{groupId}
+		   AND BORGCATE.clientid  = #{clientId}
+		   AND BORGCATE.branchid  = #{branchId}
+	</select>
+	
+	<select id="selectMyCategoryListInfo" resultType="kr.co.bitcube.product.dto.CategoryDto">
+		/* category.selectMyCategoryListInfo */
+        WITH TMP_TABLE 
+               (   cate_id ,majo_code_name ,mojo_code_desc ,ref_cate_seq ,cate_level ,ord_num ,insert_user_id ,insert_date ,update_user_id ,update_date ,remoteip ,LEV ,FULL_CATE_NAME ) AS 
+               (SELECT cate_id ,
+                      majo_code_name ,
+                      mojo_code_desc ,
+                      CONVERT (VARCHAR ,'-1') ,
+                      cate_level ,
+                      ord_num ,
+                      insert_user_id ,
+                      insert_date ,
+                      update_user_id ,
+                      update_date ,
+                      remoteip ,
+                      0 AS LEV ,
+                      CONVERT (VARCHAR(1024) ,'' ) 
+                 FROM mccategorymaster MASTERCATE WITH(NOLOCK)  
+                WHERE CATE_ID = '0'    
+                   UNION ALL 
+               SELECT OL.cate_id ,
+                      OL.majo_code_name ,
+                      OL.mojo_code_desc ,
+                      CONVERT (VARCHAR ,OL.ref_cate_seq ) ,
+                      OL.cate_level ,
+                      OL.ord_num ,
+                      OL.insert_user_id ,
+                      OL.insert_date ,
+                      OL.update_user_id ,
+                      OL.update_date ,
+                      OL.remoteip ,
+                      CTE.LEV+1 ,
+                      CONVERT (VARCHAR(1024) ,
+                      CASE 
+                          WHEN CTE.LEV+1 = 1 
+                          THEN OL.majo_code_name 
+                          ELSE CTE.FULL_CATE_NAME + ' > ' + OL.majo_code_name 
+                      END ) 
+                 FROM mccategorymaster OL  WITH(NOLOCK) ,
+                      TMP_TABLE CTE 
+                WHERE OL.REF_CATE_SEQ = CTE.CATE_ID 
+               ) ,
+               tmpTable (CATE_ID , REF_CATE_SEQ) as 
+               (SELECT DISTINCT CONVERT(VARCHAR ,DISPCATE.cate_id ) AS CATE_ID ,
+                      CONVERT(VARCHAR ,DISPCATE.cate_id ) AS REF_CATE_SEQ 
+                 FROM mccategoryborg CARTBORG  WITH(NOLOCK) ,
+                      mcdisplaycategory DISPCATE  WITH(NOLOCK) 
+                WHERE CARTBORG.cate_disp_id = DISPCATE.cate_disp_id 
+                  AND ( 
+                          (   CARTBORG.groupid = #{groupId} AND CARTBORG.clientid = #{clientId} AND CARTBORG.branchid = #{branchId}  ) OR   
+                          (   CARTBORG.groupid = #{groupId} AND CARTBORG.clientid = #{clientId} AND CARTBORG.branchid = '0'  ) OR   
+                          (   CARTBORG.groupid = #{groupId} AND CARTBORG.clientid = '0' AND CARTBORG.branchid = '0'  )    
+                      )                                                                                                                                                                                                                                       
+                UNION ALL 
+               SELECT CONVERT(VARCHAR ,CATEMASTER.cate_id ) ,
+                      CONVERT(VARCHAR ,CATEMASTER.ref_cate_seq )
+                 FROM tmpTable CATEGORY ,
+                      mccategorymaster CATEMASTER WITH(NOLOCK)  
+                WHERE CATEGORY.ref_cate_seq = CATEMASTER.CATE_ID 
+               )SELECT BORGCATE.groupid 
+                     , BORGCATE.clientid 
+                     , BORGCATE.branchid 
+                     , BORGCATE.regi_user_id 
+                     , BORGCATE.cate_id 
+                     , BORGCATE.regi_date_time
+					 , TMPCATE.FULL_CATE_NAME + ' (' + convert(varchar, DBO.FNS_PRODUCTCNT_BY_CATEGORYID( BORGCATE.cate_id , BORGCATE.groupid , BORGCATE.clientid , BORGCATE.branchid ))+ ') ' AS FULL_CATE_NAME
+                  FROM mrborgusercategory BORGCATE WITH(NOLOCK) 
+                     , TMP_TABLE TMPCATE
+                     , 
+						(
+							SELECT DISTINCT DISPCART.cate_id 
+							  FROM mccategoryborg CATEBORG WITH(NOLOCK) 
+								 , mcdisplaymaster DISPMASTER WITH(NOLOCK) 
+								 , mcdisplaycategory DISPCART  WITH(NOLOCK) 
+							 WHERE CATEBORG.cate_disp_id = DISPMASTER.cate_disp_id
+							   AND DISPMASTER.cate_disp_id = DISPCART.cate_disp_id
+							   AND DISPMASTER.is_disp_use = '1' 
+							   AND  (
+										( CATEBORG.groupid = #{groupId} AND CATEBORG.clientid = #{clientId} AND CATEBORG.branchid = #{branchId} ) OR 
+										( CATEBORG.groupid = #{groupId} AND CATEBORG.clientid = #{clientId} AND CATEBORG.branchid = '0' ) OR 
+										( CATEBORG.groupid = #{groupId} AND CATEBORG.clientid = '0' AND CATEBORG.branchid = '0' )
+									)
+						) DISPBORGCART  
+                 WHERE BORGCATE.cate_id = TMPCATE.CATE_ID
+                   AND DISPBORGCART.CATE_ID = BORGCATE.cate_id  
+                   AND BORGCATE.groupid  = #{groupId}
+                   AND BORGCATE.clientid = #{clientId}
+                   AND BORGCATE.branchid = #{branchId}
+                   
+	</select>
+</mapper>

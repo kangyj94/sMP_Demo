@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="system.holiday">
+
+    <sql id="holidayManageSql">
+        FROM    HOLIDAY_MANAGE A WITH(NOLOCK)  
+        WHERE   1=1
+        <if test="srcYear!= null and srcYear != '' ">
+            AND A.HOLIDAY like #{srcYear} + '%'
+        </if>
+    </sql>
+	<select id="selectHolidayManageList" resultType="java.util.HashMap">
+		/* system.holiday.selectHolidayManageList*/
+		SELECT	A.HOLIDAY
+		,       A.HOLIDAY_NM
+		,       A.CREATORID
+		,       A.CREATEDATE
+		<include refid="holidayManageSql"/>
+		ORDER BY A.CREATEDATE
+	</select>
+	
+	<select id="selectHolidayManageList_count" resultType="int">
+	   /* system.holiday.selectHolidayManageList_count*/
+	   SELECT COUNT(1)
+	   <include refid="holidayManageSql"/>
+	</select>
+	
+	<insert id="insertHolidayManage">
+	   /* system.holiday.insertHolidayManage */
+	   INSERT INTO HOLIDAY_MANAGE(
+	       HOLIDAY
+	   ,   HOLIDAY_NM
+	   ,   CREATORID
+	   ,   CREATEDATE
+	   )VALUES(
+	       #{holiday}
+	   ,   #{holiday_nm}
+	   ,   #{loginUserDto.userId}
+	   ,   GETDATE()
+	   )
+	</insert>
+	
+	<delete id="deleteHolidayManage">
+	   /* system.holiday.deleteHolidayManage*/
+	   DELETE FROM HOLIDAY_MANAGE WHERE HOLIDAY = #{holiday}
+	</delete>
+	
+	
+	
+	
+	
+</mapper>

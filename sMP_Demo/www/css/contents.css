@@ -1,0 +1,210 @@
+/* 硫붿씤�쁺�뿭 */
+#divSub #divContainer #divContant {margin-left:15px; text-align:left; padding-top:20px;margin-bottom:50px}
+#divSub #AllContainer {position:relative; width:1000px; top:20px; min-height:410px;}
+/* #divSub #AllContainer {position:relative; top:20px; width:1000px; min-height:842px; } */
+#divSub #divContainer #vendorMain {position:relative; margin-left:15px; text-align:left; padding-top:15px;}
+#divSub #divContainer #vendorMain .BoxCont {position:relative; float:left; width:405px; margin-bottom:15px;}
+#divSub #divContainer #vendorMain .BoxCont:after {float:none;}
+#divSub #divContainer #vendorMain .BoxCont h2 {font-size:14px; color:#000; line-height:30px;}
+#divSub #divContainer #vendorMain .BoxCont h2 span {position:absolute; right:0;}
+#divSub #divContainer #vendorMain .BoxCont table {border-top:solid 2px #000 !important;}
+#divSub #divContainer #vendorMain .BoxCont table tr th {color:#000; background-color:#f8f9fb; height:25px; border:solid 1px #ccc; vertical-align:middle; text-align:center;}
+#divSub #divContainer #vendorMain .BoxCont table tr td  {border:solid 1px #ddd; padding:5px 8px; vertical-align:middle; text-align:center;}
+#divSub #divContainer #vendorMain .BoxCont .Notice h2 span {position:absolute; margin-top:10px; margin-left:290px;}
+#divSub #divContainer #vendorMain .BoxCont .Notice h2 {line-height:30px;border-bottom:solid 2px #000;}
+#divSub #divContainer #vendorMain .BoxCont .Notice dt {float:left; line-height:28px; width:330px;}
+#divSub #divContainer #vendorMain .BoxCont .Notice dd {float:left; line-height:28px; width:75px;}
+
+#divSub #divContainer #chk-cart {position:fixed;bottom:0;margin-left:665px;width:143px;padding:18px 17.5px;background-color:#ffb700;font-size:20px;font-weight:600;color:#fff;letter-spacing:-1.5px}
+
+.banner {position:relative; float:left; width:825px;}
+.banner li {float:left;}
+
+.Alarm {position:relative; float:left; background:url(/img/contents/main_noticeBg.gif) no-repeat; width:825px; height:53px;}
+.Alarm .slide { position:relative; width:665px; height:34px; left:160px; top:12px; overflow:hidden; line-height:34px; font-size:14px;}
+.Alarm .slide a:link, .Alarm .slide a:visited {color:#000;}
+.Alarm .slide a:hover, .Alarm .slide a:aictive {color:#ea0001;}
+
+
+
+/* 20160104 �닔�젙 �떆�옉 */
+#bossMain {position:relative; width:1500px; margin:0 auto;}
+#bossMain .BoxCont {float:left; width:640px; margin:10px;}
+#bossMain .BoxCont:after {content:""; float:none;}
+#bossMain .BoxCont h2 {margin-bottom:5px; font-size:14px; font-weight:700; color:#000;}
+#bossMain table {border-top:solid 2px #ea002c !important; width:100%;}
+#bossMain table tr th {color:#000; background-color:#f8f9fb; height:25px; border:solid 1px #ccc; vertical-align:middle; text-align:center;}
+#bossMain table tr td  {border:solid 1px #ddd; padding:5px 8px; vertical-align:middle; text-align:center;}
+#bossMain .BoxCont .Notice h2 span {position:absolute; margin-left:550px;}
+#bossMain .BoxCont .Notice h2 {}
+#bossMain .BoxCont .Notice dl {border-top:solid 2px #ea002c;}
+#bossMain .BoxCont .Notice dt {float:left; line-height:28px; width:560px;}
+#bossMain .BoxCont .Notice dd {float:left; line-height:28px; width:80px; text-align:right;}
+#bossMain .BoxBottom {float:left; width:614px; margin:10px 0px 10px 10px;}
+#bossMain .BoxBottom2 {float:left; width:390px; margin:10px;}
+#bossMain .BoxBottom3 {float:left; width:452px; margin:10px 10px 10px 0px;}
+/* 20160104 �닔�젙 �걹 */
+
+#divSub #divContainer #divContant h2 {font-size:24px; color:#333; font-weight:600; margin-bottom:20px;}
+#divSub #divContainer #divContant h3 {font-size:14px; font-weight:lighter !important; color:#777;}
+#divSub #divContainer #divContant h4 {font-size:14px; color:#333; line-height:180%;}
+
+/* �꺆�쁺�뿭 */
+.Tabarea { position:relative; width:100%;}
+.Tabarea:after {content:".";height:0;clear:both;display:block;visibility:hidden;} 
+.Tabarea li {width:180px; height:36px; line-height:36px; font-size:12px; text-align:center; float:left; background:#eee; color:#777; border:solid 1px #ddd;}
+.Tabarea li.on {background:#ea002c; border:solid 1px #ea002c; color:#fff; font-size:15px; font-weight:700;}
+
+/* 寃��깋�쁺�뿭 */
+#divSub #divContainer #divContant .SRC {background:#f1f1f1; border:solid 1px #ccc; text-align:center; width:826px; line-height:50px;}
+#divSub #divContainer #divContant .SRC input.src {border:solid 2px #ea002c; background:#fff; width:350px; height:19px;}
+#divSub #divContainer #divContant .SRC label {display:inline-block; margin-right:20px;}
+
+.total {background:url(/img/contents/bullet_01.gif) 0 center no-repeat; padding-left:15px; margin-bottom:10px;}
+.total strong {color:#ea002c;}
+.alignIcon { right:0; text-align:right;}
+.alignIcon span {display:inline-block; margin-right:10px;}
+
+.TotalCount {background:#f5f5f5; border:solid 2px #ccc; padding:10px; font-size:14px; line-height:24px; position:relative; top:-1px;}
+
+.ListTab {background:#f1f1f1; border-top:solid 2px #000; width:826px; line-height:40px; font-size:14px;border-left:solid 1px #ccc;border-right:solid 1px #ccc;}
+.ListTab a.back {position:absolute; z-index:99; height:14px; width:8px; margin-top:13px;}
+.ListTab a.next {position:absolute; right:8px; z-index:99; height:14px; width:8px; margin-top:-26px;}
+.ListTab .slid { position:relative; width:826px; overflow:hidden;}
+.ListTab .slid span {display:inline-block; padding:0 20px;}
+.ListTab .slid span.On { background:#fff; color:#ea0001; border-right:solid 1px #ccc; font-weight:600;}
+
+/* �뙘�뾽 */
+#divPopup {position:absolute; background:#fff;}
+#divPopup h1 {background:#ea0001; font-size:20px; color:#fff; line-height:44px; padding-left:15px; border-bottom:solid 2px #ddd;}
+#divPopup h1 a {position:absolute; right:10px; top:10px; z-index: 99999;}
+#divPopup .popcont {padding:15px;border:solid 1px #ccc;}
+#divPopup .popcont h2 {font-size:20px; color:#000; font-weight:600; margin-bottom:15px; }
+#divPopup .popcont h3 {font-size:14px; background:url(/img/contents/bullet_02.gif) 0 center no-repeat; padding-left:15px; margin:10px 0; color:#333;}
+#divPopup .popcont h4 {font-size:12px; background:url(/img/contents/bullet_03.gif) 0 center no-repeat; padding-left:7px; color:#ea002c; margin-bottom:5px;}
+
+#divPopup .popcont .message {border:solid 1px #ccc; background:#eee; font-size:14px; text-align:center; padding:10px;}
+
+#divPopup .popcont .deal_img { position:absolute; width:380px; height:380px; border:solid 1px #ddd;}
+#divPopup .popcont .deal_info {position:relative; width:380px; height:400px; margin-left:395px; font-size:14px; }
+#divPopup .popcont .deal_info .tit {font-size:18px; font-weight:600; color:#000; letter-spacing:-1px; border-bottom:solid 1px #ddd;}
+#divPopup .popcont .deal_info .tit span {display:inline-block; width:50px; line-height:24px;  text-align:center; cursor:pointer; margin-right:5px; font-size:12px;}
+#divPopup .popcont .deal_info span.option {background:#0090eb; color:#fff;}	
+#divPopup .popcont .deal_info span.add {background:#f57f25; color:#fff;}	
+#divPopup .popcont .deal_info span.appoint {background:#333; color:#fff;}	
+#divPopup .popcont .deal_info table {width:380px; border-bottom:solid 1px #ddd;}
+#divPopup .popcont .deal_info td.stit {color:#777; width:100px; }
+#divPopup .popcont .deal_info td {color:#000; line-height:40px;}
+#divPopup .popcont .deal_info td p {line-height:24px;}
+
+#divPopup .popcont .tab {border-bottom:solid 1px #ddd;}
+#divPopup .popcont .tab li {width:100px; font-size:14px; text-align:center; color:#fff; background:#ea0001; font-weight:600; line-height:30px;}
+
+/* �뙘�뾽2 */
+#divPopup2 {position:absolute; background:#fff;}
+#divPopup2 h1 {background:#ea0001; font-size:20px; color:#fff; line-height:44px; padding-left:15px; border-bottom:solid 2px #ddd;}
+#divPopup2 h1 a {position:absolute; right:10px; top:10px; z-index: 99999;}
+#divPopup2 .popcont {padding:15px;border:solid 1px #ccc;}
+#divPopup2 .popcont h2 {font-size:20px; color:#000; font-weight:600; margin-bottom:15px; }
+#divPopup2 .popcont h3 {font-size:14px; background:url(/img/contents/bullet_02.gif) 0 center no-repeat; padding-left:15px; margin:10px 0; color:#333;}
+#divPopup2 .popcont h4 {font-size:12px; background:url(/img/contents/bullet_03.gif) 0 center no-repeat; padding-left:7px; color:#ea002c; margin-bottom:5px;}
+
+#divPopup2 .popcont .message {border:solid 1px #ccc; background:#eee; font-size:14px; text-align:center; padding:10px;}
+
+#divPopup2 .popcont .deal_img { position:absolute; width:380px; height:380px; border:solid 1px #ddd;}
+#divPopup2 .popcont .deal_info {position:relative; width:380px; height:400px; margin-left:395px; font-size:14px; }
+#divPopup2 .popcont .deal_info .tit {font-size:18px; font-weight:600; color:#000; letter-spacing:-1px; border-bottom:solid 1px #ddd;}
+#divPopup2 .popcont .deal_info .tit span {display:inline-block; width:50px; line-height:24px;  text-align:center; cursor:pointer; margin-right:5px; font-size:12px;}
+#divPopup2 .popcont .deal_info span.option {background:#0090eb; color:#fff;}	
+#divPopup2 .popcont .deal_info span.add {background:#f57f25; color:#fff;}	
+#divPopup2 .popcont .deal_info span.appoint {background:#333; color:#fff;}	
+#divPopup2 .popcont .deal_info table {width:380px; border-bottom:solid 1px #ddd;}
+#divPopup2 .popcont .deal_info td.stit {display:inline-block; color:#777; width:100px; }
+#divPopup2 .popcont .deal_info td {color:#000; line-height:40px;}
+#divPopup2 .popcont .deal_info td p {line-height:24px;}
+
+#divPopup2 .popcont .tab {border-bottom:solid 1px #ddd;}
+#divPopup2 .popcont .tab li {width:100px; font-size:14px; text-align:center; color:#fff; background:#ea0001; font-weight:600; line-height:30px;}
+
+/* �긽�뭹紐⑸줉 */
+.SRCTable {width:100%}
+.SRCTable td {border:solid 1px #ccc; padding:8px 5px;}
+.SRCTable td dl{ margin-left:3px;}
+.SRCTable td dt {width:100px; height:100px; border:solid 1px #ddd; float:left; margin-right:10px;}
+.SRCTable td dd {float:left; width:330px; font-size:14px; color:#000; letter-spacing:-0.5px;}
+.SRCTable td dd ul:after {content:" ";height:0;clear:both;display:block;}
+.SRCTable td dd li {float:left; font-size:12px; color:#888; min-width:160px;}
+.SRCTable td dd li strong {color:#000; font-weight:600;}
+.SRCTable td ul {margin:5px;} 
+.SRCTable td.count {background:#eee;}
+.SRCTable td.count span {display:inline-block; width:120px; text-align:right;}
+.SRCTable td div.label {position:absolute; left:330px; width:165px; text-align:right; margin-top:80px; z-index:99;}
+.SRCTable td div.label span {display:inline-block; width:50px; line-height:24px;  text-align:center; cursor:pointer; margin-left:5px;}
+.SRCTable td div span.option {background:#9F9B86; color:#fff;}	
+.SRCTable td div span.add {background:#9F9B86; color:#fff;}	
+.SRCTable td div span.appoint {background:#9F9B86; color:#fff;}	
+
+
+
+/* 洹몃━�뱶 */
+.GridList {border-top:solid 1px #000 !important;}
+.GridList table { width:100%;}
+.GridList tr th {color:#000; background-color:#f8f9fb; border:0 none; height:25px; padding:0; border:solid 1px #ccc;vertical-align:middle; text-align:center;}
+.GridList tr td  {border:0 none; border:solid 1px #ddd; padding:5px 8px; vertical-align:middle;}
+.GridList tr td  a:link, a:visited {color:#000; text-decoration:underline; font-weight:600;}
+.GridList tr td  a:hover, a:active {color:#ea002c;}
+.GridList tr td strong {color:#444; font-weight:600;}
+.GridList tr td dl{height:110px; position:relative; top:5px;}
+.GridList tr td dt {width:100px; height:100px; border:solid 1px #ddd; float:left; margin-right:10px;}
+.GridList tr td dd {float:left; width:auto; font-size:16px; color:#000; letter-spacing:-0.5px;}
+.GridList tr td dd ul {margin-top:10px;}
+.GridList tr td dd ul:after {content:" ";height:0;clear:both;display:block;}
+.GridList tr td dd li {font-size:12px; color:#888; min-width:160px;}
+.GridList tr td dd li strong {color:#000; font-weight:600;}
+.GridList tr td div.label {position:absolute; left:360px; width:165px; text-align:right; margin-top:80px; z-index:99;}
+.GridList tr td div.label span {display:inline-block; width:50px; line-height:24px; text-align:center; cursor:pointer; margin-left:5px;}
+.GridList tr td div span.option {background:#0090eb; color:#fff;}	
+.GridList tr td div span.add {background:#f57f25; color:#fff;}	
+.GridList tr td div span.appoint {background:#333; color:#fff;}
+.GridList tr td.count {text-align:right; padding-right:5px;}
+
+/* 紐⑸줉�뀒�씠釉� */
+.ListTable {border-top:solid 1px #000 !important;}
+.ListTable table { width:100%;}
+.ListTable tr th {color:#000; background-color:#f8f9fb; border:0 none; height:25px; padding:0; border:solid 1px #ccc;vertical-align:middle; text-align:center; border-right:0;}
+.ListTable tr td  {border:0 none; border:solid 1px #ddd; padding:5px 8px; vertical-align:middle;border-right:0;}
+.ListTable tr td  a:link, a:visited {color:#000; text-decoration:underline; font-weight:600;}
+.ListTable tr td  a:hover, a:active {color:#ea002c;}
+.ListTable tr td strong {color:#444; font-weight:600;}
+.ListTable tr td dl{height:110px; position:relative; top:5px;}
+.ListTable tr td dt {width:100px; height:100px; border:solid 1px #ddd; float:left; margin-right:10px;}
+.ListTable tr td dd {float:left; width:220px; font-size:14px; color:#000; letter-spacing:-0.5px;}
+.ListTable tr td dd ul {margin-top:10px;}
+.ListTable tr td dd ul:after {content:" ";height:0;clear:both;display:block;}
+.ListTable tr td dd li {font-size:12px; color:#888; min-width:160px;}
+.ListTable tr td dd li strong {color:#000; font-weight:600;}
+.ListTable tr td div.label {position:absolute; left:360px; width:165px; text-align:right; margin-top:80px; z-index:99;}
+.ListTable tr td div.label span {display:inline-block; width:50px; line-height:24px; text-align:center; cursor:pointer; margin-left:5px;}
+.ListTable tr td div span.option {background:#9F9B86; color:#fff;}	
+.ListTable tr td div span.add {background:#9F9B86; color:#fff;}	
+.ListTable tr td div span.appoint {background:#9F9B86; color:#fff;}
+.ListTable tr td.count {text-align:right; padding-right:5px;}
+.ListTable tr.total {background:#eee; color:#000; font-weight:600;}
+
+/* �엯�젰�뀒�씠釉� */
+.InputTable {width:100%; border-top:solid 2px #ea002c;}
+.InputTable th {color:#000; background:#eee; border:solid 1px #ccc; text-align:left; font-weight:600; padding:5px 0 5px 10px; vertical-align:middle;}
+.InputTable th strong {color:#ea0001;}
+.InputTable th.check {background:url(/img/contents/th_star.png) no-repeat 2px center #eee;}
+.InputTable td {color:#555; border:solid 1px #ccc; padding:5px;}
+.InputTable td label { display:inline-block; min-width:50px;}
+.InputTable td th, .InputTable td td {border:solid 1px #ddd;}
+.InputTable td a:link, a:visited {color:#000; text-decoration:underline; font-weight:600;}
+.InputTable td a:hover, a:active {color:#ea002c;}
+
+/*** paging ***/  
+.divPageNum {text-align:center; margin-top:10px;}
+.divPageNum ol li {padding:5px; margin:2px; display:inline; text-align:center; width:10px;}
+.divPageNum ol li.PageNumBtn {border:0 none;}
+.divPageNum ol li.Active {font-weight:700; color:#ea0001 !important; font-size:14px;}
+.divPageNum ol li a {text-decoration:none;}

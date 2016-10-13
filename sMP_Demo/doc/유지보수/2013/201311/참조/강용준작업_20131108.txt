@@ -1,0 +1,45 @@
+1. 조직관리 > 고객사관리 > 사업장조회
+	- 법인사용 및 법인주문제한 여부 필드 추가
+	- 법인종료, 법인주문제한 및 사업장 주문제한 사업장에 빨간색 폰트로 강조함
+	- 엑셀다운로드 법인사용 및 법인주문제한 여부 필드 추가
+	- /OKPlaza/www/WEB-INF/jsp/organ/organBranchList.jsp
+	- /OKPlaza/src/kr/co/bitcube/organ/dto/SmpBranchsDto.java
+	- /OKPlaza/src/config/sqlMap/mssql/organ/organ_sql.xml
+	
+2. 정산관리 > 정산생성
+	- 정산대상목록에서 이미 정산대상에 포함되어 있으면 이중으로 포함안되게 처리
+	- 정산대상목록에서 인수수량을 변경하여 정산생성목록으로 추가시 정산수량 체크
+	- 정산대상목록에 정산대상을 추가하거나 뺄시 정산확정상태 이상이거나 삭제된 상태인지 체크
+	- /OKPlaza/www/WEB-INF/jsp/adjust/adjustGenerationList.jsp
+	- /OKPlaza/src/kr/co/bitcube/adjust/controller/AdjustCtl.java
+	- /OKPlaza/src/kr/co/bitcube/adjust/service/AdjustSvc.java
+	- /OKPlaza/src/config/sqlMap/mssql/adjust/adjust_sql.xml
+	
+3. 정산관리 > 정산생성 > 정산추가팝업
+	- 정산 세금계산서 대상을 사업장으로만 함
+	- /OKPlaza/www/WEB-INF/jsp/adjust/adjustGenerationPop.jsp
+	
+4. 정산관리 > 매출확정
+	- 매출확정 처리 시 이미 매출확정되어 있는지 체크
+	- 매출확정취소 처리 시 이미 매출확정취소가 되어 있는지 체크
+	- 매출확정취소 처리 시 매입확정된 매출정보는 취소가 불가하게 체크메시지 처리
+	- 매출확정부분취소 시 취소대상에 대한 취소가능한 상태인지 체크
+	- 매출확정부분취소 시 매출헤더 합계정보 업데이트 처리
+	- 매출확정/매출확정취소 처리 시 세금계산서 발송이 된 매출은 확정및취소가 불가
+	- /OKPlaza/www/WEB-INF/jsp/adjust/adjustSalesConfirmation.jsp
+	- /OKPlaza/src/kr/co/bitcube/adjust/controller/AdjustCtl.java
+	- /OKPlaza/src/kr/co/bitcube/adjust/service/AdjustSvc.java
+	- /OKPlaza/src/kr/co/bitcube/adjust/dao/AdjustDao.java
+	- /OKPlaza/src/config/sqlMap/mssql/adjust/adjust_sql.xml
+	
+5. 정산관리 > 매입확정
+	- 정산생성일자의 조회조건 삭제
+	- 매입확정된 매입목록 총개수 가져오는 부분 수정
+	- 매입확정 처리 시 해당 매입의 매출확정취소가 되었는지 체크
+	- 매입확정 처리 시 확정처리 매입액이 서버쪽과 맞는지 체크
+	- 매입확정취소 시 확정취소 가능상태(매입확정, 매입세금계산서 미전송)인지 체크
+	- /OKPlaza/www/WEB-INF/jsp/adjust/adjustPurchaseConfirmation.jsp
+	- /OKPlaza/src/kr/co/bitcube/adjust/controller/AdjustCtl.java
+	- /OKPlaza/src/kr/co/bitcube/adjust/service/AdjustSvc.java
+	- /OKPlaza/src/kr/co/bitcube/adjust/dao/AdjustDao.java
+	- /OKPlaza/src/config/sqlMap/mssql/adjust/adjust_sql.xml

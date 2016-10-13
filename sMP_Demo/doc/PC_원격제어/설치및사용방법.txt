@@ -1,0 +1,11 @@
+원격제어용 Agent 프로그램 download
+http://files.rsupport.com/kr/remotecall/software/rcStartSupport.exe
+ 
+1. 상기 주소의 파일을 다운로드 받아 설치
+2. ID : skts-b2b / PW : sktsb2b 로그인
+3. 로그인 완료 후 시작하기 버튼 클릭 à 숫자 1 이 표기된 원격제어 대기 창이 뜸
+4. 원격으로 봐줄 PC 의 대상자에게 http://113366.com/okplaza 로 접속 유도 à 숫자 1 을 클릭 요청
+5. 원격제어 프로그램 등 실행 동의 요청
+6. 세션이 맺어지면 상대방의 PC 를 원격제어
+ 
+Agent 로그인은 동시 로그인이 안됩니다.

@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="newCate">
+	<sql id="selectCategoryListSql">
+		FROM	MCCATEGORYMASTER_NM A WITH(NOLOCK)
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="ref_Cate_Seq != null and ref_Cate_Seq != ''">
+				AND A.REF_CATE_SEQ = #{ref_Cate_Seq}
+			</if>
+			<if test="cate_Level != null and cate_Level != ''">
+				AND A.CATE_LEVEL = #{cate_Level}
+			</if>
+		</trim>
+	</sql>
+	<select id="selectCategoryList" resultType="kr.co.bitcube.mig.dto.NewCateDto">
+		/* newCate.selectCategoryList */
+		SELECT	A.CATE_ID
+		,		A.MAJO_CODE_NAME
+		,		A.CATE_CD
+		,		A.MOJO_CODE_DESC
+		,		A.REF_CATE_SEQ
+		,		A.CATE_LEVEL
+		,		A.ORD_NUM
+		,		A.INSERT_USER_ID
+		,		A.INSERT_DATE
+		,		A.UPDATE_USER_ID
+		,		A.UPDATE_DATE
+		,		A.REMOTEIP
+		<include refid="selectCategoryListSql"/>
+		ORDER BY A.ORD_NUM
+	</select>
+	
+	
+	
+	<select id="selectNewCategoryMasterCnt" resultType="int">
+		/* newCate.selectNewCategoryMasterCnt */
+		SELECT	COUNT(1)
+		FROM	MCCATEGORYMASTER_NM WITH(NOLOCK)
+		WHERE	CATE_CD = #{cateCd}
+	</select>
+	<insert id="insertNewCategoryMaster">
+		/* newCate.insertNewCategoryMaster */
+		INSERT INTO MCCATEGORYMASTER_NM (
+				CATE_ID
+		,		MAJO_CODE_NAME
+		,		CATE_CD
+		,		MOJO_CODE_DESC
+		,		REF_CATE_SEQ
+		,		CATE_LEVEL
+		,		ORD_NUM
+		,		INSERT_USER_ID
+		,		INSERT_DATE
+		,		REMOTEIP
+		) VALUES (
+				#{cateId}
+		,		#{majoCodeName}
+		,		#{cateCd}
+		,		#{mojoCodeDesc}
+		,		#{refCateSeq}
+		,		#{cateLevel}
+		,		#{ordNum}
+		,		#{insertUserId}
+		,		GETDATE()
+		,		#{remoteIp}
+		)
+	</insert>
+	
+	<update id="updateNewCategoryMaster">
+		/* newCate.updateNewCategoryMaster */
+		UPDATE	MCCATEGORYMASTER_NM
+		SET		MAJO_CODE_NAME = #{majoCodeName}
+		,		CATE_CD = #{cateCd}
+		,		MOJO_CODE_DESC = #{mojoCodeDesc}
+		,		ORD_NUM = #{ordNum}
+		,		UPDATE_USER_ID = #{insertUserId}
+		,		UPDATE_DATE = GETDATE()
+		,		REMOTEIP = #{remoteIp}
+		WHERE	CATE_ID = #{cateId}
+	</update>
+
+	<update id="deleteNewCategoryMaster">
+		/* newCate.deleteNewCategoryMaster */
+		DELETE FROM MCCATEGORYMASTER_NM
+		WHERE	CATE_ID = #{cateId}
+	</update>
+
+	<select id="selectProductListCount" resultType="int">
+		/* newCate.selectBuyProductSearchCntForAdmin */
+		SELECT COUNT(*) 
+		   <include refid="selectProductListSql"/>
+	</select>
+	<select id="selectProductList" resultType="kr.co.bitcube.mig.dto.NewCateProdDto">
+		/* newCate.selectProductList */
+		SELECT	
+				RTRIM(CONVERT(CHAR,B.GOOD_IDEN_NUMB))+'_'+B.VENDORID AS PROD_KEY
+		,		B.GOOD_IDEN_NUMB
+		,		A.GOOD_NAME
+		,		A.VTAX_CLAS_CODE
+		,		A.SALE_CRITERION_TYPE
+		,		A.STAN_BUYING_RATE
+		,		A.STAN_BUYING_MONEY
+		,		A.ISDISTRIBUTE
+		,		A.ISDISPPASTGOOD
+		,		A.INSERT_DATE
+		,		A.CATE_ID
+		,		B.VENDORID
+		,		C.VENDORNM
+		,		B.REQ_GOOD_ID
+		,		B.SALE_UNIT_PRIC
+		,		B.GOOD_SPEC_DESC
+		,		B.ORDE_CLAS_CODE
+		,		B.DELI_MINI_DAY
+		,		B.DELI_MINI_QUAN
+		,		B.MAKE_COMP_NAME
+		,		B.ORIGINAL_IMG_PATH
+		,		CASE WHEN LEN(B.ORIGINAL_IMG_PATH) > 1 THEN 'Y' ELSE 'N' END AS ISSETIMAGE
+		,		B.LARGE_IMG_PATH
+		,		B.MIDDLE_IMG_PATH
+		,		B.SMALL_IMG_PATH
+		,		B.GOOD_SAME_WORD
+		,		B.GOOD_DESC
+		,		CASE WHEN LEN(B.GOOD_DESC) > 1 THEN 'Y' ELSE 'N' END AS ISSETDESC
+		,		B.ISSUB_ONTRACT
+		,		A.GOOD_TYPE AS GOOD_CLAS_CODE
+		,		B.GOOD_INVENTORY_CNT
+		,		B.REGIST_DATE
+		<include refid="selectProductListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+<!-- 		<if test="srcCateId != null and srcCateId != ''"> -->
+<!-- 			AND A.CATE_ID = #{srcCateId} -->
+<!-- 		</if> -->
+	<sql id="selectProductListSql">
+		FROM	MCGOOD A WITH(NOLOCK)
+		,		MCGOODVENDOR B WITH(NOLOCK)
+		,		SMPVENDORS C WITH(NOLOCK)
+		WHERE	A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+		AND		B.VENDORID = C.VENDORID
+		<if test="srcGoodIdenNumb != null and srcGoodIdenNumb != ''">
+			AND A.GOOD_IDEN_NUMB = #{srcGoodIdenNumb}
+		</if>
+		<if test="srcGoodName != null and srcGoodName != ''">
+			AND A.GOOD_NAME LIKE '%${srcGoodName}%'
+		</if>
+		<if test="srcInsertStartDate != null and srcInsertStartDate != ''">
+			<if test="srcInsertEndDate != null and srcInsertEndDate != ''">
+				AND A.INSERT_DATE BETWEEN CONVERT(DATETIME, #{srcInsertStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{srcInsertEndDate}))
+			</if>
+		</if>
+		<if test="srcGoodSpecDesc != null and srcGoodSpecDesc != ''">
+			AND B.GOOD_SPEC_DESC LIKE '%${srcGoodSpecDesc}%'
+		</if>
+		<if test="srcGoodSameWord != null and srcGoodSameWord != ''">
+			AND B.GOOD_SAME_WORD LIKE '%${srcGoodSameWord}%'
+		</if>
+		<if test="srcGoodClasCode != null and srcGoodClasCode != ''">
+			AND A.GOOD_TYPE = #{srcGoodClasCode}
+		</if>
+		<if test="srcVendorId != null and srcVendorId != '' and  srcVendorId neq '0'.toString() ">
+			AND B.VENDORID = #{srcVendorId}
+		</if>
+	</sql>
+
+	<insert id="insertCateProdVendInfo">
+		/* newCate.insertCateProdVendInfo */
+		INSERT INTO MCCATEGOOD (
+			CATE_ID
+			,GOOD_IDEN_NUMB
+			,VENDORID
+		) VALUES (
+			#{cate_id}
+			,#{good_iden_numb}
+			,#{vendorid}
+		)
+	</insert>
+	
+	<delete id="deleteCateProdVendInfo">
+		/* newCate.deleteCateProdVendInfo*/
+		DELETE FROM MCCATEGOOD WHERE CATE_ID = #{cate_id} AND GOOD_IDEN_NUMB = #{good_iden_numb} AND VENDORID = #{vendorid}
+	</delete>
+
+	<select id="selectCateGoods" resultType="kr.co.bitcube.mig.dto.NewCateProdDto">
+		/* newCate.selectCateGoods */
+		SELECT	
+				RTRIM(CONVERT(CHAR,B.GOOD_IDEN_NUMB))+'_'+B.VENDORID AS PROD_KEY
+		,		B.GOOD_IDEN_NUMB
+		,		A.GOOD_NAME
+		,		A.VTAX_CLAS_CODE
+		,		A.SALE_CRITERION_TYPE
+		,		A.STAN_BUYING_RATE
+		,		A.STAN_BUYING_MONEY
+		,		A.ISDISTRIBUTE
+		,		A.ISDISPPASTGOOD
+		,		A.INSERT_DATE
+		,		A.CATE_ID
+		,		B.VENDORID
+		,		C.VENDORNM
+		,		B.REQ_GOOD_ID
+		,		B.SALE_UNIT_PRIC
+		,		B.GOOD_SPEC_DESC
+		,		B.ORDE_CLAS_CODE
+		,		B.DELI_MINI_DAY
+		,		B.DELI_MINI_QUAN
+		,		B.MAKE_COMP_NAME
+		,		B.ORIGINAL_IMG_PATH
+		,		CASE WHEN LEN(B.ORIGINAL_IMG_PATH) > 1 THEN 'Y' ELSE 'N' END AS ISSETIMAGE
+		,		B.LARGE_IMG_PATH
+		,		B.MIDDLE_IMG_PATH
+		,		B.SMALL_IMG_PATH
+		,		B.GOOD_SAME_WORD
+		,		B.GOOD_DESC
+		,		CASE WHEN LEN(B.GOOD_DESC) > 1 THEN 'Y' ELSE 'N' END AS ISSETDESC
+		,		B.ISSUB_ONTRACT
+		,		A.GOOD_TYPE AS GOOD_CLAS_CODE
+		,		B.GOOD_INVENTORY_CNT
+		,		B.REGIST_DATE
+		FROM	MCCATEGOOD D WITH(NOLOCK)
+		,		MCGOOD A WITH(NOLOCK)
+		,		MCGOODVENDOR B WITH(NOLOCK)
+		,		SMPVENDORS C WITH(NOLOCK)
+		WHERE	A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+		AND		B.VENDORID = C.VENDORID
+		AND		D.VENDORID = B.VENDORID
+		AND		D.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+		AND		D.CATE_ID = #{srcCateId}
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+
+	<insert id="insertElectronicBill">
+		/* newCate.insertElectronicBill */
+		INSERT INTO ELECTRONIC_BILL (
+				BILL_ID
+		,		BUSINESS_NUM
+		,		SALE_NUM
+		,		PUBLIC_DATE
+		,		EVIDENCE_DATE
+		,		EXPIRE_DATE
+		,		PUBLIC_AMOUNT
+		,		OVER_PERIOD
+		,		INTEREST_AMOUNT
+		,		SUM_AMOUNT
+		,		INTEREST_RATE
+		,		RETURN_DATE
+		,		EXIST_PUBLIC_DATE
+		,		REFERENCE
+		,		BILL_FLAG
+		,		BANKCD
+		,		BUSINESS_NM
+		) VALUES (
+				#{bill_id}
+		,		#{business_num}
+		,		#{sale_num}
+		,		REPLACE(#{public_date},'.','-')
+		,		REPLACE(#{evidence_date},'.','-')
+		,		REPLACE(#{expire_date},'.','-')
+		,		#{public_amount}
+		,		#{over_period}
+		,		#{interest_amount}
+		,		#{sum_amount}
+		,		REPLACE(#{interest_rate},'.','-')
+		,		REPLACE(#{return_date},'.','-')
+		,		REPLACE(#{exist_public_date},'.','-')
+		,		#{reference}
+		,		#{bill_flag}
+		,		#{bankcd}
+		,		#{business_nm}
+		)
+	</insert>
+	<update id="updateElectronicBill">
+		/* newCate.updateElectronicBill */
+		UPDATE	ELECTRONIC_BILL
+		SET		BUSINESS_NUM = #{business_num}
+		,		SALE_NUM = #{sale_num}
+		,		PUBLIC_DATE = REPLACE(#{public_date},'.','-')
+		,		EVIDENCE_DATE = REPLACE(#{evidence_date},'.','-')
+		,		EXPIRE_DATE = REPLACE(#{expire_date},'.','-')
+		,		PUBLIC_AMOUNT = #{public_amount}
+		,		OVER_PERIOD = #{over_period}
+		,		INTEREST_AMOUNT = #{interest_amount}
+		,		SUM_AMOUNT = #{sum_amount}
+		,		INTEREST_RATE = REPLACE(#{interest_rate},'.','-')
+		,		RETURN_DATE = REPLACE(#{return_date},'.','-')
+		,		EXIST_PUBLIC_DATE = REPLACE(#{exist_public_date},'.','-')
+		,		REFERENCE = #{reference}
+		,		BILL_FLAG = #{bill_flag}
+		,		BANKCD = #{bankcd}
+		,		BUSINESS_NM = #{business_nm}
+		WHERE	BILL_ID = #{bill_id}
+	</update>
+	<select id="selectElectronicBill" resultType="hashmap">
+		/* newCate.selectElectronicBill */
+		SELECT	A.BILL_ID
+		,		A.BUSINESS_NUM
+		,		A.SALE_NUM
+		,		A.PUBLIC_DATE
+		,		A.EVIDENCE_DATE
+		,		A.EXPIRE_DATE
+		,		A.PUBLIC_AMOUNT
+		,		A.OVER_PERIOD
+		,		A.INTEREST_AMOUNT
+		,		A.SUM_AMOUNT
+		,		A.INTEREST_RATE
+		,		A.RETURN_DATE
+		,		A.EXIST_PUBLIC_DATE
+		,		A.REFERENCE
+		<if test="@MybatisUtils@isNotEmpty(bill_id)">
+		,		A.BILL_FLAG
+		,		A.BANKCD
+		</if>
+		<if test="@MybatisUtils@isEmpty(bill_id)">
+		,		(CASE 	WHEN A.BILL_FLAG = '10' THEN '전자어음'
+						WHEN A.BILL_FLAG = '20' THEN '전자외담대'
+						ELSE ''
+				END) AS BILL_FLAG
+		,		B.CODENM1 AS BANKCD
+		</if>
+		,		A.BUSINESS_NM
+		FROM	ELECTRONIC_BILL A WITH(NOLOCK)
+		LEFT OUTER JOIN SMPCODES B WITH(NOLOCK)
+			ON	B.CODETYPECD = 'BANKCD'
+			AND	B.CODEVAL1 = A.BANKCD
+		WHERE	1 = 1
+		<choose>
+			<when test="@MybatisUtils@isNotEmpty(bill_id)">
+		AND		A.BILL_ID = #{bill_id}
+			</when>
+			<otherwise>
+		AND		${dateFlag}_DATE BETWEEN #{startDate} AND #{endDate}
+				<if test="@MybatisUtils@isNotEmpty(returnFlag)">
+					<if test="returnFlag=='1'.toString()">
+		AND		(A.RETURN_DATE IS NOT NULL AND A.RETURN_DATE != '')
+					</if>
+					<if test="returnFlag=='0'.toString()">
+		AND		(A.RETURN_DATE IS NULL OR A.RETURN_DATE = '')
+					</if>
+				</if>
+				<if test="@MybatisUtils@isNotEmpty(src_business_num)">
+		AND		A.BUSINESS_NUM = #{src_business_num}
+				</if>
+				<if test="@MybatisUtils@isNotEmpty(src_sale_num)">
+		AND		A.SALE_NUM = #{src_sale_num}
+				</if>
+				<if test="@MybatisUtils@isNotEmpty(src_business_nm)">
+		AND		A.BUSINESS_NM LIKE '%' + #{src_business_nm} + '%'
+				</if>
+				<if test="@MybatisUtils@isNotEmpty(src_bill_flag)">
+		AND		A.BILL_FLAG = #{src_bill_flag}
+				</if>
+				<if test="@MybatisUtils@isNotEmpty(src_bankcd)">
+		AND		A.BANKCD = #{src_bankcd}
+				</if>
+				<if test="@MybatisUtils@isNotEmpty(src_reference)">
+		AND		A.REFERENCE LIKE '%' + #{src_reference} + '%'
+				</if>
+			</otherwise>
+		</choose>
+		<if test="@MybatisUtils@isNotEmpty(orderString)">
+		ORDER BY ${orderString}
+		</if>
+	</select>
+	<delete id="deleteElectronicBill">
+		/* newCate.deleteElectronicBill */
+		DELETE ELECTRONIC_BILL WHERE BILL_ID = #{bill_id}
+	</delete>
+	
+	<select id="selectElectronicBillSummary" resultType="hashmap">
+		SELECT	SUBSTRING(A.PUBLIC_DATE,6,2)+'월' AS PUBLIC_MONTH
+		,		SUM(A.PUBLIC_AMOUNT) AS PUBLIC_AMOUNT
+		,		SUM(A.INTEREST_AMOUNT) AS INTEREST_AMOUNT
+		,		SUM(A.SUM_AMOUNT) AS SUM_AMOUNT
+		FROM	ELECTRONIC_BILL A WITH(NOLOCK)
+		WHERE	A.PUBLIC_DATE BETWEEN #{public_year}+'-01-01' AND #{public_year}+'-12-31'
+		GROUP BY SUBSTRING(A.PUBLIC_DATE,6,2)
+	</select>
+	
+	<select id="selectElectronicBillSummary2" resultType="hashmap">
+		SELECT	AAA.*
+		,		(CASE	WHEN AAA.SUM_AMOUNT=0 THEN 0
+						ELSE ROUND((AAA.INTEREST_AMOUNT/AAA.SUM_AMOUNT)*100,1)
+				END) AS INTEREST_SUM_RATE
+		FROM	(
+				SELECT	AA.PUBLIC_MONTH
+				,		(CASE	WHEN BB.BILL_NM IS NULL THEN '소계' 
+								ELSE BB.BILL_NM
+						END) AS BILL_FLAG
+				,		ROUND(CONVERT(FLOAT,SUM(AA.INTEREST_AMOUNT))/1000,0) AS INTEREST_AMOUNT
+				,		ROUND(CONVERT(FLOAT,SUM(AA.SUM_AMOUNT))/1000,0) AS SUM_AMOUNT
+				FROM	(
+						SELECT	SUBSTRING(A.PUBLIC_DATE,6,2)+'월' AS PUBLIC_MONTH
+						,		(CASE WHEN A.BILL_FLAG IS NULL OR A.BILL_FLAG='' THEN '-' ELSE A.BILL_FLAG END) AS BILL_FLAG
+						,		A.INTEREST_AMOUNT
+						,		A.SUM_AMOUNT
+						FROM	ELECTRONIC_BILL A WITH(NOLOCK)
+						WHERE	A.PUBLIC_DATE BETWEEN  #{public_year}+'-01-01' AND #{public_year}+'-12-31'
+				) AA
+				LEFT OUTER JOIN (
+						SELECT '10' AS BILL_FLAG, '전자어음' AS BILL_NM
+						UNION ALL
+						SELECT '20' AS BILL_FLAG, '전자외담대' AS BILL_NM
+						UNION ALL
+						SELECT '-' AS BILL_FLAG, '-' AS BILL_NM
+				) BB
+					ON	AA.BILL_FLAG = BB.BILL_FLAG
+				GROUP BY AA.PUBLIC_MONTH, BB.BILL_NM WITH ROLLUP
+				HAVING	AA.PUBLIC_MONTH IS NOT NULL
+		) AAA
+	</select>
+</mapper>

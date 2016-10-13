@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="system.role">
+	<select id="selectRoleList" resultType="kr.co.bitcube.system.dto.RoleDto">
+		/* system.role.selectRoleList */
+		SELECT	A.ROLEID
+		,		A.ROLECD
+		,		A.ROLENM
+		,		A.SVCTYPECD
+		,		dbo.FNS_CODENM1BYCODEVAL1('SVCTYPECD', A.SVCTYPECD) AS SVCTYPENM
+		,		A.BORGSCOPECD
+		,		dbo.FNS_CODENM1BYCODEVAL1('BORGSCOPECD',A.BORGSCOPECD) AS BORGSCOPENM
+		,		A.ISUSE
+		,		A.ROLEDESC
+		,		A.INITISROLE
+		,		A.INITBORGSCOPECD
+		FROM	SMPROLES A WITH(NOLOCK)
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="srcSvcTypeCd != null and srcSvcTypeCd != ''">
+				AND A.SVCTYPECD = #{srcSvcTypeCd}
+			</if>
+			<if test="srcRoleCd != null and srcRoleCd != ''">
+				AND A.ROLECD LIKE '%${srcRoleCd}%'
+			</if>
+			<if test="srcRoleNm != null and srcRoleNm != ''">
+				AND A.ROLENM LIKE '%${srcRoleNm}%'
+			</if>
+			<if test="srcIsUse != null and srcIsUse != ''">
+				AND A.ISUSE = #{srcIsUse}
+			</if>
+			<if test="srcInitIsRole != null and srcInitIsRole != ''">
+				AND A.INITISROLE = #{srcInitIsRole}
+			</if>
+		</trim>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectRoleScopeList" resultType="kr.co.bitcube.system.dto.ScopesDto">
+		/* system.role.selectRoleScopeList */
+		SELECT	A.SCOPECD
+		,		A.SCOPENM
+		,		A.ISUSE
+		,		A.SCOPEDESC
+		,		(
+					CASE
+						WHEN B.ROLEID IS NOT NULL THEN 1
+						WHEN B.ROLEID IS NULL  THEN 0
+					END
+				) AS ISCHECK
+		,		A.SCOPEID
+		FROM	SMPSCOPES A WITH(NOLOCK)
+		LEFT OUTER JOIN SMPROLES_SCOPES B WITH(NOLOCK) ON A.SCOPEID = B.SCOPEID AND B.ROLEID = #{srcRoleId}
+		WHERE	A.SVCTYPECD = #{srcSvcTypeCd}
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectRoleCnt" resultType="int">
+		/* system.role.selectRoleCnt */
+		SELECT	COUNT(1)
+		FROM	SMPROLES A WITH(NOLOCK)
+		WHERE	ROLECD = #{roleCd}
+	</select>
+	
+	<insert id="insertRole">
+		/* system.role.insertRole */
+		INSERT INTO SMPROLES (ROLEID, ROLECD, ROLENM, ROLEDESC, BORGSCOPECD, SVCTYPECD, ISUSE, initIsRole, initBorgScopeCd)
+		VALUES(#{roleId}, #{roleCd}, #{roleNm}, #{roleDesc}, #{borgScopeCd}, #{svcTypeCd}, #{isUse}, #{initIsRole}, #{initBorgScopeCd})
+	</insert>
+	
+	<update id="updateRole">
+		/* system.role.updateRole */
+		UPDATE 	SMPROLES
+		SET		ROLENM = #{roleNm}
+		,		ROLEDESC = #{roleDesc}
+		,		BORGSCOPECD = #{borgScopeCd}
+		,		SVCTYPECD = #{svcTypeCd}
+		,		ISUSE = #{isUse}
+		,		initIsRole = #{initIsRole}
+		,		initBorgScopeCd = #{initBorgScopeCd}
+		WHERE	ROLEID = #{roleId}
+	</update>
+	
+	<delete id="deleteRole">
+		/* system.role.deleteRole */
+		DELETE SMPROLES WHERE ROLEID = #{roleId}
+	</delete>
+	
+	<delete id="deleteRoleScope">
+		/* system.role.deleteRoleScope */
+		DELETE 	SMPROLES_SCOPES 
+		WHERE 	ROLEID = #{roleId}
+		<if test="scopeId != null and scopeId != ''">
+		AND 	SCOPEID = #{scopeId}
+		</if>
+	</delete>
+	
+	<insert id="insertRoleScope">
+		/* system.role.insertRoleScope */
+		INSERT INTO SMPROLES_SCOPES (ROLEID, SCOPEID, ROLECD, SCOPECD)
+		VALUES (
+				#{roleId}
+		, 		#{scopeId}
+		,		(SELECT ROLECD FROM SMPROLES WITH(NOLOCK) WHERE ROLEID = #{roleId})
+		,		(SELECT SCOPEID FROM SMPSCOPES WITH(NOLOCK) WHERE SCOPEID = #{scopeId})
+		)
+	</insert>
+	
+	<select id="selectScopeListByRoleId" resultType="kr.co.bitcube.system.dto.ScopesDto">
+		/* system.role.selectScopeListByRoleId */
+		SELECT	A.SCOPEID
+		,		A.SCOPECD
+		,		A.SCOPENM
+		,		A.SVCTYPECD
+		FROM	SMPSCOPES A WITH(NOLOCK)
+		,		SMPROLES_SCOPES B WITH(NOLOCK)
+		WHERE	A.SCOPEID = B.SCOPEID
+		AND		B.ROLEID = #{roleId}
+		AND		A.ISUSE = 1
+		ORDER BY A.SCOPENM
+	</select>
+
+	<select id="selectRoleMenuList" resultType="kr.co.bitcube.system.dto.MenuActivityDto">
+		/* system.role.selectRoleMenuList */
+		WITH MENU_TABLE AS(
+			SELECT	A.MENUID,   A.MENUCD,     A.MENUNM,     A.MENULEVEL, A.PARMENUID,
+					A.DISORDER, B.ACTIVITYID, B.ACTIVITYCD, B.ACTIVITYNM,A.ISFIXED,
+					A.ISUSE AS menuIsUse,
+					B.ISUSE AS activityIsUse,
+					CONVERT(VARCHAR, DBO.LPAD(CONVERT(VARCHAR,A.DISORDER),5,'0')) AS SortKey
+			FROM	SMPMENUS             A WITH(NOLOCK)
+			,		SMPACTIVITIES        B WITH(NOLOCK)
+			,		SMPMENUS_ACTIVITIES  C WITH(NOLOCK)
+			,		SMPSCOPES_ACTIVITIES D WITH(NOLOCK)
+			,		SMPSCOPES            E WITH(NOLOCK)
+			,		SMPROLES_SCOPES      F WITH(NOLOCK)
+			,		SMPROLES             G WITH(NOLOCK)
+			WHERE	A.MENUID     = C.MENUID
+			AND		B.ACTIVITYID = C.ACTIVITYID
+			AND		C.MENUID     = D.MENUID
+			AND		C.ACTIVITYID = D.ACTIVITYID
+			AND		D.SCOPEID    = E.SCOPEID
+			AND		E.SCOPEID    = F.SCOPEID
+			AND		F.ROLEID     = G.ROLEID
+			AND		A.ISUSE      = 1
+			AND		B.ISUSE      = 1
+			AND		E.ISUSE      = 1
+			AND		G.ISUSE      = 1
+			<if test="srcSrcFlag != null and srcSrcFlag == 'CODE'">
+			AND		G.SVCTYPECD  = '${srcId}'
+			</if>
+			<if test="srcSrcFlag != null and srcSrcFlag == 'ROLE'">
+			AND		G.ROLEID     = #{srcId}
+			</if>
+			<if test="srcSrcFlag != null and srcSrcFlag == 'SCOPE'">
+			AND		D.SCOPEID    = #{srcId}
+			</if>
+			AND		A.MENULEVEL  = '0'
+			UNION ALL
+			SELECT	E.MENUID,   E.MENUCD,     E.MENUNM,     E.MENULEVEL, E.PARMENUID,
+					E.DISORDER, F.ACTIVITYID, F.ACTIVITYCD, F.ACTIVITYNM,E.ISFIXED,
+					E.ISUSE                                                 AS menuIsUse,
+					F.ISUSE                                                 AS activityIsUse,
+					CONVERT(VARCHAR, I.SortKey + CONVERT(VARCHAR,E.DISORDER)) AS SortKey
+			FROM	SMPMENUS             E WITH(NOLOCK)
+			,		SMPACTIVITIES        F WITH(NOLOCK)
+			,		SMPMENUS_ACTIVITIES  G WITH(NOLOCK)
+			,		SMPSCOPES_ACTIVITIES H WITH(NOLOCK)
+			,		MENU_TABLE           I 
+			,		SMPSCOPES            J WITH(NOLOCK)
+			,		SMPROLES_SCOPES      K WITH(NOLOCK)
+			,		SMPROLES             L WITH(NOLOCK)
+			WHERE	E.MENUID     = G.MENUID
+			AND		F.ACTIVITYID = G.ACTIVITYID
+			AND		G.MENUID     = H.MENUID
+			AND		G.ACTIVITYID = H.ACTIVITYID
+			AND		H.SCOPEID    = J.SCOPEID
+			AND		J.SCOPEID    = K.SCOPEID
+			AND		K.ROLEID     = L.ROLEID
+			AND		E.ISUSE      = 1
+			AND		F.ISUSE      = 1
+			AND		J.ISUSE      = 1
+			AND		L.ISUSE      = 1
+			<if test="srcSrcFlag != null and srcSrcFlag == 'CODE'">
+			AND		L.SVCTYPECD  = '${srcId}'
+			</if>
+			<if test="srcSrcFlag != null and srcSrcFlag == 'ROLE'">
+			AND		L.ROLEID     = #{srcId}
+			</if>
+			<if test="srcSrcFlag != null and srcSrcFlag == 'SCOPE'">
+			AND		H.SCOPEID    = #{srcId}
+			</if>
+			AND		E.PARMENUID  = I.MENUID
+		)
+		<![CDATA[
+		SELECT	AA.MENUNM,     AA.MENUID,     AA.MENUCD, AA.menuIsUse, AA.ACTIVITYID,
+				AA.ACTIVITYCD, AA.ACTIVITYNM, AA.activityIsUse, AA.ISFIXED, AA.MENULEVEL,
+				(
+					CASE
+						WHEN AA.MENULEVEL = '0' THEN '대메뉴'
+						WHEN AA.MENULEVEL = '1' THEN '중메뉴'
+						WHEN AA.MENULEVEL = '2' THEN '소메뉴'
+						WHEN AA.MENULEVEL = '3' THEN '상세메뉴'
+						ELSE '기타메뉴'
+					END
+				) AS menuLevelName
+		FROM	MENU_TABLE AA
+		GROUP BY SortKey, AA.MENUNM,     AA.MENUID,     AA.MENUCD, AA.menuIsUse, AA.ACTIVITYID,
+				AA.ACTIVITYCD, AA.ACTIVITYNM, AA.activityIsUse, AA.ISFIXED, AA.MENULEVEL
+		]]>
+	</select>
+
+	<sql id="selectRoleMemberListSql">
+		FROM	SMPROLES A WITH(NOLOCK)
+		,		SMPBORGS_USERS_ROLES B WITH(NOLOCK)
+		,		SMPBORGS_USERS C WITH(NOLOCK)
+		,		SMPBORGS D WITH(NOLOCK)
+		,		SMPUSERS E WITH(NOLOCK)
+		WHERE	A.ROLEID = B.ROLEID
+		AND		B.USERID = C.USERID
+		AND		B.BORGID = C.BORGID
+		AND		C.BORGID = D.BORGID
+		AND		C.USERID = E.USERID
+		AND		A.ROLEID = #{srcRoleId}
+		<if test="srcUserNm != null and srcUserNm != ''">
+			AND E.USERNM = #{srcUserNm}
+		</if>
+		<if test="srcLoginId != null and srcLoginId != ''">
+			AND E.LOGINID = #{srcLoginId}
+		</if>
+		<if test="srcIsDefault != null and srcIsDefault != ''">
+			AND B.ISDEFAULT = #{srcIsDefault}
+		</if>
+		AND		D.ISUSE = 1
+		AND		E.ISUSE = 1
+		AND		E.ISLOGIN = 1
+	</sql>
+	<select id="selectRoleMemberListCnt" resultType="int">
+		/* system.role.selectRoleMemberListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectRoleMemberListSql"/>
+	</select>
+	<select id="selectRoleMemberList" resultType="kr.co.bitcube.system.dto.RoleMemberDto">
+		/* system.role.selectRoleMemberList */
+<!-- 		SELECT	AAA.* -->
+<!-- 		FROM -->
+<!-- 		( -->
+<!-- 				SELECT	CEIL(ROWNUM / #{rows}) AS PAGE -->
+<!-- 				, 		AA.* -->
+<!-- 				FROM -->
+<!-- 				( -->
+						SELECT	A.ROLEID
+						,		D.BORGID
+						,		E.USERID
+						,		A.SVCTYPECD
+						,		dbo.FNS_CODENM1BYCODEVAL1('SVCTYPECD', A.SVCTYPECD) AS SVCTYPENM
+						,		A.ROLENM
+						,		B.BORGSCOPECD
+						,		E.USERNM
+						,		E.LOGINID
+						,		dbo.FNS_BORG_STRING(D.BORGID) AS BORGNMS
+						,		B.ISDEFAULT
+						<include refid="selectRoleMemberListSql"/>
+						<if test="orderString != null and orderString != ''">
+							ORDER BY ${orderString}
+						</if>
+<!-- 				) AA -->
+<!-- 		) AAA -->
+<!-- 		WHERE	PAGE = #{page} -->
+	</select>
+	
+	<select id="selectRoleUserCnt" resultType="int">
+		/* system.role.selectRoleUserCnt */
+		SELECT	COUNT(1)
+		FROM	SMPBORGS_USERS_ROLES A WITH(NOLOCK)
+		WHERE	A.ROLEID = #{roleId}
+		AND		A.USERID = #{userId}
+		AND		A.BORGID = #{borgId}
+	</select>
+	
+	<insert id="insertUserRole">
+		/* system.role.insertUserRole */
+		INSERT INTO SMPBORGS_USERS_ROLES(BORGID, USERID, ROLEID, BORGSCOPECD, ISDEFAULT)
+		VALUES(#{borgId}, #{userId}, #{roleId}, #{borgScopeCd}, #{isDefault})
+	</insert>
+	
+	<update id="updateUserRole">
+		/* system.role.updateUserRole */
+		UPDATE	SMPBORGS_USERS_ROLES
+		SET		BORGSCOPECD = #{borgScopeCd}
+		,		ISDEFAULT = #{isDefault}
+		WHERE	BORGID = #{borgId}
+		AND		USERID = #{userId}
+		AND		ROLEID = #{roleId}
+	</update>
+	
+	<delete id="deleteUserRole">
+		/* system.role.deleteUserRole */
+		DELETE 	SMPBORGS_USERS_ROLES
+		WHERE	BORGID = #{borgId}
+		AND		USERID = #{userId}
+		AND		ROLEID = #{roleId}
+	</delete>
+</mapper>

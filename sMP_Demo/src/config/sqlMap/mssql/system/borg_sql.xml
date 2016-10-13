@@ -1,0 +1,992 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="system.borg">
+	<select id="selectBorgTreeList" resultType="kr.co.bitcube.common.dto.BorgDto">
+		/* system.borg.selectBorgTreeList */
+		SELECT	A.BORGID
+		,		A.BORGCD
+		,		A.BORGNM
+		,		A.BORGTYPECD
+		,		(dbo.FNS_CODENM1BYCODEVAL1('BORGTYPECD', A.BORGTYPECD)+' ['+CONVERT(VARCHAR,A.BORGLEVEL)+']') AS BORGTYPENM
+		,		A.ISUSE
+		,		A.BORGLEVEL
+		,		(CASE 	WHEN EXISTS(SELECT 1 FROM SMPBORGS X WITH(NOLOCK) WHERE X.PARBORGID = A.BORGID) THEN 'false'
+						ELSE 'true'
+				END) AS ISLEAF
+		,		(CONVERT(VARCHAR,A.BORGID)+'∥'+A.BORGTYPECD+'∥'+CONVERT(VARCHAR,A.BORGLEVEL)) AS TREEKEY
+		,		A.SVCTYPECD
+		FROM	SMPBORGS A WITH(NOLOCK)
+		WHERE	A.SVCTYPECD = #{svcTypeCd}
+		AND 	A.BORGTYPECD = #{borgTypeCd}
+		<if test="groupId != null and groupId != '' and  groupId neq '0'.toString() ">
+			AND	A.GROUPID = #{groupId}
+		</if>
+		<if test="clientId != null and clientId != '' and clientId neq '0'.toString() ">
+			AND	A.CLIENTID = #{clientId}
+		</if>
+		<if test="branchId != null and branchId != '' and branchId neq '0'.toString() ">
+			AND	A.BRANCHID = #{branchId}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND	A.DEPTID = #{deptId}
+		</if>
+		<if test="borgLevel != null and borgLevel != ''">
+			AND	A.BORGLEVEL = #{borgLevel}
+		</if>
+		<if test="isUse != null and isUse != ''">
+			AND	A.ISUSE = #{isUse}
+		</if>
+		ORDER BY A.BORGNM
+	</select>
+	
+	<select id="selectBorgCdCnt" resultType="int">
+		/* system.borg.selectBorgCdCnt */
+		SELECT COUNT(1) FROM SMPBORGS WITH(NOLOCK) WHERE BORGCD = #{borgCd}
+	</select>
+	
+	<insert id="insertBorg">
+		/* system.borg.insertBorg */
+		INSERT INTO SMPBORGS(
+				BORGID
+		,		BORGCD
+		,		BORGNM
+		,		TOPBORGID
+		,		PARBORGID
+		,		BORGLEVEL
+		,		BORGTYPECD
+		,		SVCTYPECD
+		,		GROUPID
+		,		CLIENTID
+		,		BRANCHID
+		,		DEPTID
+		,		REMOTEIP
+		,		CREATEDATE
+		,		CREATORID
+		,		UPDATEDATE
+		,		UPDATERID
+		,		ISUSE
+		) VALUES (
+				#{borgId}
+		,		#{borgCd}
+		,		#{borgNm}
+		,		#{topBorgId}
+		,		#{parBorgId}
+		,		#{borgLevel}
+		,		#{borgTypeCd}
+		,		#{svcTypeCd}
+		,		#{groupId}
+		,		#{clientId}
+		,		#{branchId}
+		,		#{deptId}
+		,		#{remoteIp}
+		,		GETDATE()
+		,		#{creatorId}
+		,		GETDATE()
+		,		#{updaterId}
+		,		#{isUse}
+		)
+	</insert>
+	
+	<update id="updateBorg">
+		/* system.borg.updateBorg */
+		UPDATE	SMPBORGS
+		SET		BORGNM = #{borgNm}
+		,		ISUSE = #{isUse}
+		,		REMOTEIP = #{remoteIp}
+		,		UPDATEDATE = GETDATE()
+		,		UPDATERID = #{updaterId}
+		WHERE	BORGID = #{borgId}
+	</update>
+	
+	<select id="selectSubBorgCnt" resultType="int">
+		/* system.borg.selectSubBorgCnt */
+		SELECT COUNT(1) FROM SMPBORGS WITH(NOLOCK) WHERE PARBORGID = #{borgId}
+	</select>
+	
+	<delete id="deleteBorg">
+		/* system.borg.deleteBorg */
+		DELETE SMPBORGS WHERE BORGID = #{borgId}
+	</delete>
+	
+	<sql id="selectBorgUserListSql">
+		FROM	SMPBORGS A WITH(NOLOCK)
+		,		SMPBORGS_USERS B WITH(NOLOCK)
+		,		SMPUSERS C WITH(NOLOCK)
+		WHERE	A.BORGID = B.BORGID
+		AND		B.USERID = C.USERID
+		AND		A.SVCTYPECD = #{svcTypeCd}
+		<if test="groupId != null and groupId != '' and groupId neq '0'.toString() ">
+			AND	A.GROUPID = #{groupId}
+		</if>
+		<if test="clientId != null and clientId != '' and clientId neq '0'.toString() ">
+			AND	A.CLIENTID = #{clientId}
+		</if>
+		<if test="branchId != null and branchId != '' and branchId neq '0'.toString() ">
+			AND	A.BRANCHID = #{branchId}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND	A.DEPTID = #{deptId}
+		</if>
+		<if test="borgId != null and borgId != ''">
+			AND	A.BORGID = #{borgId}
+		</if>
+		<if test="srcUserNm != null and srcUserNm != ''">
+			AND	C.USERNM = #{srcUserNm}
+		</if>
+		<if test="srcLoginId != null and srcLoginId != ''">
+			AND	C.LOGINID = #{srcLoginId}
+		</if>
+		<if test="srcIsLogin != null and srcIsLogin != ''">
+			AND	C.ISLOGIN = #{srcIsLogin}
+		</if>
+		<if test="srcIsUse != null and srcIsUse != ''">
+			AND	C.ISUSE = #{srcIsUse}
+		</if>
+	</sql>
+	<select id="selectBorgUserListCnt" resultType="int">
+		/* system.borg.selectBorgUserListCnt */
+		SELECT	COUNT(1)
+		<include refid="selectBorgUserListSql"/>
+	</select>
+	<select id="selectBorgUserList" resultType="kr.co.bitcube.common.dto.UserDto">
+		/* system.borg.selectBorgUserList */
+		SELECT	DBO.FNS_BORG_STRING(A.BORGID) AS BORGNMS
+		,		A.BORGCD
+		,		C.USERID
+		,		C.USERNM
+		,		C.LOGINID
+		,		C.GRADENM
+		,		DBO.FNS_ROLE_STRING_BY_USERID(C.USERID, A.BORGID) AS ROLENMS
+		,		C.TEL
+		,		C.MOBILE
+		,		C.EMAIL
+		,		C.ISLOGIN
+		,		C.ISUSE
+		,		C.ZIPCODE
+		,		(C.ADDRESS1+' '+C.ADDRESS2) AS ADDRESS
+		,		A.SVCTYPECD
+		,		C.PWD
+		,		DBO.FNS_BORG_STRING_BY_USERID(C.USERID) AS borgNmsByUserId
+		,		ISNULL((SELECT ISEMAIL FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = C.USERID),'0') AS ISEMAIL
+		,		ISNULL((SELECT ISSMS FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = C.USERID),'0') AS ISSMS
+		<include refid="selectBorgUserListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectManagedBorgList" resultType="kr.co.bitcube.common.dto.BorgDto">
+		/* system.borg.selectManagedBorgList */
+		/*
+		SELECT	DBO.FNS_CODENM1BYCODEVAL1('BORGTYPECD', B.BORGTYPECD) AS BORGTYPENM
+		,		A.BORGNM
+		,		B.ADMINBORGID
+		,		B.MANAGEBORGID
+		,		A.ISUSE
+		FROM	SMPBORGS A WITH(NOLOCK)
+		,		SMPADMIN_BORGS B WITH(NOLOCK)
+		WHERE	A.BORGID = B.MANAGEBORGID
+		AND		B.USERID = #{userId}
+		ORDER BY BORGTYPENM
+		*/
+	</select>
+	
+	<insert id="insertAdminBorgs">
+		/* system.borg.insertAdminBorgs */
+		/*
+		INSERT INTO SMPADMIN_BORGS (
+				ADMINBORGID
+		,		USERID
+		,		MANAGEBORGID
+		,		MANAGEBORGCD
+		,		BORGTYPECD
+		) VALUES (
+				#{adminBorgId}
+		,		#{userId}
+		,		#{manageBorgId}
+		,		(SELECT BORGCD FROM SMPBORGS WITH(NOLOCK) WHERE BORGID = #{manageBorgId})
+		,		(SELECT BORGTYPECD FROM SMPBORGS WITH(NOLOCK) WHERE BORGID = #{manageBorgId})
+		)
+		*/
+	</insert>
+	
+	<delete id="deleteAdminBorgs">
+		/* system.borg.deleteAdminBorgs */
+		/*
+		DELETE SMPADMIN_BORGS WHERE ADMINBORGID = #{adminBorgId}
+		*/
+	</delete>
+	
+	
+	<sql id="selectSystemUserManagerSql">
+		FROM	SMPUSERS A WITH(NOLOCK) 
+		,		SMPBORGS_USERS B WITH(NOLOCK) 
+		,		SMPBORGS C WITH(NOLOCK) 
+		WHERE	A.USERID = B.USERID
+		AND		B.BORGID = C.BORGID
+		AND		C.BORGTYPECD = 'BCH'
+		<if test="srcSvcTypeCd != null and srcSvcTypeCd != ''">
+		AND		C.SVCTYPECD = #{srcSvcTypeCd}
+		</if>
+		<if test="srcUserNm != null and srcUserNm != ''">
+		AND		A.USERNM  LIKE '%' + #{srcUserNm} + '%' 				
+		</if>
+		<if test="srcLoginId != null and srcLoginId != ''">
+		AND		A.LOGINID  LIKE '%' + #{srcLoginId} + '%'						
+		</if>
+		<if test="srcIsUse != null and srcIsUse != ''">
+		AND		A.ISUSE = #{srcIsUse}
+		</if>
+	</sql>
+	<select id="selectSystemUserManagerListCnt" resultType="int">
+		/* system.borg.selectSystemUserManagerListCnt */
+		SELECT COUNT(1) 
+		<include refid="selectSystemUserManagerSql"/>
+	</select>
+	<select id="selectSystemUserManagerList" resultType="java.util.HashMap">
+		/* system.borg.selectSystemUserManagerList */
+		SELECT	C.SVCTYPECD AS svcTypeCd
+		,		dbo.FNS_CODENM1BYCODEVAL1('SVCTYPECD',C.SVCTYPECD) AS svcTypeNm
+		,		A.USERID AS userId
+		,		B.BORGID AS borgId
+		,		A.USERNM AS userNm
+		,		A.LOGINID AS loginId
+		,		dbo.FNS_BORG_STRING(C.BORGID) AS branchNm
+		,		A.ISUSE AS isUse
+		,		A.ISLOGIN AS isLogin
+		,		A.TEL  AS tel
+		,		A.MOBILE  AS mobile
+		,		ISNULL((SELECT ISEMAIL FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = A.USERID), '0') AS isEmail 
+		,		ISNULL((SELECT ISSMS FROM SMPRECEIVEINFO  WITH(NOLOCK) WHERE USERID = A.USERID), '0') AS isSms
+		,		CONVERT(VARCHAR(10),A.CREATEDATE, 121) AS createDate
+		,		A.EMAIL AS email
+		,		A.PWD AS pwd
+		<include refid="selectSystemUserManagerSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>
+	</select>
+	
+	<select id="selectSystemIfBorgsListCnt" resultType="int">
+		/* system.borg.selectSystemIfBorgsListCnt */
+		SELECT 	COUNT(1)
+		<include refid="selectSystemIfBorgsListSql"/>
+	</select>
+	
+	<select id="selectSystemIfBorgsList" resultType="java.util.HashMap">
+		/* system.borg.selectSystemIfBorgsList */
+		SELECT 	borgId
+		,		borgNm
+		,		businessNum
+		,		svcTypeCd		
+		,		(SELECT USERNM FROM SMPUSERS  WITH(NOLOCK) WHERE USERID = updateUserId) AS updateUserId 
+		,		transDesc
+		,		transCd 	 
+		,		CONVERT(VARCHAR(10), TRANSDATE, 120) AS transDate
+		,		CONVERT(VARCHAR(10), UPDATEDATE, 120) AS updateDate
+		<include refid="selectSystemIfBorgsListSql"/>
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if>		
+	</select>
+	
+	<sql id="selectSystemIfBorgsListSql">
+		FROM	IFBORGSHIST WITH(NOLOCK) 
+		WHERE	1 = 1
+		<if test="svcTypeCd != null and svcTypeCd != ''">
+		AND		SVCTYPECD = #{svcTypeCd}
+		</if>
+		<if test="transCd != null and transCd != ''">
+		AND		TRANSCD = #{transCd} 				
+		</if>
+		<if test="borgNm != null and borgNm != ''">
+		AND		BORGNM  LIKE '%' + #{borgNm} + '%'						
+		</if>
+		<if test="transStartDate != null and transStartDate != '' and transEndDate != null and transEndDate != ''">
+		AND 	TRANSDATE BETWEEN CONVERT(DATETIME, #{transStartDate}) AND DATEADD(D,1,CONVERT(DATETIME, #{transEndDate}))
+		</if>
+	</sql>
+	
+	<update id="updateIfBorgsHistory">
+		/* system.borg.updateIfBorgsHistory */
+		UPDATE	IFBORGSHIST	
+		SET		TRANSCD = #{transCd}
+		,		UPDATEDATE = GETDATE()	
+		,		UPDATEUSERID = #{userId}
+		WHERE 	BORGID = #{borgId}
+	</update>
+	
+	<select id="selectContractCnt" resultType="int">
+		/* system.borg.selectContractCnt */
+		SELECT	COUNT(1)
+		FROM(
+		<include refid="selectConstractListSql"/>
+		)AA
+		WHERE 1=1
+		<if test="srcContractVersion != null and srcContractVersion != '' ">
+		AND AA.contractVersion LIKE '%'+#{srcContractVersion}+'%'
+		</if>
+		<if test="srcBorgNm != null and srcBorgNm != '' ">
+		AND AA.borgNm LIKE '%'+#{srcBorgNm}+'%'
+		</if>
+		<if test="srcBusinessNum != null and srcBusinessNum != '' ">
+		AND AA.businessNum LIKE '%'+#{srcBusinessNum}+'%'
+		</if>
+	</select>
+
+	<select id="selectContractList" resultType="java.util.HashMap">
+		/* system.borg.selectContractList */
+		SELECT AA.*
+		FROM
+		(
+		<include refid="selectConstractListSql"/>
+		)AA
+		WHERE 1=1
+		AND AA.ISUSE = '0'
+		<if test="srcContractVersion != null and srcContractVersion != '' ">
+		AND AA.contractVersion LIKE '%'+#{srcContractVersion}+'%'
+		</if>
+		<if test="srcBorgNm != null and srcBorgNm != '' ">
+		AND AA.borgNm LIKE '%'+#{srcBorgNm}+'%'
+		</if>
+		<if test="srcBusinessNum != null and srcBusinessNum != '' ">
+		AND AA.businessNum LIKE '%'+#{srcBusinessNum}+'%'
+		</if>
+		ORDER BY ${orderString}
+	</select>
+	
+	<sql id="selectConstractListSql">
+		SELECT	A.CONTRACT_NO AS contractNo
+		,		CASE WHEN A.CONTRACT_CLASSIFY = 'BUY' THEN '구매사'
+					 WHEN A.CONTRACT_CLASSIFY = 'VEN' THEN '공급사'
+				END contractClassify
+		,		CASE WHEN A.CONTRACT_CLASSIFY = 'BUY' THEN C.BUSINESSNUM
+					 ELSE E.BUSINESSNUM
+				END businessNum
+		,		CASE WHEN A.CONTRACT_CLASSIFY = 'BUY' THEN D.BORGNM
+					 ELSE B.BORGNM
+				END borgNm
+		,		CASE WHEN A.CONTRACT_CLASSIFY = 'BUY' THEN C.BRANCHNM
+					 ELSE E.VENDORNM
+				END branchNm
+		,		CASE WHEN (C.CONTRACTSPECIAL = F.CODEVAL1) AND (SUBSTRING(A.CONTRACT_VERSION,1,1) = 'S')
+					 THEN F.CODENM1
+					 ELSE ''
+				END contractSpecial
+		,		A.CONTRACT_USERID AS userId
+		,		A.CONTRACT_USERNM AS userNm
+		,		A.CONTRACT_VERSION AS contractVersion
+		,		CONVERT(VARCHAR(10), A.CONTRACT_DATE, 120) AS contractDate
+		,		A.ISUSE
+		FROM COMMODITY_CONTRACT_LIST A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPBORGS B WITH(NOLOCK) 
+			ON A.CONTRACT_BORGID = B.BORGID
+		LEFT OUTER JOIN SMPBRANCHS C WITH(NOLOCK) 
+			ON B.BORGID = C.BRANCHID
+		LEFT OUTER JOIN SMPBORGS D WITH(NOLOCK) 
+			ON B.PARBORGID = D.BORGID
+		LEFT OUTER JOIN SMPVENDORS E WITH(NOLOCK) 
+			ON B.BORGID = E.VENDORID
+		LEFT OUTER JOIN SMPCODES F WITH(NOLOCK) 
+			ON C.CONTRACTSPECIAL = F.CODEVAL1
+			AND F.CODETYPECD ='CONTRACT_SPECIAL'
+	</sql>
+	
+	<insert id="insertCommodityContract">
+		/* system.borg.insertCommodityContract */
+		INSERT INTO COMMODITY_CONTRACT(
+			CONTRACT_NO
+		,	CONTRACT_VERSION
+		,	CONTRACT_CLASSIFY
+		,	CONTRACT_SPECIAL
+		,	CONTRACT_CONTENTS
+		,	CONTRACT_DATE
+		,	CONTRACT_USER
+		)VALUES(
+			#{insertContractNo}
+		<if test="contractVersion1 != '' and contractVersion1 != null">
+			<if test="contractVersion1 == '10'.toString() ">
+		,	'B'+CONVERT(VARCHAR(8), GETDATE(), 12)+'V'+#{contractVersion2}
+			</if>
+			<if test="contractVersion1 == '20'.toString() ">
+		,	'I'+CONVERT(VARCHAR(8), GETDATE(), 12)+'V'+#{contractVersion2}
+			</if>
+			<if test="contractVersion1 == '30'.toString() ">
+		,	'S'+CONVERT(VARCHAR(8), GETDATE(), 12)+'V'+#{contractVersion2}
+			</if>
+			<if test="contractVersion1 == '40'.toString() ">
+		,	'Q'+CONVERT(VARCHAR(8), GETDATE(), 12)+'V'+#{contractVersion2}
+			</if>
+		</if>
+		,	#{contractClassify}
+		,	#{contractSpecial}
+		,	#{contractContents}
+		,	GETDATE()
+		,	#{contractUserNm}
+		)
+	</insert>
+	
+	<select id="selectCommodityContractList" resultType="java.util.HashMap">
+		/* system.borg.selectCommodityContractList */
+		SELECT	A.CONTRACT_NO AS contractNo
+		,		A.CONTRACT_VERSION AS contractVersion
+		,		A.CONTRACT_CLASSIFY AS contractClassify
+		,		CASE WHEN A.CONTRACT_SPECIAL = B.CODEVAL1 THEN CODENM1
+					 ELSE ''
+				END contractSpecial
+		,		A.CONTRACT_CONTENTS AS contractContents
+		,		CONVERT(VARCHAR(10),A.CONTRACT_DATE, 120) AS contractDate
+		,		A.CONTRACT_USER AS contractUserNm
+		FROM COMMODITY_CONTRACT A WITH(NOLOCK) 
+		LEFT OUTER JOIN 
+		(
+			SELECT	CODEVAL1
+			,		CODENM1
+			FROM SMPCODES WITH(NOLOCK) 
+			WHERE CODETYPECD = 'CONTRACT_SPECIAL'
+		)B
+			ON A.CONTRACT_SPECIAL = B.CODEVAL1
+		ORDER BY contractNo
+	</select>
+	
+	<select id="selectCommodityContractDetail" resultType="java.util.HashMap">
+		/* system.borg.selectCommodityContractDetail */
+		<include refid="selectCommodityContract"/>
+		WHERE CONTRACT_NO = #{contractNo}
+	</select>
+	
+	<sql id="selectCommodityContract">
+		SELECT	CONTRACT_NO AS contractNo
+		,		CONTRACT_VERSION AS contractVersion
+		,		CONTRACT_CLASSIFY AS contractClassify
+		,		CONTRACT_SPECIAL AS contractSpecial
+		,		CONTRACT_CONTENTS AS contractContents
+		,		CONVERT(VARCHAR(10), CONTRACT_DATE, 120) AS contractDate
+		,		CONTRACT_USER AS contractUserNm
+		FROM COMMODITY_CONTRACT WITH(NOLOCK) 
+	</sql>
+	
+	<update id="updateCommodityContract">
+		/* system.borg.updateCommodityContract */
+		UPDATE COMMODITY_CONTRACT SET
+			CONTRACT_DATE = GETDATE()
+		<if test="contractVersion1 != '' and contractVersion1 != null">
+			<if test="contractVersion1 == '10'.toString() ">
+		,	CONTRACT_VERSION = 'B'+CONVERT(VARCHAR(8), GETDATE(), 12)+'V'+#{contractVersion2}
+			</if>
+			<if test="contractVersion1 == '20'.toString() ">
+		,	CONTRACT_VERSION = 'I'+CONVERT(VARCHAR(8), GETDATE(), 12)+'V'+#{contractVersion2}
+			</if>
+			<if test="contractVersion1 == '30'.toString() ">
+		,	CONTRACT_VERSION = 'S'+CONVERT(VARCHAR(8), GETDATE(), 12)+'V'+#{contractVersion2}
+			</if>
+		</if>
+		,	CONTRACT_CLASSIFY = #{contractClassify}
+		,	CONTRACT_SPECIAL = #{contractSpecial}
+		,	CONTRACT_CONTENTS = #{contractContents}
+		,	CONTRACT_USER = #{contractUserNm}
+		WHERE CONTRACT_NO = #{contractNo}			
+	</update>
+	
+	<delete id="deleteCommodityContract">
+		/* system.borg.deleteCommodityContract */
+		DELETE FROM COMMODITY_CONTRACT WHERE CONTRACT_NO = #{contractNo}
+	</delete>
+	
+	<select id="selectCommodityContractListPopup" resultType="java.util.HashMap">
+		/* system.borg.selectCommodityContractListPopup */
+		SELECT	CONTRACT_NO AS contractNo
+		,		CONTRACT_VERSION AS contractVersion
+		,		CONTRACT_CONTENTS AS contractContents
+		,		CONTRACT_CLASSIFY AS contractClassify
+		FROM COMMODITY_CONTRACT WITH(NOLOCK) 
+		WHERE 1=1
+		<if test="contractVersion != null and contractVersion !='' ">
+			<if test="'1'.toString() == contractVersion">
+		AND CONTRACT_VERSION LIKE 'B%'
+			</if>
+			<if test="'2'.toString() == contractVersion">
+		AND CONTRACT_VERSION LIKE 'I%'
+			</if>
+			<if test="'3'.toString() == contractVersion">
+		AND CONTRACT_VERSION LIKE 'S%'
+		AND CONTRACT_SPECIAL = #{contractSpecial}
+			</if>
+			<if test="'4'.toString() == contractVersion">
+		AND CONTRACT_VERSION LIKE 'Q%'
+			</if>
+		</if>
+		<if test=" contractClassify != null and contractClassify !='' ">
+		AND CONTRACT_CLASSIFY = #{contractClassify}
+		</if>
+	</select>
+	
+	<select id="selectGetCommodityContractView" resultType="java.util.HashMap">
+		/* system.borg.selectGetCommodityContractView */
+		SELECT	
+		<if test="contractVersion !='' and contractVersion !=null ">
+			<if test="'1'.toString() == contractVersion ">
+				TOP 2
+			</if>
+			<if test="'2'.toString() == contractVersion ">
+				TOP 1
+			</if>
+		</if> 
+				CONTRACT_VERSION AS contractVersion
+		,		CONTRACT_SPECIAL AS contractSpecial
+		,		CONTRACT_CLASSIFY AS contractClassify
+		,		CONTRACT_CONTENTS AS contractContents
+		FROM COMMODITY_CONTRACT WITH(NOLOCK) 
+		WHERE 1=1
+		<if test="contractVersion !='' and contractVersion !=null ">
+			<if test="'1'.toString() == contractVersion ">
+		AND (CONTRACT_VERSION like 'B%' OR CONTRACT_VERSION like 'I%')
+			</if>
+			<if test="'2'.toString() == contractVersion">
+		AND CONTRACT_VERSION like 'S%'
+		AND CONTRACT_SPECIAL = #{contractSpecial}
+			</if>
+		</if>
+		<if test="contractClassify !='' and contractClassify !=null ">
+		AND CONTRACT_CLASSIFY = #{contractClassify}
+		</if>
+		ORDER BY CONTRACT_DATE DESC
+	</select>
+	
+	<insert id="insertCommodityContractList">
+		/* system.borg.insertCommodityContractList */
+		INSERT INTO COMMODITY_CONTRACT_LIST(
+			CONTRACT_NO
+		,	CONTRACT_VERSION
+		,	CONTRACT_DATE
+		,	CONTRACT_BORGID
+		,	CONTRACT_USERID
+		,	CONTRACT_USERNM
+		,	CONTRACT_CLASSIFY
+		,	CONTRACT_CUSTOMER_CD
+		,	ISUSE
+		)VALUES(
+			#{contractNo}
+		,	#{contractVersion}
+		,	GETDATE()
+		,	#{borgId}
+		,	#{loginId}
+		,	#{userNm}
+		,	#{contractClassify}
+		,	#{contractCustomerCd}
+		,	'0'
+		)
+	</insert>
+	
+	<select id="selectCommodityContractListValidation" resultType="java.util.HashMap">
+		/* system.borg.selectCommodityContractListValidation */
+		SELECT	CONTRACT_NO AS contractNo
+		,		CONTRACT_VERSION AS contractVersion
+		,		CONTRACT_DATE AS contractDate
+		,		CONTRACT_BORGID AS contractBorgId
+		,		CONTRACT_USERID AS contractUserId
+		,		CONTRACT_USERNM AS contractUserNm
+		,		CONTRACT_CLASSIFY AS contractClassify
+		FROM COMMODITY_CONTRACT_LIST WITH(NOLOCK)  
+		WHERE 1=1
+		AND CONTRACT_VERSION = #{contractVersion}
+		AND CONTRACT_BORGID = #{borgId}
+		AND CONTRACT_USERID = #{loginId}
+		AND CONTRACT_USERNM = #{userNm}
+		AND CONTRACT_CLASSIFY = #{contractClassify}
+	</select>
+	
+	<select id="selectCommodityContractListDate" resultType="String">
+		/* system.borg.getCommodityContractListDate */
+		SELECT	A.contractDateYear+'년 '+contractDateMonth+'월 '+contractDateDaY+'일' AS contractDate
+		FROM(
+			SELECT	SUBSTRING(CONVERT(VARCHAR(10), CONTRACT_DATE,120),1,4) AS contractDateYear
+			,		SUBSTRING(CONVERT(VARCHAR(10), CONTRACT_DATE,120),6,2) AS contractDateMonth
+			,		SUBSTRING(CONVERT(VARCHAR(10), CONTRACT_DATE,120),9,2) AS contractDateDaY
+			FROM COMMODITY_CONTRACT_LIST WITH(NOLOCK) 
+			WHERE CONTRACT_VERSION = #{contractVersion}
+			AND CONTRACT_BORGID = #{borgId}
+		)A
+	</select>
+	
+	<update id="updateCommodityContractList">
+		/* system.borg.updateCommodityContractList */
+		UPDATE COMMODITY_CONTRACT_LIST SET
+			ISUSE = 0
+		WHERE CONTRACT_BORGID = #{contractBorgId}
+	</update>
+	<insert id="insertCommodityContractClient">
+		/* system.borg.insertCommodityContractClient*/
+		INSERT INTO COMMODITY_CONTRACT_LIST(
+			CONTRACT_NO
+		,	CONTRACT_VERSION
+		,	CONTRACT_DATE
+		,	CONTRACT_BORGID
+		,	CONTRACT_USERID
+		,	CONTRACT_USERNM
+		,	CONTRACT_CLASSIFY
+		,	CONTRACT_CUSTOMER_CD
+		)VALUES(
+			#{contractNo}
+		,	#{contractVersion}
+		,	GETDATE()
+		,	#{borgId}
+		,	#{loginId}
+		,	#{userNm}
+		,	#{contractClassify}
+		,	#{contractCustomerCd}
+		)
+	</insert>
+	
+	<select id="selctContractSignature" resultType="int">
+		/* system.borg.selctContractSignature*/
+		SELECT	COUNT(1) + 
+				(
+					SELECT	COUNT(1)
+					FROM	SMPCODES A1 WITH(NOLOCK) 
+					INNER JOIN SMPBORGS B1 WITH(NOLOCK) 
+						ON	A1.CODEVAL1 = B1.BORGCD
+					INNER JOIN SMPBORGS C1  WITH(NOLOCK) 
+						ON	B1.BORGID = C1.CLIENTID
+						AND	A1.CODETYPECD = 'CONTRACT_NOT_CLIENT'
+					WHERE	A1.ISUSE = '1'
+					AND		C1.BORGID = '${borgId}'
+				)
+		FROM	COMMODITY_CONTRACT_LIST A WITH(NOLOCK) 
+		INNER JOIN SMPBORGS B WITH(NOLOCK) 
+			ON	A.CONTRACT_BORGID = B.BORGID
+		INNER JOIN (
+				SELECT	AA.CONTRACT_VERSION
+				,		AA.CONTRACT_CLASSIFY
+				FROM	(
+						SELECT	A.*
+						,		ROW_NUMBER() OVER(PARTITION BY A.CONTRACT_CLASSIFY ORDER BY A.CONTRACT_DATE DESC) AS RANKING
+						FROM	COMMODITY_CONTRACT A WITH(NOLOCK) 
+						WHERE (A.CONTRACT_VERSION LIKE 'I%' OR A.CONTRACT_VERSION LIKE 'B%')
+						AND A.CONTRACT_CLASSIFY = #{contractClassify}
+				) AA
+				--WHERE	AA.RANKING = 1
+		) D
+			ON	A.CONTRACT_VERSION = D.CONTRACT_VERSION
+			AND	A.CONTRACT_CLASSIFY = D.CONTRACT_CLASSIFY
+		WHERE	A.ISUSE = '0'
+		AND		B.BORGID IN (
+								SELECT	A.BORGID
+								FROM SMPBORGS A WITH(NOLOCK) 
+								WHERE A.CLIENTID = (
+													SELECT	CLIENTID
+													FROM SMPBORGS WITH(NOLOCK) 
+													WHERE BORGID = '${borgId}'
+								)
+		)
+	</select>
+	
+	<select id="selectUserPassword" resultType="String">
+		/* system.borg.selectUserPassword */
+		SELECT	PWD
+		FROM SMPUSERS WITH(NOLOCK) 
+		WHERE USERID = #{userid}
+	</select>
+	
+	<select id="selectContractNewList" resultType="java.util.HashMap">
+		/* system.borg.selectContractNewList*/
+		SELECT	CASE
+					WHEN SUBSTRING(A.CONTRACT_VERSION,1,1) = 'B'
+						THEN '물품공급 기본 계약서'
+					WHEN SUBSTRING(A.CONTRACT_VERSION,1,1) = 'I'
+						THEN '개인정보 취급 동의서'
+					WHEN SUBSTRING(A.CONTRACT_VERSION,1,1) = 'S' AND SVCTYPECD = 'BUY'
+						THEN C.CODENM1
+					WHEN SUBSTRING(A.CONTRACT_VERSION,1,1) = 'Q' AND SVCTYPECD = 'VEN'
+						THEN '품질 관리 기준서'
+				END CONTRACTNM
+		,		A.CONTRACT_VERSION
+		,		A.SVCTYPECD
+		,		A.CONTRACT_CLASSIFY
+		,		A.CONTRACT_SPECIAL
+		,		A.CONTRACT_CONTENTS
+		,		CONVERT(VARCHAR(16), A.CONTRACT_DATE, 120) AS CONTRACT_DATE
+		,		B.USERNM AS CONTRACT_USERNM
+		,		(SELECT COUNT(1) FROM COMMODITY_CONTRACT_NEW  WITH(NOLOCK) where SVCTYPECD = 'BUY' AND CONTRACT_CLASSIFY = 'S') AS CONTRACT_SPECIAL_CNT
+		FROM COMMODITY_CONTRACT_NEW A WITH(NOLOCK) 
+		INNER JOIN SMPUSERS B WITH(NOLOCK) 
+			ON A.CONTRACT_USERID = B.USERID
+		LEFT OUTER JOIN SMPCODES C WITH(NOLOCK) 
+			ON A.CONTRACT_SPECIAL = C.CODEVAL1
+			AND C.CODETYPECD = 'CONTRACT_SPECIAL'
+	</select>
+	
+	<select id="selectContractSignList_count" resultType="int">
+		/* system.borg.selectContractSignList_count */
+		SELECT	COUNT(1) AS CNT
+		FROM	SMPBORGS A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPBORG_CONTRACT B WITH(NOLOCK) 
+			ON	A.BORGID = B.BORGID
+		LEFT OUTER JOIN SMPUSERS C WITH(NOLOCK) 
+			ON	B.CONTRACT_USERID = C.USERID
+		WHERE	(A.SVCTYPECD = 'BUY' OR A.SVCTYPECD = 'VEN')
+		AND		A.ISUSE = '1'
+		AND		ISNULL(B.CONTRACT_VERSION,'') = #{contractVersion}
+		AND		A.SVCTYPECD = #{svcTypeCd}
+		<if test="borgNm != null and borgNm !=''">
+		AND		A.BORGNM LIKE '%'+#{borgNm}+'%'
+		</if>
+	</select>
+	
+	<select id="selectContractSignList" resultType="java.util.HashMap">
+		/* system.borg.selectContractSignList */
+		SELECT	A.BORGNM
+		,		CONVERT(VARCHAR(10), B.CONTRACT_DATE, 120) AS CONTRACT_DATE
+		,		C.USERNM
+		FROM	SMPBORGS A WITH(NOLOCK) 
+		LEFT OUTER JOIN SMPBORG_CONTRACT B WITH(NOLOCK) 
+			ON	A.BORGID = B.BORGID
+		LEFT OUTER JOIN SMPUSERS C WITH(NOLOCK) 
+			ON	B.CONTRACT_USERID = C.USERID
+		WHERE	(A.SVCTYPECD = 'BUY' OR A.SVCTYPECD = 'VEN')
+		AND		A.ISUSE = '1'
+		AND		ISNULL(B.CONTRACT_VERSION,'') = #{contractVersion}
+		AND		A.SVCTYPECD = #{svcTypeCd}
+		<if test="borgNm != null and borgNm !=''">
+		AND		A.BORGNM LIKE '%'+#{borgNm}+'%'
+		</if>
+		<if test="contractSpecial != null and contractSpecial !=''">
+		AND		
+			CONTRACT_SPECIAL = #{contractSpecial}
+		</if>
+	</select>
+	
+	<select id="selectCommodityContractNewVersion" resultType="java.util.HashMap">
+		SELECT	REPLACE(REPLACE(CONVERT(VARCHAR(MAX),A.CONTRACT_CONTENTS),char(9),''),char(10),'') AS CONTRACT_CONTENTS
+		,		A.CONTRACT_VERSION
+		,		A.SVCTYPECD
+		,		A.CONTRACT_CLASSIFY
+		,       A.CONTRACT_SPECIAL
+		,		ISNULL(CONVERT(VARCHAR(10),B.CONTRACT_DATE,120),'') AS CONTRACT_DATE
+		FROM	COMMODITY_CONTRACT_NEW A WITH(NOLOCK)  
+		LEFT OUTER JOIN SMPBORG_CONTRACT B WITH(NOLOCK)
+			ON	A.CONTRACT_VERSION = B.CONTRACT_VERSION
+			AND	B.BORGID = #{borgId}
+		WHERE	A.CONTRACT_VERSION =  #{contractVersion}
+		AND		A.SVCTYPECD =  #{svcTypeCd}
+	</select>
+	
+	<update id="updateCommodityContractNew">
+		/* system.borg.updateCommodityContractNew */
+		UPDATE COMMODITY_CONTRACT_NEW SET
+			CONTRACT_VERSION	= #{newContractVersion}
+		,	CONTRACT_CONTENTS	= #{contractContents}
+		,	CONTRACT_DATE		= GETDATE()
+		,	CONTRACT_USERID		= #{loginUserDto.userId}
+		WHERE
+			CONTRACT_VERSION = #{nowContractVersion}
+		AND
+			SVCTYPECD = #{svcTypeCd}
+		<if test="contractSpecial != null and contractSpecial !=''">
+		AND		
+			CONTRACT_SPECIAL = #{contractSpecial}
+		</if>
+	</update>
+	
+	<insert id="insertCommodityContractNewHist">
+		/* system.borg.insertCommodityContractNewHist */
+		INSERT INTO COMMODITY_CONTRACT_NEW_HIST(
+			CONTRACT_VERSION
+		,	SVCTYPECD
+		,	CONTRACT_CLASSIFY
+		,	CONTRACT_SPECIAL
+		,	CONTRACT_CONTENTS
+		,	CONTRACT_DATE
+		,	CONTRACT_USERID
+		)
+		SELECT	CONTRACT_VERSION
+		,		SVCTYPECD
+		,		CONTRACT_CLASSIFY
+		,		CONTRACT_SPECIAL
+		,		CONTRACT_CONTENTS
+		,		CONTRACT_DATE
+		,		CONTRACT_USERID
+		FROM COMMODITY_CONTRACT_NEW WITH(NOLOCK) 
+		WHERE CONTRACT_VERSION = #{newContractVersion}
+		AND
+			SVCTYPECD = #{svcTypeCd}
+		<if test="contractSpecial != null and contractSpecial !=''">
+		AND		
+			CONTRACT_SPECIAL = #{contractSpecial}
+		</if>
+	</insert>
+	
+	<select id="selectBranchContractNoSignList_count" resultType="int">
+		/* system.borg.selectBranchContractNoSignList_count */
+		SELECT COUNT(1) AS CNT
+		FROM(
+			SELECT	A1.BORGNM
+			,		A5.USERNM
+			,		A5.MOBILE
+			FROM	SMPBORGS A1 WITH(NOLOCK) 
+			INNER JOIN SMPBORGS_USERS A2 WITH(NOLOCK) 
+				ON	A1.BORGID = A2.BORGID
+			INNER JOIN SMPBORGS_USERS_ROLES A3 WITH(NOLOCK) 
+				ON	A2.USERID = A3.USERID
+				AND	A2.BORGID = A3.BORGID
+			INNER JOIN SMPROLES A4 WITH(NOLOCK) 
+				ON	A3.ROLEID = A4.ROLEID
+				AND	A4.ROLECD = 'BUY_CLT'
+			INNER JOIN SMPUSERS A5 WITH(NOLOCK) 
+				ON	A2.USERID = A5.USERID
+				AND	A5.ISUSE = '1'
+			LEFT OUTER JOIN SMPBORG_CONTRACT B WITH(NOLOCK) 
+				ON	A1.BORGID = B.BORGID
+				AND		B.CONTRACT_VERSION =  #{contractVersion}
+			WHERE	A1.SVCTYPECD = 'BUY' 
+			AND		A1.BORGTYPECD = 'BCH'
+			AND		A1.ISUSE = '1'
+			AND		A5.MOBILE IS NOT NULL
+			<if test="borgNm != null and borgNm !=''">
+			AND		A1.BORGNM LIKE '%'+#{borgNm}+'%'
+			</if>
+			AND		B.BORGID IS NULL
+			GROUP BY A1.BORGNM, A5.USERNM, A5.MOBILE
+		)AA
+	</select>
+	
+	<select id="selectBranchContractNoSignList" resultType="java.util.HashMap">
+		/* system.borg.selectBranchContractNoSignList */
+		SELECT	A1.BORGNM
+		,		A5.USERNM
+		,		A5.MOBILE
+		FROM	SMPBORGS A1 WITH(NOLOCK) 
+		INNER JOIN SMPBORGS_USERS A2 WITH(NOLOCK) 
+			ON	A1.BORGID = A2.BORGID
+		INNER JOIN SMPBORGS_USERS_ROLES A3 WITH(NOLOCK) 
+			ON	A2.USERID = A3.USERID
+			AND	A2.BORGID = A3.BORGID
+		INNER JOIN SMPROLES A4 WITH(NOLOCK) 
+			ON	A3.ROLEID = A4.ROLEID
+			AND	A4.ROLECD = 'BUY_CLT'
+		INNER JOIN SMPUSERS A5 WITH(NOLOCK) 
+			ON	A2.USERID = A5.USERID
+			AND	A5.ISUSE = '1'
+		LEFT OUTER JOIN SMPBORG_CONTRACT B WITH(NOLOCK) 
+			ON	A1.BORGID = B.BORGID
+			AND		B.CONTRACT_VERSION =  #{contractVersion}
+		WHERE	A1.SVCTYPECD = 'BUY' 
+		AND		A1.BORGTYPECD = 'BCH'
+		AND		A1.ISUSE = '1'
+		AND		A5.MOBILE IS NOT NULL
+		<if test="borgNm != null and borgNm !=''">
+		AND		A1.BORGNM LIKE '%'+#{borgNm}+'%'
+		</if>
+		AND		B.BORGID IS NULL
+		GROUP BY A1.BORGNM, A5.USERNM, A5.MOBILE
+		<if test="orderString != null and orderString != ''">
+			ORDER BY ${orderString}
+		</if> 
+	</select>
+	
+	<select id="selectVendorContractNoSignList_count" resultType="int">
+		/* system.borg.selectVendorContractNoSignList */
+		SELECT	COUNT(1)
+		FROM(
+			SELECT	AA.BORGNM
+			,		AA.USERNM
+			,		AA.MOBILE
+			FROM(
+				SELECT	A.BORGNM
+				,		A2.USERNM
+				,		A2.MOBILE
+				,		B.BORGID
+				FROM	SMPBORGS A WITH(NOLOCK) 
+				INNER JOIN SMPBORGS_USERS A1 WITH(NOLOCK) 
+					ON	A.BORGID = A1.BORGID
+				INNER JOIN SMPUSERS A2 WITH(NOLOCK) 
+					ON	A1.USERID = A2.USERID
+					AND	A2.ISUSE = '1'
+				LEFT OUTER JOIN SMPBORG_CONTRACT B WITH(NOLOCK) 
+					ON	A.BORGID = B.BORGID
+					AND B.CONTRACT_VERSION =  #{contractVersion}
+				WHERE	A.SVCTYPECD = 'VEN'
+				AND		A.ISUSE = '1'
+			)AA
+			WHERE AA.BORGID IS NULL
+			<if test="borgNm != null and borgNm !=''">
+			AND AA.BORGNM LIKE '%'+#{borgNm}+'%'
+			</if>
+			GROUP BY AA.BORGNM, AA.USERNM, AA.MOBILE
+		)AAA
+	</select>
+	
+	<select id="selectVendorContractNoSignList" resultType="java.util.HashMap">
+		/* system.borg.selectVendorContractNoSignList */
+		SELECT	AA.BORGNM
+		,		AA.USERNM
+		,		AA.MOBILE
+		FROM(
+			SELECT	A.BORGNM
+			,		A2.USERNM
+			,		A2.MOBILE
+			,		B.BORGID
+			FROM	SMPBORGS A WITH(NOLOCK) 
+			INNER JOIN SMPBORGS_USERS A1 WITH(NOLOCK) 
+				ON	A.BORGID = A1.BORGID
+			INNER JOIN SMPUSERS A2 WITH(NOLOCK) 
+				ON	A1.USERID = A2.USERID
+				AND	A2.ISUSE = '1'
+			LEFT OUTER JOIN SMPBORG_CONTRACT B WITH(NOLOCK) 
+				ON	A.BORGID = B.BORGID
+				AND B.CONTRACT_VERSION =  #{contractVersion}
+			WHERE	A.SVCTYPECD = 'VEN'
+			AND		A.ISUSE = '1'
+		)AA
+		WHERE AA.BORGID IS NULL
+		<if test="borgNm != null and borgNm !=''">
+		AND AA.BORGNM LIKE '%'+#{borgNm}+'%'
+		</if>
+		GROUP BY AA.BORGNM, AA.USERNM, AA.MOBILE
+	</select>
+	
+	<!-- 운영사 사용자 상세 정보 조회 -->
+	<resultMap id="selectAdmUserDetailMap" type="java.util.Map">
+ 		<result property="userId"  column="USERID"  javaType="string"/>
+ 		<result property="userNm"  column="USERNM"  javaType="string"/>
+ 		<result property="loginId" column="LOGINID" javaType="string"/>
+ 		<result property="tel"     column="TEL"     javaType="string"/>
+ 		<result property="mobile"  column="MOBILE"  javaType="string"/>
+ 		<result property="email"   column="EMAIL"   javaType="string"/>
+ 		<result property="isEmail" column="ISEMAIL" javaType="string"/>
+ 		<result property="isSms"   column="ISSMS"   javaType="string"/>
+ 	</resultMap>
+	<select id="selectAdmUserDetailInfo" resultMap="selectAdmUserDetailMap">
+		/* system.borg.selectAdmUserDetailInfo */
+		SELECT
+			A.USERID, A.USERNM,  A.LOGINID, A.TEL, A.MOBILE,
+			A.EMAIL,  B.ISEMAIL, B.ISSMS
+		FROM
+			SMPUSERS A
+		INNER JOIN SMPRECEIVEINFO B ON A.USERID = B.USERID
+		WHERE
+			A.USERID = #{userId}
+	</select>
+	
+	<!-- 관리자 사용자 정보 수정 -->
+	<update id="updateAdmSmpUsersInfo">
+		/* system.borg.updateAdmSmpUsersInfo */
+		UPDATE
+			SMPUSERS
+		SET
+			USERNM     = #{userNm},
+		<if test="pwd != null and pwd != ''">
+			PWD        = #{pwd},
+		</if>
+			TEL        = #{tel},
+			MOBILE     = #{mobile},
+			EMAIL      = #{email},
+			REMOTEIP   = #{remoteIp},
+			UPDATEDATE = GETDATE(),
+			UPDATERID  = #{updaterId}
+		WHERE
+			USERID = #{userId}
+	</update>
+</mapper>

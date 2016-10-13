@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="euc-kr" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" 
+		"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="order.cart">
+	
+	<select id="selectCateMasterInfo" resultType="kr.co.bitcube.order.dto.CartMasterInfoDto">
+		SELECT CART.branchid
+		     , CART.comp_iden_name
+		     , CART.orde_type_clas
+		     , CART.tran_deta_addr_seq
+		     , CART.tran_user_name
+		     , CART.tran_tele_numb
+		     , CART.mana_user_name
+		     , CART.orde_text_desc
+		     , CART.firstattachseq
+		     , CART.secondattachseq
+		     , CART.thirdattachseq
+			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.firstattachseq, 'NAME') AS firstAttachName
+			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.secondattachseq, 'NAME') AS secondAttachName
+			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.thirdattachseq, 'NAME') AS thirdAttachName
+			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.firstattachseq, 'PATH') AS firstAttachPath
+			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.secondattachseq, 'PATH') AS secondAttachPath
+			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.thirdattachseq, 'PATH') AS thirdAttachPath
+			 , dbo.FNS_CODENM1BYCODEVAL1('PAYMCONDCODE', BCH.PAYBILLTYPE ) AS PAYBILLTYPE
+		  FROM mrcart CART WITH(NOLOCK)      
+		  ,	   SMPBRANCHS BCH WITH(NOLOCK) 
+		 WHERE  CART.branchid = #{branchid}
+		   AND CART.userid   = #{userid}
+		   AND CART.branchid = BCH.branchid
+	</select>
+	
+	<select id="selectCartProdInfo" resultType="kr.co.bitcube.order.dto.CartProdInfoDto">
+		/* order.cart.selectCartProdInfo */
+		SELECT DISPGOOD.DISP_GOOD_ID
+			 , GOOD.GOOD_IDEN_NUMB
+			 , GOOD.GOOD_NAME
+			 , GOODVENDOR.SMALL_IMG_PATH 
+			 , BORGS.BORGNM 
+			 , GOODVENDOR.GOOD_ST_SPEC_DESC
+			 , GOODVENDOR.GOOD_SPEC_DESC  
+			 , GOOD.ORDER_UNIT AS ORDE_CLAS_CODE 
+		     , DISPGOOD.SELL_PRICE
+		     , CART.ORDE_REQU_QUAN
+		     , GOODVENDOR.DELI_MINI_DAY
+		     , CONVERT(VARCHAR(10) ,  DATEADD(DAY ,  CONVERT(INT , GOODVENDOR.DELI_MINI_DAY)  , GETDATE() ),121)+'('+CONVERT(VARCHAR,GOODVENDOR.DELI_MINI_DAY)+'일)'  AS  STAN_DELI_DAY
+		     , CONVERT(VARCHAR(10) ,  DATEADD(DAY ,  CONVERT(INT , GOODVENDOR.DELI_MINI_DAY)  , GETDATE() ),121) AS requ_deli_date
+		     , CONVERT(DECIMAL(15, 2) , DISPGOOD.SELL_PRICE ) * CONVERT(DECIMAL(5, 0) , CART.ORDE_REQU_QUAN )   AS TOTALAMOUNT
+		     , GOODVENDOR.DELI_MINI_QUAN
+		     , CASE WHEN GOOD.GOOD_TYPE = '10' then '일반' 
+		     	WHEN GOOD.GOOD_TYPE = '20' then '지정' 
+		     	WHEN GOOD.GOOD_TYPE = '30' then '수탁' 
+		       end as GOOD_CLAS_CODE
+			 , DISPGOOD.CUST_GOOD_IDEN_NUMB  
+			 , GOODVENDOR.VENDORID
+			 , GOODVENDOR.original_Img_Path
+			 , GOOD.isDistribute
+			 , ISNULL(Good.is_add_good,0) AS is_add_good
+		  FROM MRCARTPROD CART WITH(NOLOCK)  
+		     , MCDISPLAYGOOD DISPGOOD WITH(NOLOCK) 
+			 , MCGOODVENDOR GOODVENDOR WITH(NOLOCK) 
+			 , MCGOOD       GOOD  WITH(NOLOCK) 
+			 , SMPBORGS     BORGS WITH(NOLOCK) 
+			 , DBO.FNS_DISP_GOODINFO_FOR_ADMIN(#{groupid} , #{clientid} , #{branchid}) DISPINFO
+		 WHERE CART.disp_good_id = DISPGOOD.disp_good_id
+		   AND DISPGOOD.good_iden_numb = GOODVENDOR.good_iden_numb 
+		   AND DISPGOOD.vendorid       = GOODVENDOR.vendorid
+		   AND GOODVENDOR.good_iden_numb = GOOD.good_iden_numb
+		   AND GOODVENDOR.vendorid       = BORGS.BORGID
+		   AND DISPGOOD.good_iden_numb = DISPINFO.good_iden_numb
+		   AND DISPGOOD.vendorid       = DISPINFO.vendorid
+		   AND DISPGOOD.final_good_sts = '1'
+		   AND GOODVENDOR.ISUSE = '1'
+		   AND CART.GROUPID  = #{groupid}   
+		   AND CART.CLIENTID = #{clientid}  
+		   AND CART.BRANCHID = #{branchid}  
+		   AND CART.USERID   = #{userid}    
+	</select>
+	
+	<select id="selectIsExistsCateForBranck" resultType="INT">
+		/* order.cart.selectIsExistsCateForBranck */
+		SELECT COUNT(*) AS CNT  
+		  FROM mrcart CART WITH(NOLOCK)  
+		 WHERE CART.branchid = #{branchid}
+		   AND CART.userid  = #{userid} 
+	</select>
+	
+	<insert id="insertCateMasterInfo">
+		/* order.cart.insertCateMasterInfo */
+		INSERT INTO dbo.mrcart (   
+		            branchid          /* 사업장ID     */ 
+		          , userid            /* 사용자ID  */
+		          , comp_iden_name    /* 공사명       */ 
+		          , orde_type_clas    /* 주문유형     */ 
+		          , tran_deta_addr_seq    /* 배송지주소   */ 
+		          , tran_user_name    /* 인수자       */ 
+		          , tran_tele_numb    /* 인수자연락처 */ 
+		          , mana_user_name    /* 관리자       */ 
+		          , orde_text_desc    /* 비고         */ 
+		          , firstattachseq    /* 첨부파일1    */ 
+		          , secondattachseq   /* 첨부파일2    */ 
+		          , thirdattachseq    /* 첨부파일3    */   
+		             
+		       ) 
+		       VALUES(   
+		                 #{branchid}   /* branchid        사업장ID     */ 
+		               , #{userid}     /* userid          사용자ID     */
+		               , ''            /* comp_iden_name  공사명       */ 
+		               , '10'          /* orde_type_clas  주문유형     */ 
+		               , ''            /* tran_deta_addr  배송지주소   */ 
+		               , ''            /* tran_user_name  인수자       */ 
+		               , ''            /* tran_tele_numb  인수자연락처 */ 
+		               , ''            /* mana_user_name  관리자       */ 
+		               , ''            /* orde_text_desc  비고         */ 
+		               , ''            /* firstattachseq  첨부파일1    */ 
+		               , ''            /* secondattachseq 첨부파일2    */ 
+		               , ''            /* thirdattachseq  첨부파일3    */ 
+		       )                    
+
+	</insert>
+	
+	<select id="selectProdCntInCate" resultType="INT">
+		/* order.cart.selectCateProdCnt */
+		SELECT COUNT(*) AS CNT 
+		  FROM mrcartprod CATEPROD WITH(NOLOCK) 
+		 WHERE CATEPROD.branchid 		= #{branchid}        
+		   AND CATEPROD.userid   		= #{userid}          
+		   AND CATEPROD.good_iden_numb  = #{good_iden_numb}  
+		   AND CATEPROD.vendorid   		= #{vendorid}        
+	</select>
+	
+	<insert id="insertProductInCart" >
+		/* order.cart.insertProductInCart */
+		INSERT INTO MRCARTPROD 
+       	( 
+        	BRANCHID          		
+        , 	USERID            		
+        , 	GOOD_IDEN_NUMB	 		
+        , 	VENDORID	 		 		
+        , 	ORDE_REQU_QUAN    		
+        , 	REGI_DATE_TIME    		
+        , 	ADD_REPRE_GOOD_IDEN_NUMB 
+        , 	REPRE_GOOD_IDEN_NUMB
+        , 	COMMON_OPTION    		
+       )VALUES( 
+          	#{branchid}                    
+       	,  	#{userid}                      
+       	,  	#{good_iden_numb}              
+      	,  	#{vendorid}                    
+       	,  	#{orde_requ_quan}              
+       	,  	GETDATE()                      
+       	,  	#{add_repre_good_iden_numb}    
+       	,  	#{repre_good_iden_numb}         
+       	,  	#{common_option}               
+       ) 
+	</insert>
+	
+	<update id="updateProductOrderQuanInCart">
+		/* order.cart.updateProductOrderQuanInCart */
+		UPDATE dbo.mrcartprod SET 
+		       orde_requ_quan  = #{orde_requ_quan}   
+		     , regi_date_time  = GETDATE()           
+		 WHERE branchid 		= #{branchid}        
+		   AND userid   		= #{userid}          
+		   AND good_iden_numb   = #{good_iden_numb}  
+		   AND vendorid   		= #{vendorid}        
+	</update>
+	
+	<delete id="deleteCartProduct">
+		/*	order.cart.deleteCartProduct	*/
+		DELETE FROM mrcartprod
+		 WHERE disp_good_id = #{disp_good_id}
+		   AND groupid      = #{groupid}
+		   AND clientid     = #{clientid}
+		   AND branchid     = #{branchid}
+	</delete>
+	
+	<delete id="deleteCartProdInfo">
+		/*	order.cart.deleteCartProdInfo*/
+		DELETE FROM MRCARTPROD
+		WHERE GROUPID    = #{groupid}
+		AND CLIENTID     = #{clientid}
+		AND BRANCHID     = #{branchid}
+		AND USERID       = #{userid}
+		AND DISP_GOOD_ID = #{disp_good_id}
+	</delete>
+	
+	
+	
+	<update id="editCartProductOrdQuan">
+		/*	order.cart.editCartProduct	*/
+		UPDATE mrcartprod 
+		   SET orde_requ_quan = #{orde_requ_quan} 
+		     , regi_user_id   = #{userId}
+		     , regi_date_time = getdate() 
+		 WHERE disp_good_id = #{disp_good_id}
+		   AND groupid      = #{groupid}
+		   AND clientid     = #{clientid}
+		   AND branchid     = #{branchid} 
+		   AND userid       = #{userid}
+	</update>
+	
+	
+	<update id="updateCartMstInfo">
+		/*	order.cart.updateCartMstInfo	*/
+		UPDATE mrcart SET 
+		       comp_iden_name      = #{comp_iden_name}      /* 공사명      */
+		     , orde_type_clas      = #{orde_type_clas}      /* 주문유형  */
+		     , tran_deta_addr_seq  = #{tran_deta_addr_seq}  /* 배송지주소 */
+		     , tran_user_name      = #{tran_user_name}      /* 인수자     */
+		     , tran_tele_numb      = #{tran_tele_numb}      /* 인수자연락처 */
+		     , mana_user_name      = #{mana_user_name}      /* 관리자  */
+		     , orde_text_desc      = #{orde_text_desc}      /* 비고     */
+		     , firstattachseq      = #{firstattachseq}      /* 첨부파일1 */
+		     , secondattachseq     = #{secondattachseq}     /* 첨부파일2 */
+		 WHERE branchid            = #{branchid}            /* 사업장ID */
+		   AND userid              = #{userid}              /* 사업장ID */
+	</update>
+	
+	<update id="updateCartAttachFile">
+		UPDATE	MRCART
+		<if test="@MybatisUtils@isNotEmpty(firstattachseq)">
+		SET		FIRSTATTACHSEQ = NULL
+		</if>
+			
+		<if test="@MybatisUtils@isNotEmpty(secondattachseq)">
+		SET		SECONDATTACHSEQ = NULL
+		</if>
+			
+		<if test="@MybatisUtils@isNotEmpty(thirdattachseq)">
+		SET		THIRDATTACHSEQ = NULL
+		</if>
+		WHERE	BRANCHID = #{branchId}
+		AND     userid   = #{userId}
+	</update>
+	
+	
+	<update id="updateCartInfo">
+		/*	order.cart.updateCartInfo	*/
+		UPDATE	MRCART SET
+			TRAN_DETA_ADDR_SEQ = ''
+			, ORDE_TEXT_DESC = ''
+			, FIRSTATTACHSEQ = ''
+			, SECONDATTACHSEQ = ''
+			, THIRDATTACHSEQ = ''
+<!-- 		WHERE	GROUPID = #{groupid} -->
+<!-- 		AND		CLIENTID = #{clientid} -->
+		WHERE	BRANCHID = #{branchid}
+		AND     USERID   = #{userid}
+	</update>
+	
+	<update id="updateCartProd">
+		/*	order.cart.updateCartProd DEPRECATED*/	
+<!-- 		UPDATE 	MRCARTPROD 	SET  -->
+<!-- 			ORDE_REQU_QUAN = #{orde_requ_quan} -->
+<!-- 		WHERE	GROUPID = #{groupid} -->
+<!-- 		AND		CLIENTID = #{clientid} -->
+<!-- 		WHERE	BRANCHID = #{branchid} -->
+<!-- 		AND		USERID = #{userid} -->
+<!-- 		AND		DISP_GOOD_ID = #{disp_good_id}	 -->
+	</update>
+	
+	<select id="getBuyCartInfo" resultType="hashmap">
+		/* order.cart.getBuyCartInfo */
+
+		SELECT
+			AA.*
+		FROM
+		(
+            SELECT	RANK() OVER(ORDER BY ISNULL(B.ADD_REPRE_GOOD_IDEN_NUMB, B.GOOD_IDEN_NUMB)) RANK
+            ,		ROW_NUMBER() OVER( PARTITION BY ISNULL(B.ADD_REPRE_GOOD_IDEN_NUMB, B.GOOD_IDEN_NUMB) ORDER BY B.REGI_DATE_TIME) AS PDTGROUP
+            ,		B.GOOD_IDEN_NUMB
+            ,		C.GOOD_NAME
+            --,		C.GOOD_SPEC
+            ,		ISNULL(C.GOOD_SPEC,'')+' '+ISNULL(B.COMMON_OPTION,'') + CASE WHEN (B.REPRE_GOOD_IDEN_NUMB IS NOT NULL AND B.REPRE_GOOD_IDEN_NUMB!='') THEN (SELECT ' ('+Z.GOOD_SPEC+')' FROM MCGOOD Z WITH(NOLOCK) WHERE Z.GOOD_IDEN_NUMB = B.REPRE_GOOD_IDEN_NUMB) ELSE '' END AS GOOD_SPEC
+            ,		D.SELL_PRICE
+            ,		CASE WHEN ISNULL(C.VENDOR_EXPOSE, 'Y') = 'Y' THEN E.BORGNM ELSE 'SKTS' END AS VENDORNM
+            ,		B.VENDORID
+            ,		B.ORDE_REQU_QUAN
+            ,		D.SELL_PRICE * B.ORDE_REQU_QUAN AS ORD_PRICE
+            ,		B.ADD_REPRE_GOOD_IDEN_NUMB
+            ,		B.COMMON_OPTION
+            ,		B.USERID
+            ,		B.REPRE_GOOD_IDEN_NUMB
+            ,		C.GOOD_TYPE AS GOOD_CLAS_CODE
+            ,		ISNULL(C.ADD_GOOD, 'N') AS ADD_GOOD
+            ,		ISNULL(C.REPRE_GOOD, 'N') AS REPRE_GOOD
+            ,		D.DELI_MINI_DAY
+            ,		B.REGI_DATE_TIME
+            ,		D.SALE_UNIT_PRIC
+            ,		DBO.FNS_DATE_CALC(CONVERT(VARCHAR(10),GETDATE(),121),D.DELI_MINI_DAY) AS DELI_DATE
+        	,		CASE WHEN ISNULL(G.SKTS_IMG,'DIFF_IMG') = 'DIFF_IMG' 
+        				THEN 
+                            CASE WHEN C.SKTS_IMG = 'Y' THEN ISNULL(C.SKTS_LARGE_IMG_PATH, '') ELSE ISNULL(D.LARGE_IMG_PATH, '') END 
+        				ELSE 
+                            CASE WHEN G.SKTS_IMG = 'Y' THEN ISNULL(G.SKTS_LARGE_IMG_PATH, '') ELSE ISNULL(H.LARGE_IMG_PATH, '') END 
+        				END  AS IMG_PATH
+            ,		DBO.FNS_ISDISPLAY_PRODUCT( ISNULL(B.REPRE_GOOD_IDEN_NUMB,B.GOOD_IDEN_NUMB) , B.VENDORID, #{userInfoDto.areaType}, #{userInfoDto.workId}, #{userInfoDto.borgId}) AS DISPLAY_YN
+            ,		D.MAKE_COMP_NAME
+            ,		ISNULL(CONVERT(VARCHAR,D.DELI_MINI_QUAN),'0') AS DELI_MINI_QUAN
+            FROM	MRCART A WITH(NOLOCK) 
+            INNER JOIN MRCARTPROD B WITH(NOLOCK) 
+                ON	A.BRANCHID = B.BRANCHID
+                AND	A.USERID = B.USERID
+            INNER JOIN MCGOOD C WITH(NOLOCK) 
+                ON	B.GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB
+            INNER JOIN MCGOODVENDOR D WITH(NOLOCK) 
+                ON	B.GOOD_IDEN_NUMB = D.GOOD_IDEN_NUMB
+                AND	B.VENDORID = D.VENDORID
+                AND	D.ISUSE = '1'
+                AND	D.SELL_PRICE > 0
+            INNER JOIN SMPBORGS E WITH(NOLOCK) 
+                ON	D.VENDORID = E.BORGID
+                AND	E.ISUSE = '1'
+            LEFT OUTER JOIN MCGOOD G WITH(NOLOCK) 
+                ON	B.REPRE_GOOD_IDEN_NUMB = G.GOOD_IDEN_NUMB
+            LEFT OUTER JOIN MCGOODVENDOR H WITH(NOLOCK) 
+                ON	B.REPRE_GOOD_IDEN_NUMB = H.GOOD_IDEN_NUMB
+                AND	B.VENDORID = H.VENDORID
+                AND	H.ISUSE = '1'
+                AND	H.SELL_PRICE > 0
+            WHERE	A.BRANCHID = #{branchid}
+            AND		A.USERID = #{userid}
+        ) AA
+        WHERE AA.DISPLAY_YN = 'Y'
+		ORDER BY AA.RANK DESC, AA.PDTGROUP
+	</select>
+	
+	<delete id="deleteAddProduct">
+		/* order.cart.deleteAddProduct */
+		DELETE FROM MRCARTPROD WHERE ADD_REPRE_GOOD_IDEN_NUMB = #{good_iden_numb}
+	</delete>
+	
+	<delete id="deleteCartPdt">
+		/* order.cart.deleteCartPdt */
+		DELETE 	FROM MRCARTPROD 
+		WHERE 	BRANCHID 		= #{branchid}
+		AND 	USERID 			= #{userid}
+		AND 	GOOD_IDEN_NUMB	= #{good_iden_numb}
+		AND 	VENDORID		= #{vendorid}	
+	</delete>
+	
+	<select id="selectExistProdList" resultType="java.util.HashMap">
+		/* order.cart.selectExistProdList */
+		SELECT 
+             CATEPROD.BRANCHID
+             ,CATEPROD.USERID
+             ,CATEPROD.GOOD_IDEN_NUMB
+             ,CATEPROD.VENDORID
+		  FROM MRCARTPROD CATEPROD WITH(NOLOCK) 
+		 WHERE CATEPROD.BRANCHID = #{branchid}        
+		   AND CATEPROD.USERID = #{userid}          
+		   AND CATEPROD.GOOD_IDEN_NUMB = #{good_iden_numb}  
+		   AND CATEPROD.VENDORID = #{vendorid}        
+	</select>
+	<select id="selectExistAddProdList" resultType="java.util.HashMap">
+		/* order.cart.selectExistAddProdList */
+		SELECT 
+             CATEPROD.BRANCHID
+             ,CATEPROD.USERID
+             ,CATEPROD.GOOD_IDEN_NUMB
+             ,CATEPROD.VENDORID
+		  FROM MRCARTPROD CATEPROD WITH(NOLOCK) 
+		 WHERE CATEPROD.BRANCHID = #{branchid}        
+		   AND CATEPROD.USERID = #{userid}          
+		   AND CATEPROD.ADD_REPRE_GOOD_IDEN_NUMB = #{good_iden_numb}  
+	</select>
+	<delete id="deleteCartPdtForAddProd">
+		/*	order.cart.deleteCartPdtForAddProd	*/
+		DELETE FROM MRCARTPROD
+		 WHERE BRANCHID = #{BRANCHID}        
+		   AND USERID = #{USERID}          
+		   AND GOOD_IDEN_NUMB = #{GOOD_IDEN_NUMB}  
+		   AND VENDORID = #{VENDORID}        
+	</delete>
+	
+	<!-- 프론트 카트 카운트 조회 -->
+	<select id="selectCartCount" resultType="int">
+		/* order.cart.selectCartCount */
+		SELECT
+			COUNT(1)
+		FROM
+			(
+				SELECT
+					DBO.FNS_ISDISPLAY_PRODUCT(
+						ISNULL(
+							B.ADD_REPRE_GOOD_IDEN_NUMB, 
+							ISNULL(
+								B.REPRE_GOOD_IDEN_NUMB,
+								B.GOOD_IDEN_NUMB
+							)
+						),
+						B.VENDORID,
+						#{areaType},
+						#{workId},
+						#{branchid}
+					) AS DISPLAY_YN
+				FROM
+					MRCART              A WITH(NOLOCK) 
+				INNER JOIN MRCARTPROD   B  WITH(NOLOCK) ON A.BRANCHID       = B.BRANCHID       AND A.USERID   = B.USERID
+				INNER JOIN MCGOOD       C  WITH(NOLOCK) ON B.GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB
+				INNER JOIN MCGOODVENDOR D  WITH(NOLOCK) ON B.GOOD_IDEN_NUMB = D.GOOD_IDEN_NUMB AND B.VENDORID = D.VENDORID AND D.ISUSE = '1'
+				INNER JOIN SMPBORGS     E  WITH(NOLOCK) ON D.VENDORID       = E.BORGID         AND E.ISUSE    = '1'
+				WHERE	A.BRANCHID = #{branchid}
+				AND		A.USERID   = #{userid}
+				AND		D.SELL_PRICE > 0
+        ) AA
+        WHERE
+        	AA.DISPLAY_YN = 'Y'
+	</select>
+	
+	
+	<select id="selectCartChkAddProductSubInfo" resultType="java.util.HashMap">
+		/* order.cart.selectCartChkAddProductSubInfo */
+        SELECT 
+            BRANCHID
+            ,USERID
+            ,GOOD_IDEN_NUMB
+            ,VENDORID
+            ,ORDE_REQU_QUAN
+            ,REGI_DATE_TIME
+            ,ADD_REPRE_GOOD_IDEN_NUMB AS ADD_REPRE_GOOD_IDEN_NUMB
+            ,REPRE_GOOD_IDEN_NUMB AS REPRE_GOOD_IDEN_NUMB
+            ,COMMON_OPTION AS COMMON_OPTION
+        FROM MRCARTPROD WITH(NOLOCK) 
+        WHERE BRANCHID = #{branchid}
+            AND USERID= #{userid}
+            AND GOOD_IDEN_NUMB= #{good_iden_numb}
+            AND VENDORID= #{vendorid}
+	</select>
+	<select id="selectCartChkAddProductSubInfo2" resultType="java.util.HashMap">
+		/* order.cart.selectCartChkAddProductSubInfo2 */
+		SELECT 
+            ISNULL(B.GOOD_IDEN_NUMB,C.GOOD_IDEN_NUMB) AS ADD_PROD_ID
+        ,	(CASE WHEN B.GOOD_IDEN_NUMB IS NOT NULL THEN 'Y' ELSE 'N' END) AS IS_MST_YN
+        FROM MRCARTPROD A WITH(NOLOCK) 
+        LEFT OUTER JOIN MRCARTPROD B WITH(NOLOCK) 
+            ON A.GOOD_IDEN_NUMB = B.ADD_REPRE_GOOD_IDEN_NUMB
+            AND A.BRANCHID = A.BRANCHID
+            AND A.USERID = B.USERID
+        LEFT OUTER JOIN MRCARTPROD C WITH(NOLOCK) 
+            ON A.ADD_REPRE_GOOD_IDEN_NUMB = C.GOOD_IDEN_NUMB
+            AND A.BRANCHID = C.BRANCHID
+            AND A.USERID = C.USERID
+        WHERE A.BRANCHID =  #{branchid}
+            AND A.USERID= #{userid}
+            AND A.GOOD_IDEN_NUMB = #{good_iden_numb}
+            AND A.VENDORID = #{vendorid}
+	</select>
+	
+	<select id="selectCartPopPdtInfo" resultType="java.util.HashMap">
+		/* order.cart.selectCartPopPdtInfo */
+		SELECT	ISNULL(A.ADD_GOOD,'N' ) AS ADD_GOOD
+		,		A.REPRE_GOOD
+		,		A.GOOD_NAME
+		,		ISNULL(CONVERT(VARCHAR,B.DELI_MINI_QUAN),'0')  AS DELI_MINI_QUAN
+		FROM 	MCGOOD A WITH(NOLOCK) 
+		,			MCGOODVENDOR B WITH(NOLOCK) 
+		WHERE	A.GOOD_IDEN_NUMB = B.GOOD_IDEN_NUMB
+		AND A.GOOD_IDEN_NUMB = #{goodIdenNumb}
+		AND B.VENDORiD = #{vendorId}
+	</select>
+	
+	
+	<update id="updateCartPdtOrdQuan">
+		/* order.cart.updateCartPdtOrdQuan */
+		UPDATE MRCARTPROD SET ORDE_REQU_QUAN = #{ordQuan}
+        WHERE BRANCHID = #{branchid}
+        AND USERID = #{userid}
+        AND GOOD_IDEN_NUMB = #{goodIdenNumb}
+        AND VENDORID = #{vendorId}
+	</update>
+</mapper>
