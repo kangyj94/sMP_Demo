@@ -80,7 +80,7 @@ jq(function() {
 		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/order/orderRequest/venOrderListProgressJQGrid.sys', 
 		datatype: 'json',
 		mtype : 'POST',
-		colNames:['주문일자','고객유형','주문번호','공사명','고객사','발주의뢰','발주의뢰중지','발주접수','발주접수중지','출하준비중','출하','출하취소','인수','주문취소','반품','branchId'],
+		colNames:['주문일자','고객유형','주문번호','주문명','고객사','발주의뢰','발주의뢰중지','발주접수','발주접수중지','출하준비중','출하','출하취소','인수','주문취소','반품','branchId'],
 		colModel:[
 			{name:'regi_date_time',index:'regi_date_time', width:93,align:"center",search:false,sortable:true, 
 				editable:false 
@@ -93,7 +93,7 @@ jq(function() {
 			},	//주문번호
 			{name:'cons_iden_name',index:'cons_iden_name', width:200,align:"left",search:false,sortable:true, 
 				editable:false
-			},	//공사명
+			},	//주문명
 			{name:'orde_client_name',index:'orde_client_name', width:125,align:"left",search:false,sortable:true,
 				editable:false 
 			},	//고객사

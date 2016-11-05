@@ -230,6 +230,24 @@ jQuery.download = function(url, data, method){
 $(document).ready(function(){
 	/*****  1.이벤트 적용*****/
 	$("#btnPost").click(function(){	fnSetPostCode();	});
+	
+	//주문결제사용여부
+	$("#isOrderApproval").change(function() {
+		if($(this).val()=="0") {
+			$.post(
+				"/organ/selectBranchApprovalOrderCnt/branchApprovalOrderCnt/object.sys", 
+				{ branchId:'<%=detailDto.getBranchId()%>' },
+				function(arg){
+					var result = eval('(' + arg + ')').branchApprovalOrderCnt;
+					var orderCnt = $.number(orderCnt);
+					if(orderCnt!=0) {
+						alert("주문승인중 상태의 주문이 존재합니다.\n주문결제 사용을 미사용 하기 위해서는 모든승인이 완료되어야 합니다.");
+						$("#isOrderApproval").val("1");
+					}
+				}
+			);
+		}
+	});
 });
 
 function fnSetPostCode() {
@@ -654,11 +672,12 @@ function fnUpdateSmpBranchNm(){
 		{
 			branchId:'<%=detailDto.getBranchId()%>',
 			branchNm:$("#branchNm").val(),
+			isOrderApproval:$("#isOrderApproval").val()
 		},
 		function(arg){ 
 			if(fnAjaxTransResult(arg)) {  //성공시
 				window.opener.fnSearch();
-				window.close();
+// 				window.close();
 			}
 		}
 	);
@@ -894,7 +913,7 @@ function fnUpdateSmpBranchNm(){
                      </td>
                      <td class="table_td_subject">참고사항</td>
                      <td class="table_td_contents">
-                        <input id="refereceDesc" name="refereceDesc" type="text" value="<%=detailDto.getRefereceDesc() %>" maxlength="1000" class="disabled"/>
+                        <input id="refereceDesc" name="refereceDesc" type="text" value="<%=CommonUtils.getString(detailDto.getRefereceDesc()) %>" maxlength="1000" class="disabled"/>
                      </td>
                   </tr>
                   <tr>
@@ -1070,7 +1089,7 @@ function fnUpdateSmpBranchNm(){
                     <td class="table_td_subject"><font color="red"><b>자재대금 결제일</b></font></td>
                     <td class="table_td_contents">
 						<input id="autOrderLimitPeriod" type="text" name="autOrderLimitPeriod" value="<%=detailDto.getAutOrderLimitPeriod()%>" style="width: 30px;" class="disabled"/> 일
-						<br/><font color="#000000" style="font-size: 8px;">(세금계산서 발행일로부터)</font>
+						<font color="#000000" style="font-size: 8px;">(세금계산서 발행일로부터)</font>
                     </td>
                 </tr>
                 <tr>
@@ -1082,9 +1101,17 @@ function fnUpdateSmpBranchNm(){
                     <%=detailDto.getCreateDate() %>
                     </td>
                     <td class="table_td_subject">종료일</td>
-                    <td colspan="3" class="table_td_contents">
+                    <td class="table_td_contents">
                     <%=detailDto.getUpdateDate()%>
                     </td>
+					<td class="table_td_subject">주문결재 사용여부</td>
+					<td class="table_td_contents">
+<!-- 						<select class="select" id="isOrderApproval" name="isOrderApproval" style="width:80px;background-color: gray;" disabled="disabled"> -->
+						<select id="isOrderApproval" name="isOrderApproval" style="width:80px;">
+							<option value="0">미사용</option>
+							<option value="1" <%=("1".equals(CommonUtils.getString(detailDto.getIsOrderApproval(), "0"))) ? "selected":"" %>>사용</option>
+						</select>
+					</td>
                 </tr>
                 <tr>
                     <td colspan="6" height='1' bgcolor="eaeaea"></td>

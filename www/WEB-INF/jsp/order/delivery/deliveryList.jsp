@@ -146,7 +146,7 @@ jq(function() {
 		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/order/delivery/deliveryListJQGrid.sys', 
 		datatype: 'json',
 		mtype: 'POST',
-		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자', '납품요청일','발주접수일','주문유형','고객유형', '주문번호', '발주차수', '상품명', '상품규격', '발주수량', '출하된수량', '출하할수량', '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처', '단가','발주 총금액', '발주일','비고' ,'공사명','첨부1','첨부2','첨부3', '공급사명', 'vendorId', 'branchId','disp_good_id' , 'good_iden_numb', 'path1', 'path2', 'path3','good_st_spec_desc'],
+		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자', '납품요청일','발주접수일','주문유형','고객유형', '주문번호', '발주차수', '상품명', '상품규격', '발주수량', '출하된수량', '출하할수량', '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처', '단가','발주 총금액', '발주일','비고' ,'주문명','첨부1','첨부2','첨부3', '공급사명', 'vendorId', 'branchId','disp_good_id' , 'good_iden_numb', 'path1', 'path2', 'path3','good_st_spec_desc'],
 		colModel:[
 			{name:'isCheck',index:'isCheck', width:30,align:"center",search:false,sortable:false,editable:false, formoptions:{rowpos:1,elmprefix:"&nbsp;&nbsp;&nbsp;&nbsp;"},formatter:checkboxFormatter,frozen:true},
 			{name:'regi_date_time',index:'regi_date_time', width:70,align:"center",search:false,sortable:true, editable:false },
@@ -206,7 +206,7 @@ jq(function() {
 				formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" }},//금액
 			{name:'clin_date',index:'clin_date', width:70,align:"center",search:false,sortable:true, editable:false },
 			{name:'adde_text_desc',index:'adde_text_desc', width:150,align:"left",search:false,sortable:true, editable:false },
-			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:true, editable:false },//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:true, editable:false },//주문명
 			{name:'attach_file_name1',index:'attach_file_name1', width:60,align:"left",search:false,sortable:true, editable:false },
 			{name:'attach_file_name2',index:'attach_file_name2', width:60,align:"left",search:false,sortable:true, editable:false },
 			{name:'attach_file_name3',index:'attach_file_name3', width:60,align:"left",search:false,sortable:true, editable:false },
@@ -396,7 +396,7 @@ function fnSearch(){
 /** list Excel Export */
 function exportExcel() {
 	
-	var colLabels =['주문일자', '납품요청일','발주접수일','주문유형', '주문번호', '발주차수', '상품명', '상품규격', '발주수량', '출하된수량',  '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처', '단가','발주 총금액', '발주일','비고','공사명', '첨부1','첨부2','첨부3', '공급사명'];
+	var colLabels =['주문일자', '납품요청일','발주접수일','주문유형', '주문번호', '발주차수', '상품명', '상품규격', '발주수량', '출하된수량',  '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처', '단가','발주 총금액', '발주일','비고','주문명', '첨부1','첨부2','첨부3', '공급사명'];
 	var colIds = ['regi_date_time', 'requ_deli_date', 'purc_rece_date', 'orde_type_clas', 'orde_iden_numb', 'purc_iden_numb', 'good_name', 'good_spec_desc', 'purc_requ_quan', 'deli_prod_quan',  'tran_data_addr', 'orde_client_name', 'orde_user_name', 'tran_user_name', 'tran_tele_numb', 'sale_unit_pric', 'total_sale_unit_pric', 'clin_date','adde_text_desc' ,'cons_iden_name','attach_file_name1', 'attach_file_name2', 'attach_file_name3', 'vendornm'];
 	var numColIds = ['purc_requ_quan','deli_prod_quan','sale_unit_pric','total_sale_unit_pric'];
 	var figureColIds = ['purc_iden_numb'];
@@ -612,7 +612,7 @@ function processDeliReject(reason){
 }
 function processDeliReject_cancel(){}
 function fnSearchExcelView(){
-	var colLabels =['주문일자', '납품요청일','발주접수일','주문유형', '주문번호', '발주차수', '상품명', '상품규격', '발주수량', '출하된수량',  '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처', '단가','발주 총금액', '발주일','비고','공사명', '첨부1','첨부2','첨부3', '공급사명'];
+	var colLabels =['주문일자', '납품요청일','발주접수일','주문유형', '주문번호', '발주차수', '상품명', '상품규격', '발주수량', '출하된수량',  '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처', '단가','발주 총금액', '발주일','비고','주문명', '첨부1','첨부2','첨부3', '공급사명'];
 	var colIds = ['REGI_DATE_TIME', 'REQU_DELI_DATE', 'PURC_RECE_DATE', 'ORDE_TYPE_CLAS', 'ORDE_IDEN_NUMB', 'PURC_IDEN_NUMB', 'GOOD_NAME', 'GOOD_SPEC_DESC', 'PURC_REQU_QUAN', 'DELI_PROD_QUAN',  'TRAN_DATA_ADDR', 'ORDE_CLIENT_NAME', 'ORDE_USER_NAME', 'TRAN_USER_NAME', 'TRAN_TELE_NUMB', 'SALE_UNIT_PRIC', 'TOTAL_SALE_UNIT_PRIC', 'CLIN_DATE','ADDE_TEXT_DESC' ,'CONS_IDEN_NAME','ATTACH_FILE_NAME1', 'ATTACH_FILE_NAME2', 'ATTACH_FILE_NAME3', 'VENDORNM'];
 	var numColIds = ['PURC_REQU_QUAN','DELI_PROD_QUAN','SALE_UNIT_PRIC','TOTAL_SALE_UNIT_PRIC'];	
 	var figureColIds = ['PURC_IDEN_NUMB'];

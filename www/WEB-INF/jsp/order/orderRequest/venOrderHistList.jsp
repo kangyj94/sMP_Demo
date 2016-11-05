@@ -57,7 +57,7 @@
               <col width="auto" />
             </colgroup>
             <tr>
-              <th>공사명</th>
+              <th>주문명</th>
               <td><input type="text" style="width:200px;" id="srcConNm"/></td>
               <th>상품코드</th>
               <td><input type="text" style="width:150px;" id="srcGoodIdenNumb"/></td>
@@ -289,7 +289,7 @@ function venOrderHistList(page){
                     str += "    <div class=\"f11\">                                  ";
                     str += "      <p><strong>"+list[i].BRANCHNM+"</strong></p>               ";
                     str += "      <p><strong>주문일</strong> : "+list[i].REGI_DATE_TIME+"</p>         ";
-                    str += "      <p><strong>공사명</strong> : "+list[i].CONS_IDEN_NAME;
+                    str += "      <p><strong>주문명</strong> : "+list[i].CONS_IDEN_NAME;
 					if(list[i].ADD_REPRE_SEQU_NUMB != "0"){
 					str += "		<input type='hidden' id='add_repre_sequ_numb_"+i+"' name='add_repre_sequ_numb_' value='"+list[i].ADD_REPRE_SEQU_NUMB+"'>";
 					str += "		<input type='hidden' id='temp_orde_iden_numb_"+i+"' name='temp_orde_iden_numb_' value='"+list[i].TEMP_ORDE_IDEN_NUMB+"'>";
@@ -345,7 +345,7 @@ function fnVenProductDetail(i){
 }
 <%-- 주문접수 엑셀일괄다운--%>
 function fnAllExcelPrintDown(){
-	var colLabels = ['주문번호', '구매사', '주문일',  '주문상태', '상품명', '공사명',
+	var colLabels = ['주문번호', '구매사', '주문일',  '주문상태', '상품명', '주문명',
 						'규격', '총중량', '실중량', '단위', '단가', '주문수량','수량', 
 						'공급가액', '표준납기일', '지연일', '배송일','인수일',
 						'계산서발행일', '자동인수여부','비고' ];

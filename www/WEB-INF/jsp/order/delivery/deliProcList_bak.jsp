@@ -230,7 +230,7 @@ jq(function() {
 		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/order/delivery/deliCompleteListJQGrid.sys', 
 		datatype: 'json',
 		mtype: 'POST',
-		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자','납품요청일','주문유형', '고객유형','주문번호', '발주차수', '납품차수', '인수증번호', '상품명', '상품규격', '배송상태',   '출하일','발주수량', '출하수량', '배송유형', '송장(전화)번호', '배송처주소', '주문상태','구매사', '주문자', '인수자', '인수자 연락처', '단가','금액', '발주일', '비고','공사명','첨부1','첨부2','첨부3', '인수완료일시', '공급사'<%if(isShow){ %>, '인수증 파일','인수증 업로드','receipt_img_file', 'receipt_img_file_path'<%} %>, 'disp_good_id', 'good_iden_numb','vendorId', 'tempDeliType', 'tempInvoNumb', 'deli_type_clas_code', 'path1', 'path2', 'path3','good_st_spec_desc','branchId' ], 
+		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자','납품요청일','주문유형', '고객유형','주문번호', '발주차수', '납품차수', '인수증번호', '상품명', '상품규격', '배송상태',   '출하일','발주수량', '출하수량', '배송유형', '송장(전화)번호', '배송처주소', '주문상태','구매사', '주문자', '인수자', '인수자 연락처', '단가','금액', '발주일', '비고','주문명','첨부1','첨부2','첨부3', '인수완료일시', '공급사'<%if(isShow){ %>, '인수증 파일','인수증 업로드','receipt_img_file', 'receipt_img_file_path'<%} %>, 'disp_good_id', 'good_iden_numb','vendorId', 'tempDeliType', 'tempInvoNumb', 'deli_type_clas_code', 'path1', 'path2', 'path3','good_st_spec_desc','branchId' ], 
 		colModel:[
 			{name:'isCheck',index:'isCheck', width:30,align:"center",search:false,sortable:false,
 				editable:false,formoptions:{rowpos:1,elmprefix:"&nbsp;&nbsp;&nbsp;&nbsp;"},
@@ -311,7 +311,7 @@ jq(function() {
 				formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" }},//금액
 			{name:'clin_date',index:'clin_date', width:70,align:"center",search:false,sortable:true, editable:false },
 			{name:'adde_text_desc',index:'adde_text_desc', width:150,align:"left",search:false,sortable:true, editable:false },
-			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:true, editable:false },//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:true, editable:false },//주문명
 			{name:'attach_file_name1',index:'attach_file_name1', width:60,align:"left",search:false,sortable:true, editable:false },
 			{name:'attach_file_name2',index:'attach_file_name2', width:60,align:"left",search:false,sortable:true, editable:false },
 			{name:'attach_file_name3',index:'attach_file_name3', width:60,align:"left",search:false,sortable:true, editable:false },

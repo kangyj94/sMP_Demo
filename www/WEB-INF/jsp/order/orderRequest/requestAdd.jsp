@@ -878,7 +878,7 @@ function productList(producArray){
                             <td colspan="6" height='1' bgcolor="eaeaea"></td>
                         </tr>
                         <tr>
-                            <td class="table_td_subject" width="100">공사명</td>
+                            <td class="table_td_subject" width="100">주문명</td>
                             <td class="table_td_contents">
                                 <input id="cons_iden_name" name="cons_iden_name" type="text" value="" size="" maxlength="250" style="width: 205px" />
                             </td>
@@ -1039,7 +1039,7 @@ function productList(producArray){
         </div>
         <div id="cons_iden_name_warning" title="Warning" style="display: none; font-size: 12px; color: red;">
             <p>
-                <b>공사명</b>을 입력해주십시오.
+                <b>주문명</b>을 입력해주십시오.
             </p>
         </div>
         <div id="orde_tele_numb_warning" title="Warning" style="display: none; font-size: 12px; color: red;">

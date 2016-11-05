@@ -162,10 +162,10 @@ function exportExcel() {
 	var colLabels;
 	var colIds;
 	if($(":input:radio[name=isDispCate]:checked").val()=="1") {
-		colLabels =['주문일자',			'납품요청일',		'사업유형',		'고객유형',	'주문번호',			'대분류',		'중분류',		'소분류',		'상품구분',			'상품명',		'규격',				'단위',				'공사명',			'주문유형',			'주문상태',			'고객사',	'고객사 사업자등록번호','권역',				'수량',		'판매단가',			'판매금액',				'발주일',	'출하일',			'배송정보입력일',	'인수일',			'매출세금 계산서일','매입세금 계산서일','자동인수 여부','상품 실적년도'];
+		colLabels =['주문일자',			'납품요청일',		'사업유형',		'고객유형',	'주문번호',			'대분류',		'중분류',		'소분류',		'상품구분',			'상품명',		'규격',				'단위',				'주문명',			'주문유형',			'주문상태',			'고객사',	'고객사 사업자등록번호','권역',				'수량',		'판매단가',			'판매금액',				'발주일',	'출하일',			'배송정보입력일',	'인수일',			'매출세금 계산서일','매입세금 계산서일','자동인수 여부','상품 실적년도'];
 		colIds = [	'regi_date_time', 	'requ_deli_date', 	'codeNmTop'	,	'worknm',	'orde_iden_numb',	'cate_name1',	'cate_name2',	'cate_name3',	'good_clas_code',	'good_name',	'good_spec_desc',	'orde_clas_code',	'cons_iden_name',	'orde_type_name',	'stat_flag_name',	'branchnm',	'bchBusinessNum',		'deli_area_name',	'quantity',	'orde_requ_pric',	'total_orde_requ_pric',	'clin_date','deli_degr_date',	'invoiceDate',		'rece_regi_date',	'clos_sale_date',	'clos_buyi_date',	'auto_receive',	'good_reg_year'];
 	}else{
-		colLabels =['주문일자',		'납품요청일',		'사업유형',	'고객유형',	'주문번호', 		'상품구분',			'상품명',	'규격',				'단위',				'공사명',			'주문유형',			'주문상태',			'고객사',	'고객사사업자등록번호',	'권역',				'수량',		'판매단가',			'판매금액',				'발주일',	'출하일',			'배송정보입력일',	'인수일',			'매출세금계산서일',	'매입세금계산서일',	'자동인수여부','상품 실적년도'];
+		colLabels =['주문일자',		'납품요청일',		'사업유형',	'고객유형',	'주문번호', 		'상품구분',			'상품명',	'규격',				'단위',				'주문명',			'주문유형',			'주문상태',			'고객사',	'고객사사업자등록번호',	'권역',				'수량',		'판매단가',			'판매금액',				'발주일',	'출하일',			'배송정보입력일',	'인수일',			'매출세금계산서일',	'매입세금계산서일',	'자동인수여부','상품 실적년도'];
 		colIds = ['regi_date_time', 'requ_deli_date', 	'codeNmTop','worknm',	'orde_iden_numb', 	'good_clas_code',	'good_name','good_spec_desc',	'orde_clas_code',	'cons_iden_name',	'orde_type_name',	'stat_flag_name',	'branchnm',	'bchBusinessNum',		'deli_area_name',	'quantity',	'orde_requ_pric',	'total_orde_requ_pric',	'clin_date','deli_degr_date',	'invoiceDate',		'rece_regi_date',	'clos_sale_date',	'clos_buyi_date',	'auto_receive','good_reg_year'];
 	}
 	var numColIds = ['quantity','orde_requ_pric','total_orde_requ_pric'];   //숫자표현ID
@@ -181,10 +181,10 @@ function fnAllExcelPrintDown(){
 	var colLabels;
 	var colIds;
 	if($(":input:radio[name=isDispCate]:checked").val()=="1") {
-		colLabels =['주문일자',			'납품요청일',		'사업유형',		'고객유형',	'주문번호',			'대분류',		'중분류',		'소분류',		'상품구분',			'상품명',		'규격',				'단위',				'공사명',			'주문유형',			'주문상태',			'고객사',	'고객사 사업자등록번호','권역',				'수량',		'판매단가',			'판매금액',				'발주일',	'출하일',			'배송정보입력일',	'인수일',			'매출세금 계산서일','매입세금 계산서일','자동인수 여부','상품 실적년도'];
+		colLabels =['주문일자',			'납품요청일',		'사업유형',		'고객유형',	'주문번호',			'대분류',		'중분류',		'소분류',		'상품구분',			'상품명',		'규격',				'단위',				'주문명',			'주문유형',			'주문상태',			'고객사',	'고객사 사업자등록번호','권역',				'수량',		'판매단가',			'판매금액',				'발주일',	'출하일',			'배송정보입력일',	'인수일',			'매출세금 계산서일','매입세금 계산서일','자동인수 여부','상품 실적년도'];
 		colIds = [	'REGI_DATE_TIME', 	'REQU_DELI_DATE', 	'CODENMTOP'	,	'WORKNM',	'ORDE_IDEN_NUMB',	'CATE_NAME1',	'CATE_NAME2',	'CATE_NAME3',	'GOOD_CLAS_CODE',	'GOOD_NAME',	'GOOD_SPEC_DESC',	'ORDE_CLAS_CODE',	'CONS_IDEN_NAME',	'ORDE_TYPE_NAME',	'STAT_FLAG_NAME',	'BRANCHNM',	'BCHBUSINESSNUM',		'DELI_AREA_NAME',	'QUANTITY',	'ORDE_REQU_PRIC',	'TOTAL_ORDE_REQU_PRIC',	'CLIN_DATE','DELI_DEGR_DATE',	'INVOICEDATE',		'RECE_REGI_DATE',	'CLOS_SALE_DATE',	'CLOS_BUYI_DATE',	'AUTO_RECEIVE',	'GOOD_REG_YEAR'];
 	} else {
-		colLabels =['주문일자',		'납품요청일',		'사업유형',	'고객유형',	'주문번호', 		'상품구분',			'상품명',	'규격',				'단위',				'공사명',			'주문유형',			'주문상태',			'고객사',	'고객사사업자등록번호',	'권역',				'수량',		'판매단가',			'판매금액',				'발주일',	'출하일',			'배송정보입력일',	'인수일',			'매출세금계산서일',	'매입세금계산서일',	'자동인수여부','상품 실적년도'];
+		colLabels =['주문일자',		'납품요청일',		'사업유형',	'고객유형',	'주문번호', 		'상품구분',			'상품명',	'규격',				'단위',				'주문명',			'주문유형',			'주문상태',			'고객사',	'고객사사업자등록번호',	'권역',				'수량',		'판매단가',			'판매금액',				'발주일',	'출하일',			'배송정보입력일',	'인수일',			'매출세금계산서일',	'매입세금계산서일',	'자동인수여부','상품 실적년도'];
 		colIds = ['REGI_DATE_TIME', 'REQU_DELI_DATE', 	'CODENMTOP','WORKNM',	'ORDE_IDEN_NUMB', 	'GOOD_CLAS_CODE',	'GOOD_NAME','GOOD_SPEC_DESC',	'ORDE_CLAS_CODE',	'CONS_IDEN_NAME',	'ORDE_TYPE_NAME',	'STAT_FLAG_NAME',	'BRANCHNM',	'BCHBUSINESSNUM',		'DELI_AREA_NAME',	'QUANTITY',	'ORDE_REQU_PRIC',	'TOTAL_ORDE_REQU_PRIC',	'CLIN_DATE','DELI_DEGR_DATE',	'INVOICEDATE',		'RECE_REGI_DATE',	'CLOS_SALE_DATE',	'CLOS_BUYI_DATE',	'AUTO_RECEIVE','GOOD_REG_YEAR'];
 	}
 	var numColIds = ['quantity','orde_requ_pric','total_orde_requ_pric'];   //숫자표현ID
@@ -223,7 +223,7 @@ jq(function() {
 		datatype: 'json',
 		mtype: 'POST',
 		colNames:['주문일자','납품요청일','사업유형','고객유형','주문번호','대분류','중분류','소분류','상품구분','상품코드','상품명','규격','단위',
-					'공사명','주문유형', '주문상태', '고객사','고객사사업자등록번호','권역', '수량','판매단가', '판매금액','disp_good_id','고객유형 담당자',
+					'주문명','주문유형', '주문상태', '고객사','고객사사업자등록번호','권역', '수량','판매단가', '판매금액','disp_good_id','고객유형 담당자',
 					'발주일','출하일','배송정보입력일','인수일','매출세금계산서일','매입세금계산서일','자동인수여부','상품 실적년도','카테고리 진열명',
 					'sum_total_sale_unit_pric','sum_quantity','good_st_spec_desc'],
 		colModel:[
@@ -240,7 +240,7 @@ jq(function() {
 			{name:'good_name',index:'good_name', width:150,align:"left",search:false,sortable:true, editable:false},//상품명
 			{name:'good_spec_desc',index:'good_spec_desc', width:100,align:"left",search:false,sortable:true, editable:false},//상품규격
 			{name:'orde_clas_code',index:'orde_clas_code', width:50,align:"center",search:false,sortable:true, editable:false},//단위
-			{name:'cons_iden_name',index:'cons_iden_name', width:200,align:"left",search:false,sortable:true, editable:false },//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:200,align:"left",search:false,sortable:true, editable:false },//주문명
 			{name:'orde_type_name',index:'orde_type_name', width:60,align:"center",search:false,sortable:true, editable:false },//주문유형
 			{name:'stat_flag_name',index:'stat_flag_name', width:70,align:"center",search:false,sortable:true, editable:false },//주문상태
 			{name:'branchnm',index:'branchnm', width:120,align:"left",search:false,sortable:true, editable:false },//고객사

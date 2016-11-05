@@ -123,7 +123,7 @@ body.mainBg {background:url(/img/FR/blank.gif) no-repeat;}
 							</td>
 						</tr>
 						<tr>
-							<th>공사명(주문명)</th>
+							<th>주문명(주문명)</th>
 							<td colspan="6">
 								
 							<input id="cons_iden_name" name="cons_iden_name" type="text" value="<%= cartInfoDto.getComp_iden_name() %>" size="" maxlength="250" style="width: 400px;" />
@@ -1080,7 +1080,7 @@ function fnOrder(){
 	var add_good_numbs		= new Array();
 	var repre_good_numbs	= new Array();
 
-	var cons_iden_name  = $("#cons_iden_name").val();                    // 공사명
+	var cons_iden_name  = $("#cons_iden_name").val();                    // 주문명
 	var orde_type_clas  = "10";                                          // 주문유형
 	var orde_tele_numb  = $("#orde_tele_numb").val();                    // 주문자 전화번호
 	var orde_user_id    = $("#orde_user_id").val();                      // 주문자 ID

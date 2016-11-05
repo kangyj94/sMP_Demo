@@ -51,31 +51,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <%@ include file="/WEB-INF/jsp/system/systemInclude.jsp" %>
-<%-- <link href="<%=Constances.SYSTEM_JSCSS_URL %>/jq/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" media="screen" /> --%>
-<%-- <link href="<%=Constances.SYSTEM_JSCSS_URL %>/jq/themes/ui.jqgrid.css" rel="stylesheet" type="text/css" media="screen" /> --%>
-<%-- <link href="<%=Constances.SYSTEM_JSCSS_URL %>/css/hmro_green_tree.css" rel=StyleSheet /> --%>
-<%-- <link href="<%=Constances.SYSTEM_JSCSS_URL %>/css/button.css" rel="stylesheet" type="text/css" media="screen" /> --%>
-
-<%-- <link rel="stylesheet" href="<%=Constances.SYSTEM_JSCSS_URL %>/css/bootstrap.min.css" /> --%>
-<%-- <link rel="stylesheet" href="<%=Constances.SYSTEM_JSCSS_URL %>/css/font-awesome-4.2.0/css/font-awesome.min.css" /> --%>
-
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.min.js" type="text/javascript"></script> --%>
-
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery-ui.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.layout.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/i18n/grid.locale-kr.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.jqGrid.min.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.alphanumeric.pack.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/Validation.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.ui.datepicker-ko.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.formatCurrency-1.4.0.pack.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.maskedinput-1.3.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jshashtable-2.1.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.blockUI.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/custom.common.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jqgrid.common.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.money.js" type="text/javascript"></script> --%>
-<%-- <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/jquery.number.js" type="text/javascript"></script> --%>
 
 <script type="text/javascript">
 $(document).ready(function(){
@@ -95,6 +70,23 @@ $(document).ready(function(){
 	$("#faxNum").val( fnSetTelformat( $("#faxNum").val() ) );
 	$("#accountTelNum").val( fnSetTelformat( $("#accountTelNum").val() ) );
 	
+	//주문결제사용여부
+	$("#isOrderApproval").change(function() {
+		if($(this).val()=="0") {
+			$.post(
+				"/organ/selectBranchApprovalOrderCnt/branchApprovalOrderCnt/object.sys", 
+				{ branchId:'<%=detailDto.getBranchId()%>' },
+				function(arg){
+					var result = eval('(' + arg + ')').branchApprovalOrderCnt;
+					var orderCnt = $.number(orderCnt);
+					if(orderCnt!=0) {
+						alert("주문승인중 상태의 주문이 존재합니다.\n주문결제 사용을 미사용 하기 위해서는 모든승인이 완료되어야 합니다.");
+						$("#isOrderApproval").val("1");
+					}
+				}
+			);
+		}
+	});
 });
 </script>
 <%
@@ -621,7 +613,8 @@ function fnApply(){
 				srcContractSpecial:$("#srcContractSpecial").val(),
 				sharpMail:$("#sharpMail").val(),
 				workId:$("#workId").val(),
-				ebillEmail:$("#ebillEmail").val()
+				ebillEmail:$("#ebillEmail").val(),
+				isOrderApproval:$("#isOrderApproval").val()
 			},
 			function(arg){ 
 				if(fnAjaxTransResult(arg)) {  //성공시
@@ -629,7 +622,7 @@ function fnApply(){
 						window.opener.fnSearch();
 					}catch(e){}
 					
-					window.close();
+// 					window.close();
 				}
 			}
 		);
@@ -1176,42 +1169,34 @@ function admDisabled(){
                 <tr>
                     <td colspan="6" height='1' bgcolor="eaeaea"></td>
                 </tr>
-                <tr>
-                    <td class="table_td_subject9">권역</td>
-                    <td class="table_td_contents" colspan="5">
-                        <select class="select" id="areaType" name="areaType"> 
-                            <option value="">선택하세요</option> 
+				<tr>
+					<td class="table_td_subject9">권역</td>
+					<td class="table_td_contents">
+						<select class="select" id="areaType" name="areaType"> 
+							<option value="">선택하세요</option> 
 <%
-   @SuppressWarnings("unchecked")
-   List<CodesDto> areaCode = (List<CodesDto>) request.getAttribute("areaCode");
-   for(CodesDto areaCd : areaCode){
-	   
-	   if(!areaCd.getCodeVal1().equals("99")){
-	   
-%>    
-                            <option value="<%=areaCd.getCodeVal1()%>" <%=CommonUtils.getString(areaCd.getCodeVal1()).equals(detailDto.getAreaType()) ? "selected" : "" %> ><%=areaCd.getCodeNm1() %></option>
-<% 
-	   }
-   }                 
-%>    
-                        </select>
-                        <input type="hidden" id="payBillType" name="payBillType" value="1060">
-                    </td>
-<!--                     <td class="table_td_subject9">결제조건</td> -->
-<!--                     <td class="table_td_contents"> -->
-<!--                         <select class="select" id="payBillType" name="payBillType" style="width: 125px;">  -->
-<!--                             <option value="">선택하세요</option>  -->
-<%
-//    @SuppressWarnings("unchecked")
-//    List<CodesDto> payCondCode = (List<CodesDto>) request.getAttribute("payCondCode");
-//    for(CodesDto payCondCd: payCondCode){
+	@SuppressWarnings("unchecked")
+	List<CodesDto> areaCode = (List<CodesDto>) request.getAttribute("areaCode");
+	for(CodesDto areaCd : areaCode){
+		if(!areaCd.getCodeVal1().equals("99")){
 %>
-                  
-<%--                             <option value="<%=payCondCd.getCodeVal1()%>" <%=CommonUtils.getString(payCondCd.getCodeVal1()).equals(detailDto.getPayBilltype()) ? "selected" : "" %>> <%=payCondCd.getCodeNm1()%> </option> --%>
-<%-- <%}%>                                --%>
-<!--                         </select>  -->
-<!--                     </td> -->
-                </tr>
+							<option value="<%=areaCd.getCodeVal1()%>" <%=CommonUtils.getString(areaCd.getCodeVal1()).equals(detailDto.getAreaType()) ? "selected" : "" %> ><%=areaCd.getCodeNm1() %></option>
+<%
+		}
+	}
+	String isOrderApproval = CommonUtils.getString(detailDto.getIsOrderApproval(), "0");
+%>
+						</select>
+						<input type="hidden" id="payBillType" name="payBillType" value="1060">
+					</td>
+					<td class="table_td_subject9">주문결재 사용여부</td>
+					<td class="table_td_contents" colspan="3">
+						<select class="select" id="isOrderApproval" name="isOrderApproval" style="width:80px;">
+							<option value="0">미사용</option>
+							<option value="1" <%=("1".equals(isOrderApproval)) ? "selected":"" %>>사용</option>
+						</select>
+					</td>
+				</tr>
                 <tr>
                     <td colspan="6" height='1' bgcolor="eaeaea"></td>
                 </tr>

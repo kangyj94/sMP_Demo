@@ -150,7 +150,7 @@ function fnVenOrderProgressList(page){
                         	
                         str += "	<td rowspan='"+subList.length+"' class='br_l0'>";	// 서브리스트 갯수만큼 rowsapn
                         str += "		<p><a href=\"javascript:fnOrderDetailView('" + subList[j].ORDE_IDEN_NUMB + "', '', '')\">"+subList[j].ORDE_IDEN_NUMB+"</a></p>";
-                        str += "		<p class='f11'>공사명  : "+subList[j].CONS_IDEN_NAME+"</p>";
+                        str += "		<p class='f11'>주문명  : "+subList[j].CONS_IDEN_NAME+"</p>";
                         str += "		<p class='f11'>구매사  : "+subList[j].BRANCHNM;
                         
                             if(subList[j].ADD_REPRE_SEQU_NUMB != "" && subList[j].ADD_REPRE_SEQU_NUMB != "0"){

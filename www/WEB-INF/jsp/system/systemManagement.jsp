@@ -36,7 +36,7 @@ div.grayLine {
 function fnNoticeDetailPop(boardNo){
 	var params = "board_No=" + boardNo;
 	
-	window.open("", 'noticeDetailPop', 'width=720, height=510, scrollbars=yes, status=no, resizable=no');
+	window.open("", 'noticeDetailPop', 'width=720, height=510, scrollbars=yes, status=no, resizable=yes');
 	
 	fnDynamicForm("/board/noticeDetail.sys", params, "noticeDetailPop");
 }
@@ -97,15 +97,32 @@ function fnViewProposalList(){
 }
 
 function vocGo(){	
-	window.open("", 'requestManageWrite', 'width=720, height=600, scrollbars=yes, status=no, resizable=no');
+	window.open("", 'requestManageWrite', 'width=720, height=600, scrollbars=yes, status=no, resizable=yes');
 	
 	fnDynamicForm("/board/requestManageWrite.sys", "", "requestManageWrite");
 }
 
 $(document).ready(function() {
 	fnContractToDoList();
+	fnSideBarInfo();
 });
 
+function fnSideBarInfo() {
+	$.post(
+		"/system/getSideBarInfo.sys",
+		function(arg) {
+			$("#brc01").html("상품등록 요청 (<a href='javascript:void(0);' class='col02'>"+arg.brc01+"</a>)");
+			$("#ven03").html("물량배분 (<a href='javascript:void(0);' class='col02'>"+arg.ven03+"</a>)");
+			$("#brc02").html("선입금주문처리 (<a href='javascript:void(0);' class='col02'>"+arg.brc02+"</a>)");
+			$("#brc03").html("구매사등록요청 (<a href='javascript:void(0);' class='col02'>"+arg.brc03+"</a>)");
+
+			$("#ven01").html("상품등록요청 (<a href='javascript:void(0);' class='col02'>"+arg.ven01+"</a>)");
+			$("#ven02").html("상품변경요청 (<a href='javascript:void(0);' class='col02'>"+arg.ven02+"</a>)");
+			$("#ven04").html("공급사등록요청 (<a href='javascript:void(0);' class='col02'>"+arg.ven04+"</a>)");
+		},
+		"json"
+	);
+}
 function fnContractToDoList(){
 	$.post(
 		"/common/contractToDoList.sys",
@@ -153,7 +170,7 @@ function fnContractView(contractClassify) {
 	
 	params = params + '&contractVersion='+contractVersion;
 	
-	window.open('', 'popContractDetail', 'width=917, height=720, scrollbars=yes, status=no, resizable=no');
+	window.open('', 'popContractDetail', 'width=917, height=720, scrollbars=yes, status=no, resizable=yes');
 	
 	fnDynamicForm("/common/popContractDetail.sys", params, "popContractDetail");
 }
@@ -174,19 +191,23 @@ function fnContractView(contractClassify) {
 			<span style="position:absolute; margin-left:430px; font-size: x-small;">단위 : 백만원</span></h2>
 			<table width="100%">
 				<colgroup>
-					<col width="20%" />
-					<col width="20%" />
-					<col width="20%" />
-					<col width="20%" />
-					<col width="20%" />
+					<col width="14%" />
+					<col width="14%" />
+					<col width="14%" />
+					<col width="14%" />
+					<col width="14%" />
+					<col width="14%" />
+					<col width="16%" />
 				</colgroup>
 				<tr>
-					<th colspan="2">당월</th>
+					<th colspan="4">당월</th>
 					<th colspan="3">년간누적</th>
 				</tr>
 				<tr>
 					<th>주문금액</th>
+					<th>배송중</th>
 					<th>인수금액</th>
+					<th>매출처리</th>
 					<th>매출</th>
 					<th>매출이익</th>
 					<th>이익율</th>
@@ -200,6 +221,8 @@ function fnContractView(contractClassify) {
 		String              info03   = null;
 		String              info04   = null;
 		String              info05   = null;
+		String              info06   = null;
+		String              info07   = null;
 		int                 i        = 0;
 		int                 lisSize  = batchList.size();
 		
@@ -213,13 +236,17 @@ function fnContractView(contractClassify) {
 				info03   = info.get("info03"); 
 				info04   = info.get("info04");   
 				info05   = info.get("info05");  
+				info06   = info.get("info06");
+				info07   = info.get("info07");
 %>
 				<tr>
 					<td style="text-align: right;"><%=info01 %></td>
 					<td style="text-align: right;"><%=info02 %></td>
 					<td style="text-align: right;"><%=info03 %></td>
 					<td style="text-align: right;"><%=info04 %></td>
-					<td style="text-align: right;"><%=info05 %> %</td>
+					<td style="text-align: right;"><%=info05 %></td>
+					<td style="text-align: right;"><%=info06 %></td>
+					<td style="text-align: right;"><%=info07 %> %</td>
 				</tr>
 <%
 			}
@@ -690,7 +717,7 @@ function fnContractView(contractClassify) {
 			<table style="border-top: grey !important;">
 				<tr>
 					<th rowspan="3" width="100px">스마일지수</th>
-					<th colspan="2" height="5px">운영사</th>
+					<th colspan="2" height="5px">SKTS</th>
 					<th rowspan="2">공급사</th>
 				</tr>
 				<tr>
@@ -749,7 +776,7 @@ function fnContractView(contractClassify) {
 				</a>
 			</span>
 			<span class="mgl_5">
-				<a href="javascript:window.open('http://113366.com/okplaza','remoteManagePop', 'width=950, height=700, scrollbars=yes, status=no, resizable=no');void(0);">
+				<a href="javascript:window.open('http://113366.com/okplaza','remoteManagePop', 'width=950, height=700, scrollbars=yes, status=no, resizable=yes');void(0);">
 					<img src="/img/contents/boss_quickbanner03.gif" name="quick03" id="quick03" width="145px;" onmouseover="MM_swapImage('quick03','','/img/contents/boss_quickbanner03_over.gif',1)" onmouseout="MM_swapImgRestore()" />
 				</a>
 			</span>
@@ -758,33 +785,47 @@ function fnContractView(contractClassify) {
 			<div id="quickmenu">
 				<ul>
 <%
-	if(sideCount != null){
-		String brc01 = sideCount.get("brc01");
-		String brc02 = sideCount.get("brc02");
-		String brc03 = sideCount.get("brc03");
-		String ven01 = sideCount.get("ven01");
-		String ven02 = sideCount.get("ven02");
-		String ven03 = sideCount.get("ven03");
-		String ven04 = sideCount.get("ven04");
-		String ven05 = sideCount.get("ven05");
+// 	if(sideCount != null){
+// 		String brc01 = sideCount.get("brc01");
+// 		String brc02 = sideCount.get("brc02");
+// 		String brc03 = sideCount.get("brc03");
+// 		String ven01 = sideCount.get("ven01");
+// 		String ven02 = sideCount.get("ven02");
+// 		String ven03 = sideCount.get("ven03");
+// 		String ven04 = sideCount.get("ven04");
+// 		String ven05 = sideCount.get("ven05");
 %>
+<!-- 					<li class="hd">구매사</li> -->
+<!-- 					<li> -->
+<%-- 						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnNewProductRequestListForAdm();">상품등록 요청 (<a href="javascript:void(0);" class="col02"><%=brc01 %></a>)</div> --%>
+<%-- 						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrderDivList();">물량배분 (<a href="javascript:void(0);" class="col02"><%=ven03 %></a>)</div> --%>
+<%-- 						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrderPrePayList();">선입금주문처리 (<a href="javascript:void(0);" class="col02"><%=brc02 %></a>)</div> --%>
+<%-- 						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrganClientRegistRequestList();">구매사등록요청 (<a href="javascript:void(0);" class="col02"><%=brc03 %></a>)</div> --%>
+<!-- 					</li> -->
+<!-- 					<li class="hd mgt_5">공급사</li> -->
+<!-- 					<li> -->
+<%-- 						<div class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnProductRequestRegistList();">상품등록요청 (<a href="javascript:void(0);" class="col02"><%=ven01 %></a>)</div> --%>
+<%-- 						<div class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnProductRequestDiscontinuanceList();">상품변경요청 (<a href="javascript:void(0);" class="col02"><%=ven02 %></a>)</div> --%>
+<%-- 						<div class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnOrganVendorRegistRequestList();">공급사등록요청 (<a href="javascript:void(0);" class="col02"><%=ven04 %></a>)</div> --%>
+<%-- 						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnViewProposalList();">신규제안 건 (<a href="javascript:void(0);" class="col02"><%=ven05 %></a>)</div> --%>
+<!-- 					</li> -->
+<%
+// 	}
+%>
+
 					<li class="hd">구매사</li>
 					<li>
-						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnNewProductRequestListForAdm();">상품등록 요청 (<a href="javascript:void(0);" class="col02"><%=brc01 %></a>)</div>
-						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrderDivList();">물량배분 (<a href="javascript:void(0);" class="col02"><%=ven03 %></a>)</div>
-						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrderPrePayList();">선입금주문처리 (<a href="javascript:void(0);" class="col02"><%=brc02 %></a>)</div>
-						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrganClientRegistRequestList();">구매사등록요청 (<a href="javascript:void(0);" class="col02"><%=brc03 %></a>)</div>
+						<div id="brc01" class="bossQ" style="cursor: pointer;" onclick="javascript:fnNewProductRequestListForAdm();"></div>
+						<div id="ven03" class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrderDivList();"></div>
+						<div id="brc02" class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrderPrePayList();"></div>
+						<div id="brc03" class="bossQ" style="cursor: pointer;" onclick="javascript:fnOrganClientRegistRequestList();"></div>
 					</li>
 					<li class="hd mgt_5">공급사</li>
 					<li>
-						<div class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnProductRequestRegistList();">상품등록요청 (<a href="javascript:void(0);" class="col02"><%=ven01 %></a>)</div>
-						<div class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnProductRequestDiscontinuanceList();">상품변경요청 (<a href="javascript:void(0);" class="col02"><%=ven02 %></a>)</div>
-						<div class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnOrganVendorRegistRequestList();">공급사등록요청 (<a href="javascript:void(0);" class="col02"><%=ven04 %></a>)</div>
-<%-- 						<div class="bossQ" style="cursor: pointer;" onclick="javascript:fnViewProposalList();">신규제안 건 (<a href="javascript:void(0);" class="col02"><%=ven05 %></a>)</div> --%>
+						<div id="ven01" class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnProductRequestRegistList();"></div>
+						<div id="ven02" class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnProductRequestDiscontinuanceList();"></div>
+						<div id="ven04" class="bossQ" style="cursor: pointer;height: 35px;" onclick="javascript:fnOrganVendorRegistRequestList();"></div>
 					</li>
-<%
-	}
-%>
 				</ul>
 			</div>
 		</div>

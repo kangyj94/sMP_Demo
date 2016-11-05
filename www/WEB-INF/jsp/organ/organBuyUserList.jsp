@@ -451,7 +451,7 @@ function onDetail(){
 	if( row != null ){
 		var selrowContent = jq("#list").jqGrid('getRowData',row);        // 선택된 로우의 데이터 객체 조회
 		var popurl = "/buyOrgan/organUserDetailBuy.sys?borgId=" + selrowContent.borgId + "&userId=" + selrowContent.userId + "&_menuCd=<%=_menuCd %>";
-	    window.open(popurl, 'okplazaPop', 'width=600, height=640, scrollbars=yes, status=no, resizable=yes');
+	    window.open(popurl, 'okplazaPop', 'width=600, height=510, scrollbars=yes, status=no, resizable=yes');
 // 	    fnSearch();
 	} else { jq( "#dialogSelectRow" ).dialog(); }	
 }

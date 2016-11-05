@@ -52,7 +52,7 @@ jq(function() {
 			{name:'주문일자',index:'주문일자', width:90,align:"center",search:false,sortable:true, editable:false },
 			{name:'고객사',index:'고객사', width:250,align:"left",search:false,sortable:true, editable:false },
 			{name:'주문자',index:'주문자', width:90,align:"left",search:false,sortable:true, editable:false },
-			{name:'공사명',index:'공사명', width:250,align:"left",search:false,sortable:true, editable:false },
+			{name:'주문명',index:'주문명', width:250,align:"left",search:false,sortable:true, editable:false },
 			{name:'주문상태',index:'주문상태', width:170,align:"center",search:false,sortable:true, editable:false },
 			{name:'상품명',index:'상품명', width:200,align:"left",search:false,sortable:true, editable:false },
 			{name:'판매단가',index:'판매단가', width:90,align:"right",search:false,sortable:true, editable:false },

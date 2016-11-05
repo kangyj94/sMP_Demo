@@ -151,7 +151,7 @@ function fnTotSearch(){
 function fnUserDetail(){
 	var param = "borgId=<%=loginUserDto.getBorgId()%>&userId=<%=loginUserDto.getUserId() %>";	
 	
-    window.open("", 'organUserDetail', 'width=600, height=650, scrollbars=yes, status=no, resizable=yes');
+    window.open("", 'organUserDetail', 'width=600, height=510, scrollbars=yes, status=no, resizable=yes');
 	
     fnDynamicForm("/buyOrgan/organUserDetailBuy.sys", param, 'organUserDetail');
 }

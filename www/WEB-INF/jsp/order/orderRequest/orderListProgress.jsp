@@ -463,7 +463,7 @@ function branchManual(){
 									<img id="btnBuyBorg" src="/img/system/btn_icon_search.gif" width="20" height="18" style="vertical-align: middle;border: 0px;" />
 								</a>
 						</td>
-						<td width="100" class="table_td_subject">공사명</td>
+						<td width="100" class="table_td_subject">주문명</td>
 						<td class="table_td_contents">
 							<input id="srcConsIdenName" name="srcConsIdenName" type="text" value="" size="20" maxlength="30" style="width: 200px" />
 						</td>

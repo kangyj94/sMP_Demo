@@ -306,7 +306,7 @@ jq(function() {
 		mtype: 'POST',
 		colNames:[
 			'주문일자',				'납품요청일',			'납품예정일',			'고객유형',				'주문번호',
-			'공사명',				'주문<br/>유형',		'주문상태',			'구매사',				'주문자',
+			'주문명',				'주문<br/>유형',		'주문상태',			'구매사',				'주문자',
 			'공급사',				'공급사 전화번호',	'상품명',			'규격',					'판매단가',
 			'수량',					'판매금액',			'매입단가',			'매입금액',				'긴급여부',
 			'disp_good_id',			'vendorid',			'good_iden_numb',	'good_st_spec_desc',	'sum_total_sale_unit_pric',
@@ -319,7 +319,7 @@ jq(function() {
 			{name:'worknm',                   index:'worknm',                   width:100, align:"left",    search:false, sortable:true, editable:false},//고객유형
 			{name:'orde_iden_numb',           index:'orde_iden_numb',           width:120, align:"center",  search:false, sortable:true, editable:false, key:true},//주문번호
 			
-			{name:'cons_iden_name',           index:'cons_iden_name',           width:120, align:"left",    search:false, sortable:true, editable:false },//공사명
+			{name:'cons_iden_name',           index:'cons_iden_name',           width:120, align:"left",    search:false, sortable:true, editable:false },//주문명
 			{name:'orde_type_clas',           index:'orde_type_clas',           width:30,  align:"center",  search:false, sortable:true, editable:false ,hidden:true},//주문유형
 			{name:'order_status_flag',        index:'order_status_flag',        width:90,  align:"center",  search:false, sortable:true, editable:false },//주문상태
 			{name:'orde_client_name',         index:'orde_client_name',         width:120, align:"left",    search:false, sortable:true, editable:false },//구매사
@@ -495,7 +495,7 @@ function fnGoOrderList() {
 
 /** 일괄 엑셀 다운로드 function*/
 function fnAllExcelPrintDown(){
-	var colLabels = ['주문일자','납품요청일','고객유형','주문번호','공사명', '주문유형','선입금여부',  '주문상태', '구매사','주문자', '공급사', '공급사 전화번호', '상품 담당자', '상품명', '규격','판매단가', '수량', '판매금액', '매입단가', '매입금액',  '긴급여부'];
+	var colLabels = ['주문일자','납품요청일','고객유형','주문번호','주문명', '주문유형','선입금여부',  '주문상태', '구매사','주문자', '공급사', '공급사 전화번호', '상품 담당자', '상품명', '규격','판매단가', '수량', '판매금액', '매입단가', '매입금액',  '긴급여부'];
 	var colIds =['REGI_DATE_TIME','REQU_DELI_DATE','WORKNM','ORDE_IDEN_NUMB','CONS_IDEN_NAME','ORDE_TYPE_CLAS','PREPAYNM','ORDER_STATUS_FLAG','ORDE_CLIENT_NAME','ORDE_USER_NAME','VENDOR_NAME','PHONENUM' ,'PRODUCT_MANAGER', 'GOOD_IDEN_NAME' ,'GOOD_SPEC_DESC' ,'SELL_PRICE' ,'ORDE_REQU_QUAN' ,'TOTAL_SELL_PRICE', 'SALE_UNIT_PRIC' ,'TOTAL_SALE_PRICE', 'EMER_ORDE_CLAS']; 
 	var numColIds = ['SELL_PRICE','ORDE_REQU_QUAN','TOTAL_SELL_PRICE','SALE_UNIT_PRIC','TOTAL_SALE_PRICE'];  //숫자표현ID
 	var sheetTitle = "주문조회";    //sheet 타이틀

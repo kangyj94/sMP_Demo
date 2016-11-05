@@ -253,13 +253,13 @@ jq(function() {
 		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/order/orderRequest/orderListJQGrid.sys', 
 		datatype: 'json',
 		mtype: 'POST',
-		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자','납품요청일','주문번호','공사명', '주문유형',  '주문상태', '고객사', '공급사', '공급사 전화번호','주문자', '상품명', '규격','판매단가', '수량', '판매금액', <%if(!isClient){%>'매입단가', '매입금액', <%}%> '긴급여부','disp_good_id', 'vendorid', 'good_iden_numb', 'good_st_spec_desc'],
+		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자','납품요청일','주문번호','주문명', '주문유형',  '주문상태', '고객사', '공급사', '공급사 전화번호','주문자', '상품명', '규격','판매단가', '수량', '판매금액', <%if(!isClient){%>'매입단가', '매입금액', <%}%> '긴급여부','disp_good_id', 'vendorid', 'good_iden_numb', 'good_st_spec_desc'],
 		colModel:[
 			{name:'isCheck',index:'isCheck', width:30,align:"center",search:false,sortable:false,editable:false, formoptions:{rowpos:1,elmprefix:"&nbsp;&nbsp;&nbsp;&nbsp;"},formatter:checkboxFormatter},
 			{name:'regi_date_time',index:'regi_date_time', width:70,align:"center",search:false,sortable:true, editable:false, editable:false,sorttype:"date", editable:false,formatter:"date"},//주문일자
 			{name:'requ_deli_date',index:'requ_deli_date', width:70,align:"center",search:false,sortable:true, editable:false,sorttype:"date", editable:false,formatter:"date"},//납품요청일
 			{name:'orde_iden_numb',index:'orde_iden_numb', width:100,align:"left",search:false,sortable:true, editable:false},//주문번호
-			{name:'cons_iden_name',index:'cons_iden_name', width:120,align:"left",search:false,sortable:true, editable:false },//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:120,align:"left",search:false,sortable:true, editable:false },//주문명
 			{name:'orde_type_clas',index:'orde_type_clas', width:50,align:"center",search:false,sortable:true, editable:false },//주문유형
 			{name:'order_status_flag',index:'order_status_flag', width:150,align:"left",search:false,sortable:true, editable:false },//주문상태
 			{name:'orde_client_name',index:'orde_client_name', width:200,align:"left",search:false,sortable:true, editable:false },//고객사
@@ -514,7 +514,7 @@ function fnSearch() {
  * 엑셀 출력
  */
 function exportExcel() {
-	var colLabels = ['주문일자','납품요청일','주문번호','공사명', '주문유형',  '주문상태', '고객사', '공급사', '공급사 전화번호','주문자', '상품명', '규격','판매단가', '수량', '판매금액', <%if(!isClient){%>'매입단가', '매입금액', <%}%> '긴급여부'];
+	var colLabels = ['주문일자','납품요청일','주문번호','주문명', '주문유형',  '주문상태', '고객사', '공급사', '공급사 전화번호','주문자', '상품명', '규격','판매단가', '수량', '판매금액', <%if(!isClient){%>'매입단가', '매입금액', <%}%> '긴급여부'];
 	var colIds = ['regi_date_time', 'requ_deli_date', 'orde_iden_numb', 'cons_iden_name', 'orde_type_clas', 'order_status_flag', 'orde_client_name', 'vendor_name', 'phonenum', 'orde_user_name', 'good_iden_name', 'good_spec_desc', 'sell_price', 'orde_requ_quan', 'total_sell_price', <%if(!isClient){%>'sale_unit_pric', 'total_sale_price', <%}%>'emer_orde_clas' ];
 	var numColIds = ['sell_price','orde_requ_quan','total_sell_price'<%if(!isClient){%>,'sale_unit_pric','total_sale_price'<%}%>];	
 	var sheetTitle = "주문승인조회";	//sheet 타이틀
@@ -524,7 +524,7 @@ function exportExcel() {
 }
 
 function fnAllExcelPrintDown(){
-	var colLabels = ['주문일자','납품요청일','주문번호','공사명', '주문유형',  '주문상태', '고객사', '공급사', '공급사 전화번호','주문자', '상품명', '규격','판매단가', '수량', '판매금액', <%if(!isClient){%>'매입단가', '매입금액', <%}%> '긴급여부'];
+	var colLabels = ['주문일자','납품요청일','주문번호','주문명', '주문유형',  '주문상태', '고객사', '공급사', '공급사 전화번호','주문자', '상품명', '규격','판매단가', '수량', '판매금액', <%if(!isClient){%>'매입단가', '매입금액', <%}%> '긴급여부'];
 	var colIds = ['REGI_DATE_TIME', 'REQU_DELI_DATE', 'ORDE_IDEN_NUMB', 'CONS_IDEN_NAME', 'ORDE_TYPE_CLAS', 'ORDER_STATUS_FLAG', 'ORDE_CLIENT_NAME', 'VENDOR_NAME', 'PHONENUM', 'ORDE_USER_NAME', 'GOOD_IDEN_NAME', 'GOOD_SPEC_DESC', 'SELL_PRICE', 'ORDE_REQU_QUAN', 'TOTAL_SELL_PRICE', <%if(!isClient){%>'SALE_UNIT_PRIC', 'TOTAL_SALE_PRICE', <%}%>'EMER_ORDE_CLAS' ];
 	var numColIds = ['SELL_PRICE','ORDE_REQU_QUAN','TOTAL_SELL_PRICE'<%if(!isClient){%>,'SALE_UNIT_PRIC','TOTAL_SALE_PRICE'<%}%>];	
 	var sheetTitle = "주문승인조회";	//sheet 타이틀

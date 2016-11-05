@@ -238,7 +238,7 @@ jq(function() {
 		datatype: 'local',
 		mtype: 'POST',
 		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자', '납품요청일', '인수일자', '주문유형','주문번호','반품가능수량','반품요청', '인수증 출력'
-		,'공사명','출하차수', '인수차수','배송유형','송장번호','고객사','공급사','상품명', '규격','GOOD_ST_SPEC_DESC','주문수량','인수수량'
+		,'주문명','출하차수', '인수차수','배송유형','송장번호','고객사','공급사','상품명', '규격','GOOD_ST_SPEC_DESC','주문수량','인수수량'
 		,'sum_return_request_quan','good_clas_type', 'disp_good_id', 'good_iden_numb', 'vendorId', 'deli_type_clas_code'
 		, 'receipt_num', 'receivecancelable', 'tmp_return_able_quan','branchId', 'is_add','발주차수'],
 		colModel:[
@@ -286,7 +286,7 @@ jq(function() {
 			},	//반품요청수량
 			{name:'btn',index:'btn', width:60,align:"center",search:false,sortable:false,align:"left", editable:false },	//내역확인
 			{name:'btn1',index:'btn1', width:80,align:"center",search:false,sortable:false,align:"left", editable:false },
-			{name:'cons_iden_name',index:'cons_iden_name', width:250,align:"left",search:false,sortable:true, editable:false },	//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:250,align:"left",search:false,sortable:true, editable:false },	//주문명
 			{name:'deli_iden_numb',index:'deli_iden_numb', width:50,align:"center",search:false,sortable:true, editable:false ,hidden:true},	//출하차수
 			{name:'rece_iden_numb',index:'rece_iden_numb', width:50,align:"center",search:false,sortable:true, editable:false ,hidden:true},	//출하차수
 			{name:'deli_type_clas',index:'deli_type_clas', width:80,align:"center",search:false,sortable:true, editable:false },	//배송유형
@@ -640,7 +640,7 @@ function returnRequestProcess_cancel(){
 }
 
 function fnSearchExcelView(){
-	var colLabels = ['주문일자', '납품요청일', '인수일자', '주문유형','주문번호','공사명','발주차수','출하차수', '인수차수','배송유형','송장번호','고객사','공급사','상품명','규격','주문수량','인수수량','반품(요청)수량'];
+	var colLabels = ['주문일자', '납품요청일', '인수일자', '주문유형','주문번호','주문명','발주차수','출하차수', '인수차수','배송유형','송장번호','고객사','공급사','상품명','규격','주문수량','인수수량','반품(요청)수량'];
 	var colIds = ['REGI_DATE_TIME', 'REQU_DELI_DATE', 'PURC_PROC_DATE', 'ORDE_TYPE_CLAS', 'ORDE_IDEN_NUMB','CONS_IDEN_NAME', 'PURC_IDEN_NUMB', 'DELI_IDEN_NUMB', 'RECE_IDEN_NUMB', 'DELI_TYPE_CLAS', 'DELI_INVO_IDEN', 'ORDE_CLIENT_NAME', 'VENDORNM', 'GOOD_NAME', 'GOOD_SPEC_DESC','ORDE_REQU_QUAN', 'RECE_PROD_QUAN', 'SUM_RETURN_REQUEST_QUAN'];
 	var numColIds = ['ORDE_REQU_QUAN','RECE_PROD_QUAN','SUM_RETURN_REQUEST_QUAN'];
 	var figureColIds = ['PURC_IDEN_NUMB', 'DELI_IDEN_NUMB', 'RECE_IDEN_NUMB'];

@@ -238,12 +238,12 @@ jq(function() {
 		datatype: 'json',
 		multiselect:true,
 		mtype: 'POST',
-		colNames:['주문<br/>유형','구매사명','주문번호', '공사명','공급사명','상품코드','상품명','인수<br/>수량','매출<br/>단가','매출액','매입<br/>단가','매입액','인수일자', 'sale_sequ_numb', 'buyi_sequ_numb', 'orde_iden_numb','orde_sequ_numb', 'purc_iden_numb', 'deli_iden_numb', 'vendorId', 'listOper', 'good_st_spec_desc', 'good_spec_desc', 'rece_iden_numb', 'sale_conf_quan'],
+		colNames:['주문<br/>유형','구매사명','주문번호', '주문명','공급사명','상품코드','상품명','인수<br/>수량','매출<br/>단가','매출액','매입<br/>단가','매입액','인수일자', 'sale_sequ_numb', 'buyi_sequ_numb', 'orde_iden_numb','orde_sequ_numb', 'purc_iden_numb', 'deli_iden_numb', 'vendorId', 'listOper', 'good_st_spec_desc', 'good_spec_desc', 'rece_iden_numb', 'sale_conf_quan'],
 		colModel:[                                                                                                                                                              
           {name:'orde_type_clas_nm', index:'orde_type_clas_nm',width:32,align:"center",search:false,sortable:true, editable:false, hidden:true },	//주문유형
           {name:'branchNm', index:'branchNm',width:160,align:"left",search:false,sortable:true, editable:false },	//구매사명
           {name:'order_num',index:'order_num',width:120,align:"center",search:false,sortable:true, editable:false,fontcolor:'blue' },	//주문번호
-          {name:'cons_iden_name', index:'cons_iden_name',width:160,align:"left",search:false,sortable:true, editable:false },	//공사명
+          {name:'cons_iden_name', index:'cons_iden_name',width:160,align:"left",search:false,sortable:true, editable:false },	//주문명
           {name:'vendorNm', index:'vendorNm',width:160,align:"left",search:false,sortable:true, editable:false},	//공급사명
           {name:'good_iden_numb',index:'good_iden_numb',width:70,align:"center",search:false,sortable:true, editable:false },	//상품코드
           {name:'good_name',index:'good_name',width:170,align:"left",search:false,sortable:true, editable:false },	//상품명
@@ -661,7 +661,7 @@ jq(function() {
       datatype: 'json',
       mtype: 'POST',
       multiselect:true,
-      colNames:['주문유형','주문번호','공사명','상품명','인수수량','매출단가','매출액','매출부가세액','매입단가','매입액','매입부가세액','상품코드','인수일자','주문일자','출하일자', 'sale_sequ_numb', 'buyi_sequ_numb', 'orde_iden_numb','orde_sequ_numb', 'purc_iden_numb', 'deli_iden_numb', 'rece_iden_numb'],
+      colNames:['주문유형','주문번호','주문명','상품명','인수수량','매출단가','매출액','매출부가세액','매입단가','매입액','매입부가세액','상품코드','인수일자','주문일자','출하일자', 'sale_sequ_numb', 'buyi_sequ_numb', 'orde_iden_numb','orde_sequ_numb', 'purc_iden_numb', 'deli_iden_numb', 'rece_iden_numb'],
       colModel:[                                                                                                                                                              
          {name:'orde_type_clas_nm', index:'orde_type_clas_nm',width:80,align:"center",search:false,sortable:true, editable:false, hidden:true },                                           
          {name:'order_num',index:'order_num',width:130,align:"center",search:false,sortable:true, editable:false },
@@ -1017,11 +1017,11 @@ function fnAdjustCreatListReload(){
 
 //list
 function exportExcel1() {
-   //var colLabels = ['주문유형','구매사명','주문자','주문번호','공사명','실제구입시공사','공급사명','발주차수','납품차수','인수차수','상품명','규격','인수수량','매출단가','매출액','매출부가세액','매입단가','매입액','매입부가세액','상품코드','인수일자','주문일자','출하일자'];   //출력컬럼명
+   //var colLabels = ['주문유형','구매사명','주문자','주문번호','주문명','실제구입시공사','공급사명','발주차수','납품차수','인수차수','상품명','규격','인수수량','매출단가','매출액','매출부가세액','매입단가','매입액','매입부가세액','상품코드','인수일자','주문일자','출하일자'];   //출력컬럼명
    //var colIds = ['orde_type_clas_nm','branchNm','orde_user_nm','order_num','cons_iden_name','org_branchnm','vendorNm','purc_iden_numb', 'deli_iden_numb','rece_iden_numb','good_name','good_spec','sale_prod_quan','sale_prod_pris','sale_prod_amou','sale_prod_tax','purc_prod_pris','purc_prod_amou','purc_prod_tax','good_iden_numb','rece_regi_date','orde_regi_date','deli_regi_date'];   //출력컬럼ID
    //var numColIds = ['sale_prod_quan','sale_prod_pris','sale_prod_amou','sale_prod_tax','purc_prod_pris','purc_prod_amou','purc_prod_tax'];   //숫자표현ID
    
-   var colLabels = ['주문유형','구매사명','주문번호','공사명','공급사명','상품코드','상품명','인수수량','매출단가','매출액','매입단가','매입액','인수일자']; //출력컬럼명
+   var colLabels = ['주문유형','구매사명','주문번호','주문명','공급사명','상품코드','상품명','인수수량','매출단가','매출액','매입단가','매입액','인수일자']; //출력컬럼명
    var colIds = ['orde_type_clas_nm','branchNm','order_num','cons_iden_name','vendorNm','good_iden_numb','good_name','sale_prod_quan','sale_prod_pris','sale_prod_amou','purc_prod_pris','purc_prod_amou','rece_regi_date']; //출력컬럼ID
    var numColIds = ['sale_prod_quan','sale_prod_pris','sale_prod_amou','purc_prod_pris','purc_prod_amou'];   //숫자표현ID
    var sheetTitle = "정산대상목록"; //sheet 타이틀
@@ -1043,7 +1043,7 @@ function exportExcel2() {
 
 //list4
 function exportExcel3() {
-   var colLabels = ['주문유형','주문번호','공사명','상품명','인수수량','매출단가','매출액','매출부가세액','매입단가','매입액','매입부가세액','상품코드','인수일자','주문일자','출하일자'];   //출력컬럼명
+   var colLabels = ['주문유형','주문번호','주문명','상품명','인수수량','매출단가','매출액','매출부가세액','매입단가','매입액','매입부가세액','상품코드','인수일자','주문일자','출하일자'];   //출력컬럼명
    var colIds = ['orde_type_clas_nm','order_num','cons_iden_name','good_name','sale_prod_quan','sale_prod_pris','sale_prod_amou','sale_prod_tax','purc_prod_pris','purc_prod_amou','purc_prod_tax','good_iden_numb','rece_regi_date','orde_regi_date','deli_regi_date'];   //출력컬럼ID
    var numColIds = ['sale_prod_quan','sale_prod_pris','sale_prod_amou','sale_prod_tax','purc_prod_pris','purc_prod_amou','purc_prod_tax'];   //숫자표현ID
    var sheetTitle = "정산생성목록"; //sheet 타이틀
@@ -1275,7 +1275,7 @@ function fnCallBackVendor(vendorId, vendorNm, areaType){
 								<td colspan="4" height="1" bgcolor="eaeaea"></td>
 							</tr>
 							<tr>
-								<td class="table_td_subject">공사명</td>
+								<td class="table_td_subject">주문명</td>
 								<td class="table_td_contents">
 									<input id="srcConsIdenName" name="srcConsIdenName" type="text" value="" size="" maxlength="50" style="width: 350px;" class="blue" />
 								</td>

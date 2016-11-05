@@ -111,7 +111,7 @@ function fnPastOrderRequest() {
 	var groupid            = $("#groupId ").val(); 		  					// 그룹 ID
 	var clientid           = $("#clientId").val();		  	    			// 법인 ID 
 	var branchid           = $("#branchId").val();		  	    			// 사업장 ID
-	var cons_iden_name     = $("#branchNms").val()+' 과거주문';	    		// 공사명
+	var cons_iden_name     = $("#branchNms").val()+' 과거주문';	    		// 주문명
 	var orde_type_clas     = "50";		  									// 주문유형
 	var orde_tele_numb     = '';							    			// 주문자 전화번호
 	var orde_user_id       = $("#orde_user_id").val(); 						// 주문자 ID
@@ -178,7 +178,7 @@ function fnPastOrderRequest() {
 	msg += "\n 그룹 ID        value ["+groupid             +"]"; 
 	msg += "\n 법인 ID        value ["+clientid            +"]"; 
 	msg += "\n 사업장 ID       value ["+branchid            +"]"; 
-	msg += "\n 공사명             	value ["+cons_iden_name      +"]"; 
+	msg += "\n 주문명             	value ["+cons_iden_name      +"]"; 
 	msg += "\n 주문유형       		value ["+orde_type_clas      +"]"; 
 	msg += "\n 주문자 전화번호 	value ["+orde_tele_numb      +"]"; 
 	msg += "\n 주문자 ID       value ["+orde_user_id        +"]"; 

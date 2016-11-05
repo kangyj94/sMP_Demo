@@ -199,7 +199,7 @@ function venDeliProcList(page){
                     str +=					list[i].ORDE_IDEN_NUMB;
                     str +=				"</a>";
                     str +=			"</p>";
-                    str += "         <p class=\"f11\">공사명 : "+list[i].CONS_IDEN_NAME+"</p>                              ";
+                    str += "         <p class=\"f11\">주문명 : "+list[i].CONS_IDEN_NAME+"</p>                              ";
                     str += "         <p class=\"f11\">구매사 : "+list[i].BRANCHNM+"</p>                              ";
                     str += "     </td>                                                                                     ";
                     str += "     <td>                                                                                      ";
