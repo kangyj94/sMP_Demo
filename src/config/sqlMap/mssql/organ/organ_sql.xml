@@ -849,6 +849,7 @@
 		,		ISUSE 			= #{isUse}
 		,		ENDCAUSEDESC 	= #{endCauseDesc}
 		,		USERNOTE 		= #{userNote}
+		,		ISORDERAPPROVAL = isnull(#{isOrderApproval},'0')
 		WHERE USERID = #{userId} 	
 	</update>
 	
@@ -1440,6 +1441,7 @@
 		,		ISNULL(F.CLT_LOAN,0) AS CLT_LOAN
 		,		ISNULL(F.CLT_ISPREPAY,'0') AS CLT_ISPREPAY
 		,		ISNULL(F.CLT_ISLIMIT,'0') AS CLT_ISLIMIT
+		,		ISNULL(A.ISORDERAPPROVAL,'0') AS ISORDERAPPROVAL	
 		FROM	SMPBRANCHS A WITH(NOLOCK) 
 		LEFT OUTER JOIN SMPWORKINFO C WITH(NOLOCK) 
 			ON A.WORKID = C.WORKID
@@ -1556,6 +1558,7 @@
 		</if>
 		,		EBILL_EMAIL				=	#{ebillEmail}
 		,		WORKID					=	#{workId}
+		,		ISORDERAPPROVAL			=	#{isOrderApproval}
 		WHERE	BRANCHID				=	#{branchId}
 	</update>
 	
@@ -1802,6 +1805,7 @@
 			, REMOTEIP
 			, ISUSE
 			, CREATEDATE
+			, ISORDERAPPROVAL
 		)VALUES(
 			  #{userId}		
 			, #{loginId}		
@@ -1813,7 +1817,8 @@
 			, #{userEmail}
 			, #{remoteIp}
 			, #{isUse}
-			, GETDATE()		
+			, GETDATE()	
+			, ISNULL(#{isOrderApproval},'0')	
 		)	
 	</insert>
 	
@@ -1875,11 +1880,9 @@
 		,		ISNULL(E.SMSBYREGISTERGOOD, '0') AS SMSBYREGISTERGOOD
 		,		A.ENDCAUSEDESC	
 		,		A.USERNOTE
-		,       D.SVCTYPECD
-		,		CASE
-					WHEN (SELECT TOP 1 DIRECTORID FROM SMPDIRECTINFO A1  WITH(NOLOCK) WHERE A1.DIRECTORID = A.USERID) IS NULL THEN 'N'
-					ELSE 'Y'
-				END AS ISDIRECT
+		,		D.SVCTYPECD
+		,		ISNULL(A.ISORDERAPPROVAL,'0') AS ISORDERAPPROVAL
+		,		ISNULL(C.ISORDERAPPROVAL,'0') AS ISBRANCHORDERAPPROVAL
 		FROM	SMPBORGS_USERS B WITH(NOLOCK) 
 		,		SMPBRANCHS C WITH(NOLOCK) 
 		,		SMPBORGS D WITH(NOLOCK) 
@@ -2218,27 +2221,6 @@
 		AND     A.USERID = #{userId}
 		AND     C.VENDORID = #{borgId}	
 	</select>
-	
-	<insert id="insertSmpDirectInfo">
-		INSERT INTO SMPDIRECTINFO(
-			BRANCHID
-		,	USERID
-		,	DIRECTORID
-		)VALUES(
-			#{branchId}
-		,	#{userId}
-		,	#{directorId}	
-		)
-	</insert>
-	
-	<insert id="deleteSmpDirectInfo">
-		DELETE FROM SMPDIRECTINFO
-		WHERE	BRANCHID 	= #{branchId}
-		<if test="userId != null and userId != ''">
-		AND		USERID 		= #{userId}
-		</if>
-		AND		DIRECTORID  = #{directorId}	
-	</insert>
 	
 	<select id="selectSmpDirectInfoList" resultType="kr.co.bitcube.organ.dto.SmpUsersDto">
 		SELECT 	A.USERID
@@ -2696,8 +2678,11 @@
 	
 	<update id="updateSmpBranchsNm">
 		/* organ.updateSmpBranchsNm*/
-		UPDATE SMPBRANCHS SET
-			BRANCHNM = #{branchNm}
+		UPDATE	SMPBRANCHS 
+		SET		BRANCHNM = #{branchNm}
+		<if test="@MybatisUtils@isNotEmpty(isOrderApproval)">
+		,		ISORDERAPPROVAL = #{isOrderApproval}
+		</if>
 		WHERE BRANCHID = #{branchId}
 	</update>
 	
@@ -3414,11 +3399,29 @@
 		
 	</select>
 	
-	
 	<update id="updateCreditInfo">
 		/* organ.updateCreditInfo */
 		UPDATE	SMPVENDORS
 		SET		CREDITINFO = #{CREDITINFO}
 		WHERE	VENDORID = #{VENDORID}
-	</update>		
+	</update>
+	
+	<select id="selectBranchApprovalOrderCnt" resultType="int">
+		/* organ.selectBranchApprovalOrderCnt */
+		SELECT	COUNT(1) AS CNT
+		FROM 	MRORDM A WITH(NOLOCK)
+		INNER JOIN MRORDT B WITH(NOLOCK)
+			ON	A.ORDE_IDEN_NUMB = B.ORDE_IDEN_NUMB
+		WHERE	A.BRANCHID = #{branchId}
+		AND		B.ORDE_STAT_FLAG = '05'
+		<if test="@MybatisUtils@isNotEmpty(userId)">
+		AND		EXISTS(
+					SELECT 1 FROM MRORDT_APPLINE Z WITH(NOLOCK) 
+					WHERE 	Z.ORDE_IDEN_NUMB=B.ORDE_IDEN_NUMB 
+					AND 	Z.ORDE_SEQU_NUMB = B.ORDE_SEQU_NUMB
+					AND		Z.APPUSERID = #{userId}
+				)
+		</if>
+	</select>
+	
 </mapper>

@@ -74,80 +74,6 @@ public class CommonCtl {
 		return modelAndView;
 	}
 	
-	private boolean systemDefaultAdmIsSpecial(LoginUserDto userInfoDto) throws Exception{
-		List<LoginRoleDto> roleList = userInfoDto.getLoginRoleList();
-		LoginRoleDto       role     = null;
-		String             roleCd   = null;
-		int                i        = 0;
-		int                roleSize = 0;
-		boolean            result   = false;
-		
-		if(roleList != null){
-			roleSize = roleList.size();
-		}
-		
-		for(i = 0; i < roleSize; i++){
-			role   = roleList.get(i);
-			roleCd = role.getRoleCd();
-			
-			if(
-				Constances.ETC_SPECIAL_SKB.equals(roleCd) ||
-				Constances.ETC_SPECIAL_SKT.equals(roleCd) ||
-				Constances.ETC_SPECIAL_CON.equals(roleCd)
-			){
-				if(Constances.ETC_SPECIAL_SKB.equals(roleCd)) userInfoDto.setSKBMng(true);
-				if(Constances.ETC_SPECIAL_SKT.equals(roleCd)) userInfoDto.setSKTMng(true);
-				result = true;
-				break;
-			}
-		}
-		
-		return result;
-	}
-	
-	/**
-	 * 관리자 
-	 * 
-	 * @param modelAndView
-	 * @return ModelAndView
-	 * @throws Exception
-	 */
-	private ModelAndView systemDefaultAdm(HttpServletRequest request) throws Exception{
-		ModelAndView              modelAndView       = new ModelAndView();
-		String                    veiwName           = null;
-		LoginUserDto              userInfoDto        = CommonUtils.getLoginUserDto(request); // 로그인 사용자 정보 조회
-		List<BoardDto>            noticeList         = this.defaultSvc.systemDefaultNoticeList(userInfoDto, false, 4); // 공지사항 리스트 조회
-		List<Map<String, String>> batchList          = null;
-		List<Map<String, String>> productRequestList = null;
-		Map<String, String>       sideCount          = null;
-		Map<String, String>       vocCount           = null;
-		Map<String, String>       smilePoint         = null;
-		boolean                   isSpecial          = this.systemDefaultAdmIsSpecial(userInfoDto); // 매니저 여부
-		
-		if(isSpecial){
-			veiwName = "system/managerManagement";
-		}
-		else{
-			batchList          = this.defaultSvc.selectAdmBatchList(); // 배치 정보 조회
-			sideCount          = this.defaultSvc.selectAmdSideCount(); // 사이드 카운트 정보 조회
-			vocCount           = this.defaultSvc.selectAdmVocInfo(userInfoDto); // voc 정보 조회
-			smilePoint         = this.defaultSvc.selectAdmSmilePointInfo(); // 스마일 지수 정보 조회
-			productRequestList = this.defaultSvc.selectAdmProductRequestList(); // 신규상품 리스트 조회
-			veiwName           = "system/systemManagement";
-			
-			modelAndView.addObject("batchList",          batchList);
-			modelAndView.addObject("sideCount",          sideCount);
-			modelAndView.addObject("vocCount",           vocCount);
-			modelAndView.addObject("smilePoint",         smilePoint);
-			modelAndView.addObject("productRequestList", productRequestList);
-		}
-		
-		modelAndView.addObject("noticeList", noticeList);
-		modelAndView.setViewName(veiwName);
-		
-		return modelAndView;
-	}
-	
 	/**
 	 * 스마일 평가 지수 조사 관련
 	 * 
@@ -322,7 +248,7 @@ public class CommonCtl {
 		List<BoardDto> list         = (List<BoardDto>) this.boardSvc.selectNoticePopBoardNoList(svcTypeCd, userInfoDto);
 		
 		if("ADM".equals(svcTypeCd)) { // 관리자
-			modelAndView = this.systemDefaultAdm(request); 
+			modelAndView = defaultSvc.systemDefaultAdm(request);
 		}
 		else if("BUY".equals(svcTypeCd)) { // 고객사
 			modelAndView = this.systemDefaultBuy(request, paramMap);
@@ -338,6 +264,21 @@ public class CommonCtl {
 		
 		modelAndView.addObject("popup_list", list);
 		
+		return modelAndView;
+	}
+	
+	@RequestMapping("getSideBarInfo.sys")
+	public ModelAndView getSideBarInfo(
+			HttpServletRequest request, ModelAndView modelAndView) throws Exception {
+		modelAndView.setViewName("jsonView");
+		Map<String, String> result = defaultSvc.selectAmdSideCount();
+		modelAndView.addObject("brc01", result.get("brc01"));
+		modelAndView.addObject("ven03", result.get("ven03"));
+		modelAndView.addObject("brc02", result.get("brc02"));
+		modelAndView.addObject("brc03", result.get("brc03"));
+		modelAndView.addObject("ven01", result.get("ven01"));
+		modelAndView.addObject("ven02", result.get("ven02"));
+		modelAndView.addObject("ven04", result.get("ven04"));
 		return modelAndView;
 	}
 	

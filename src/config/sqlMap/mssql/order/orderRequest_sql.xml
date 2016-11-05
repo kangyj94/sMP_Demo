@@ -2278,6 +2278,7 @@
 	</select>   
 
     <!-- 주문요청시 감독관 선택 -->
+    <!-- @Deprecated -->
     <select id="selectSupervisorUserInfo" resultType="kr.co.bitcube.common.dto.UserDto">
         /* order.orderRequest.selectSupervisorUserInfo*/
         SELECT TOP 1 USERID, USERNM FROM SMPUSERS  WITH(NOLOCK) WHERE USERID IN (

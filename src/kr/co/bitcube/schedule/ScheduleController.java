@@ -251,7 +251,7 @@ public class ScheduleController {
 	}
 
 	//운영사 메인스케줄
-	@Scheduled(cron="0 45 0 * * *")	//초 분 시 일 월 주(년)
+	@Scheduled(cron="0 45 8,12,15,21 * * *")	//초 분 시 일 월 주(년)
 	@RequestMapping("admMainInfoSetup.sys")
 	public void admMainInfoSetup() {
 		logger.info("--------------------------admMainInfoSetup start!--------------------------");
