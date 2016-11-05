@@ -4,12 +4,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import kr.co.bitcube.board.dto.BoardDto;
 import kr.co.bitcube.board.service.BoardSvc;
 import kr.co.bitcube.common.dao.DefaultDao;
 import kr.co.bitcube.common.dao.GeneralDao;
+import kr.co.bitcube.common.dto.LoginRoleDto;
 import kr.co.bitcube.common.dto.LoginUserDto;
 import kr.co.bitcube.common.utils.CommonUtils;
+import kr.co.bitcube.common.utils.Constances;
 import kr.co.bitcube.organ.dto.SmpBranchsDto;
 
 import org.apache.ibatis.session.RowBounds;
@@ -17,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.servlet.ModelAndView;
 
 @Service
 public class DefaultSvc {
@@ -242,6 +247,7 @@ public class DefaultSvc {
 	/**
 	 * 고객사 - 마이카테고리 리스트를 조회하여 반환하는 메소드
 	 */
+	@Deprecated
 	public List<Map<String, Object>> getBuyMyCategoryList(Map<String, Object> params) {
 		return defaultDao.selectBuyMyCategoryList(params);
 	}
@@ -256,6 +262,7 @@ public class DefaultSvc {
 	/**
 	 * 고객사 - 관심품목 리스트를 조회하여 반환하는 메소드
 	 */
+	@Deprecated
 	public List<Map<String, Object>> getBuyWishlistItemList(Map<String, Object> params) {
 		return defaultDao.selectBuyWishlistItemList(params);
 	}
@@ -263,6 +270,7 @@ public class DefaultSvc {
 	/**
 	 * 고객사 - 발주대기 리스트를 조회하여 반환하는 메소드
 	 */
+	@Deprecated
 	public Map<String, Object> getBuyOrderConditionListCnt(Map<String, Object> params) {
 		return defaultDao.selectBuyOrderConditionListCnt(params);
 	}
@@ -306,7 +314,7 @@ public class DefaultSvc {
 		SmpBranchsDto  smpBranchsDto = loginUserDto.getSmpBranchsDto();
 		String         svcTypeCd     = loginUserDto.getSvcTypeCd();
 		String         workId        = null;
-		int            records       = 0;
+//		int            records       = 0;
 		
 		if(smpBranchsDto != null ){
 			workId = smpBranchsDto.getWorkId();
@@ -330,11 +338,11 @@ public class DefaultSvc {
 			}
 		}
 		
-        records = this.generalDao.selectGernalCount("board.selectNoticeList_count", params);
+//        records = this.generalDao.selectGernalCount("board.selectNoticeList_count", params);
 		
-        if(records > 0){
+//        if(records > 0){
         	result = this.boardSvc.getNoticeList(params, 1, row);
-        }
+//        }
 		
 		return result;
 	}
@@ -501,31 +509,44 @@ public class DefaultSvc {
 	 */
 	@SuppressWarnings("unchecked")
 	private Map<String, String> selectAdmBatchListInfo01(Map<String, String> listInfo) throws Exception{
-		Map<String, String> thisMonthOrderInfo = (Map<String, String>)this.generalDao.selectGernalObject("common.default.selectAdmThisMonthOrderInfo", new ModelMap());
-		String              info01             = null; // 당월 주문금액
-		String              info02             = null; // 당월 인수금액
-		String              info03             = listInfo.get("info03"); // 년간 매출
-		String              info04             = listInfo.get("info04"); // 년간 매출이익
-		String              info05             = listInfo.get("info05"); // 년간 이익율
+		//속도문제로 주석 Jameskang 20161015
+//		Map<String, String> thisMonthOrderInfo = (Map<String, String>)this.generalDao.selectGernalObject("common.default.selectAdmThisMonthOrderInfo", new ModelMap());
+//		String              info01             = null; // 당월 주문금액
+		String info01 = listInfo.get("info01");
+		String              info02             = listInfo.get("info02"); // 당월 배송중
+//		String              info03             = null; // 당월 인수금액
+		String info03 = listInfo.get("info03");
+		String              info04             = listInfo.get("info04"); // 당월 매출처리
 		
-		if(thisMonthOrderInfo != null){
-			info01 = thisMonthOrderInfo.get("info01");
-			info02 = thisMonthOrderInfo.get("info02");
-		}
+		String              info05             = listInfo.get("info05"); // 년간 매출
+		String              info06             = listInfo.get("info06"); // 년간 매출이익
+		String              info07             = listInfo.get("info07"); // 년간 이익율
+		
+//		if(thisMonthOrderInfo != null){
+//			info01 = thisMonthOrderInfo.get("info01");
+//			info03 = thisMonthOrderInfo.get("info03");
+//		}
 		
 		info01 = CommonUtils.nvl(info01, "0");
-		info02 = CommonUtils.nvl(info02, "0");
+		info03 = CommonUtils.nvl(info03, "0");
+		
 		info01 = this.getRoundAmount(info01);
 		info02 = this.getRoundAmount(info02);
 		info03 = this.getRoundAmount(info03);
 		info04 = this.getRoundAmount(info04);
-		info05 = CommonUtils.getRoundPercent(info05);
+		
+		info05 = this.getRoundAmount(info05);
+		info06 = this.getRoundAmount(info06);
+		info07 = CommonUtils.getRoundPercent(info07);
 		
 		listInfo.put("info01", info01);
 		listInfo.put("info02", info02);
 		listInfo.put("info03", info03);
 		listInfo.put("info04", info04);
 		listInfo.put("info05", info05);
+		listInfo.put("info05", info05);
+		listInfo.put("info06", info06);
+		listInfo.put("info07", info07);
 		
 		return listInfo;
 	}
@@ -687,6 +708,74 @@ public class DefaultSvc {
 		
 		return listInfo;
 	}
+	
+	
+	private boolean systemDefaultAdmIsSpecial(LoginUserDto userInfoDto) throws Exception{
+		List<LoginRoleDto> roleList = userInfoDto.getLoginRoleList();
+		LoginRoleDto       role     = null;
+		String             roleCd   = null;
+		int                i        = 0;
+		int                roleSize = 0;
+		boolean            result   = false;
+		
+		if(roleList != null){
+			roleSize = roleList.size();
+		}
+		
+		for(i = 0; i < roleSize; i++){
+			role   = roleList.get(i);
+			roleCd = role.getRoleCd();
+			
+			if(
+				Constances.ETC_SPECIAL_SKB.equals(roleCd) ||
+				Constances.ETC_SPECIAL_SKT.equals(roleCd) ||
+				Constances.ETC_SPECIAL_CON.equals(roleCd)
+			){
+				if(Constances.ETC_SPECIAL_SKB.equals(roleCd)) userInfoDto.setSKBMng(true);
+				if(Constances.ETC_SPECIAL_SKT.equals(roleCd)) userInfoDto.setSKTMng(true);
+				result = true;
+				break;
+			}
+		}
+		
+		return result;
+	}
+	public ModelAndView systemDefaultAdm(HttpServletRequest request) throws Exception{
+		ModelAndView              modelAndView       = new ModelAndView();
+		String                    veiwName           = null;
+		LoginUserDto              userInfoDto        = CommonUtils.getLoginUserDto(request); // 로그인 사용자 정보 조회
+		List<BoardDto>            noticeList         = this.systemDefaultNoticeList(userInfoDto, false, 4); // 공지사항 리스트 조회
+		List<Map<String, String>> batchList          = null;
+		List<Map<String, String>> productRequestList = null;
+		Map<String, String>       sideCount          = null;
+		Map<String, String>       vocCount           = null;
+		Map<String, String>       smilePoint         = null;
+		boolean                   isSpecial          = this.systemDefaultAdmIsSpecial(userInfoDto); // 매니저 여부
+		
+		if(isSpecial){
+			veiwName = "system/managerManagement";
+		}
+		else{
+			batchList          = this.selectAdmBatchList(); // 배치 정보 조회
+//			sideCount          = this.selectAmdSideCount(); // 사이드 카운트 정보 조회
+			vocCount           = this.selectAdmVocInfo(userInfoDto); // voc 정보 조회
+			smilePoint         = this.selectAdmSmilePointInfo(); // 스마일 지수 정보 조회
+			productRequestList = this.selectAdmProductRequestList(); // 신규상품 리스트 조회
+			veiwName           = "system/systemManagement";
+			
+			modelAndView.addObject("batchList",          batchList);
+			modelAndView.addObject("sideCount",          sideCount);
+			modelAndView.addObject("vocCount",           vocCount);
+			modelAndView.addObject("smilePoint",         smilePoint);
+			modelAndView.addObject("productRequestList", productRequestList);
+		}
+		
+		modelAndView.addObject("noticeList", noticeList);
+		modelAndView.setViewName(veiwName);
+		
+		return modelAndView;
+	}
+	
 	
 	/**
 	 * <pre>

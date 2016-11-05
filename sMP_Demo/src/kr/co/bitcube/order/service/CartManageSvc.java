@@ -3,6 +3,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import kr.co.bitcube.common.dao.GeneralDao;
 import kr.co.bitcube.common.utils.CommonUtils;
 import kr.co.bitcube.order.dao.CartManageDao;
 import kr.co.bitcube.order.dto.CartMasterInfoDto;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.ModelMap;
 
 
 @Service
@@ -20,8 +22,8 @@ public class CartManageSvc {
 	
 	private Logger logger = Logger.getLogger(getClass());
 	
-	@Autowired
-	private CartManageDao cartManageDao;  
+	@Autowired private CartManageDao cartManageDao;
+	@Autowired private GeneralDao generalDao;
 	
 	
 	/**
@@ -349,6 +351,23 @@ public class CartManageSvc {
             saveMap.put("goodIdenNumb", goodIdenNumbs[i]);
             saveMap.put("vendorId", vendorIds[i]);
             cartManageDao.updateCartPdtOrdQuan(saveMap);
+		}
+	}
+
+	/**
+	 * 기존 결재자정보 삭제 후 재생성
+	 * @param paramMap
+	 */
+	@Transactional(propagation=Propagation.REQUIRED, readOnly=false, rollbackFor={Exception.class})
+	public void saveOrderArpproval(ModelMap paramMap) {
+		String jsonInfo = CommonUtils.getString(paramMap.get("jsonInfo"));
+		List<Map<String,Object>> paramList = CommonUtils.getListMapByJson(jsonInfo);
+		generalDao.insertGernal("order.cart.deleteMrcartAppline", paramMap);
+		int appOrder = 0;
+		for(Map<String,Object> parameterMap : paramList) {
+			parameterMap.put("userInfoDto", paramMap.get("userInfoDto"));
+			parameterMap.put("appOrder", ++appOrder);
+			generalDao.insertGernal("order.cart.insertMrcartAppline", parameterMap);
 		}
 	}
 }

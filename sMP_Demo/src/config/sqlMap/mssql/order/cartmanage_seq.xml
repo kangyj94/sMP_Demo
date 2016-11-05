@@ -5,29 +5,55 @@
 <mapper namespace="order.cart">
 	
 	<select id="selectCateMasterInfo" resultType="kr.co.bitcube.order.dto.CartMasterInfoDto">
-		SELECT CART.branchid
-		     , CART.comp_iden_name
-		     , CART.orde_type_clas
-		     , CART.tran_deta_addr_seq
-		     , CART.tran_user_name
-		     , CART.tran_tele_numb
-		     , CART.mana_user_name
-		     , CART.orde_text_desc
-		     , CART.firstattachseq
-		     , CART.secondattachseq
-		     , CART.thirdattachseq
-			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.firstattachseq, 'NAME') AS firstAttachName
-			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.secondattachseq, 'NAME') AS secondAttachName
-			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.thirdattachseq, 'NAME') AS thirdAttachName
-			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.firstattachseq, 'PATH') AS firstAttachPath
-			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.secondattachseq, 'PATH') AS secondAttachPath
-			 , dbo.FNS_ATTACH_FILE_NAME_PATH(CART.thirdattachseq, 'PATH') AS thirdAttachPath
-			 , dbo.FNS_CODENM1BYCODEVAL1('PAYMCONDCODE', BCH.PAYBILLTYPE ) AS PAYBILLTYPE
-		  FROM mrcart CART WITH(NOLOCK)      
-		  ,	   SMPBRANCHS BCH WITH(NOLOCK) 
-		 WHERE  CART.branchid = #{branchid}
-		   AND CART.userid   = #{userid}
-		   AND CART.branchid = BCH.branchid
+		/* order.cart.selectCateMasterInfo */
+		SELECT	CART.branchid
+		,		CART.comp_iden_name
+		,		CART.orde_type_clas
+		,		CART.tran_deta_addr_seq
+		,		CART.tran_user_name
+		,		CART.tran_tele_numb
+		,		CART.mana_user_name
+		,		CART.orde_text_desc
+		,		CART.firstattachseq
+		,		CART.secondattachseq
+		,		CART.thirdattachseq
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(CART.firstattachseq, 'NAME') AS firstAttachName
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(CART.secondattachseq, 'NAME') AS secondAttachName
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(CART.thirdattachseq, 'NAME') AS thirdAttachName
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(CART.firstattachseq, 'PATH') AS firstAttachPath
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(CART.secondattachseq, 'PATH') AS secondAttachPath
+		,		dbo.FNS_ATTACH_FILE_NAME_PATH(CART.thirdattachseq, 'PATH') AS thirdAttachPath
+		,		dbo.FNS_CODENM1BYCODEVAL1('PAYMCONDCODE', BCH.PAYBILLTYPE ) AS PAYBILLTYPE
+		,		BCH.ISORDERAPPROVAL
+		,		STUFF((
+							SELECT	','+A.APPUSERID
+							FROM	MRCART_APPLINE A WITH(NOLOCK)
+							INNER JOIN SMPUSERS B WITH(NOLOCK)
+								ON	A.APPUSERID = B.USERID
+								AND	B.ISUSE = '1'
+								AND	B.ISORDERAPPROVAL = '1'
+							WHERE	A.BRANCHID = CART.BRANCHID
+							AND		A.USERID = CART.USERID
+							ORDER BY A.APPORDER
+							FOR XML PATH('')
+						),1,1,'') AS approvalUserIdArr
+		,		STUFF((
+							SELECT	' กต'+B.USERNM
+							FROM	MRCART_APPLINE A WITH(NOLOCK)
+							INNER JOIN SMPUSERS B WITH(NOLOCK)
+								ON	A.APPUSERID = B.USERID
+								AND	B.ISUSE = '1'
+								AND	B.ISORDERAPPROVAL = '1'
+							WHERE	A.BRANCHID = CART.BRANCHID
+							AND		A.USERID = CART.USERID
+							ORDER BY A.APPORDER
+							FOR XML PATH('')
+						),1,2,'') AS approvalUserNmArr
+		FROM	mrcart CART WITH(NOLOCK)
+		,		SMPBRANCHS BCH WITH(NOLOCK)
+		WHERE	CART.branchid = #{branchid}
+		AND		CART.userid   = #{userid}
+		AND		CART.branchid = BCH.branchid
 	</select>
 	
 	<select id="selectCartProdInfo" resultType="kr.co.bitcube.order.dto.CartProdInfoDto">
@@ -470,4 +496,71 @@
         AND GOOD_IDEN_NUMB = #{goodIdenNumb}
         AND VENDORID = #{vendorId}
 	</update>
+	
+	<select id="selectApprovalUserList" resultType="kr.co.bitcube.buyController.dto.MractAppline">
+		/* order.cart.selectApprovalUserList */
+		SELECT	A.APPORDER
+		,		A.APPBRANCHID
+		,		B.BORGNM AS APPBRANCHNM
+		,		A.APPUSERID
+		,		C.USERNM AS APPUSERNM
+		FROM 	MRCART_APPLINE A WITH(NOLOCK)
+		INNER JOIN SMPBORGS B WITH(NOLOCK)
+			ON	A.APPBRANCHID = B.BORGID
+			AND	B.ISUSE = '1'
+		INNER JOIN SMPUSERS C WITH(NOLOCK)
+			ON	A.APPUSERID = C.USERID
+			AND	C.ISUSE = '1'
+			AND	C.ISORDERAPPROVAL = '1'
+		WHERE	A.BRANCHID = #{branchId}
+		AND		A.USERID = #{userId}
+		ORDER BY A.APPORDER
+	</select>
+	
+	<select id="selectApprovalTargetList" resultType="kr.co.bitcube.buyController.dto.MractAppline">
+		/* order.cart.selectApprovalTargetList */
+		SELECT	C.BORGID AS APPBRANCHID
+		,		C.BORGNM AS APPBRANCHNM
+		,		A.USERID AS APPUSERID
+		,		A.USERNM AS APPUSERNM
+		FROM	SMPUSERS A WITH(NOLOCK)
+		INNER JOIN SMPBORGS_USERS B WITH(NOLOCK)
+			ON	A.USERID = B.USERID
+		INNER JOIN SMPBORGS C WITH(NOLOCK)
+			ON	B.BORGID = C.BORGID
+			AND	C.ISUSE = '1'
+		WHERE	A.ISUSE = '1'
+		AND		A.ISORDERAPPROVAL = '1'
+		AND		C.CLIENTID = #{clientId}
+		<if test="@MybatisUtils@isNotEmpty(appUserNm)">
+		AND		A.USERNM LIKE '%'+ #{appUserNm} +'%'
+		</if>
+		<if test="@MybatisUtils@isNotEmpty(appBranchId)">
+		AND		C.BORGID = #{appBranchId}
+		</if>
+		ORDER BY C.BORGNM, A.USERNM
+	</select>
+	
+	<delete id="deleteMrcartAppline">
+		/* order.cart.deleteMrcartAppline */
+		DELETE	MRCART_APPLINE 
+		WHERE 	BRANCHID=#{userInfoDto.borgId} 
+		AND		USERID=#{userInfoDto.userId}
+	</delete>
+	<insert id="insertMrcartAppline">
+		/* order.cart.insertMrcartAppline */
+		INSERT INTO MRCART_APPLINE (
+				BRANCHID
+		,		USERID
+		,		APPORDER
+		,		APPBRANCHID
+		,		APPUSERID
+		) VALUES (
+				#{userInfoDto.borgId}
+		,		#{userInfoDto.userId}
+		,		#{appOrder}
+		,		#{appBranchId}
+		,		#{appUserId}
+		)
+	</insert>
 </mapper>

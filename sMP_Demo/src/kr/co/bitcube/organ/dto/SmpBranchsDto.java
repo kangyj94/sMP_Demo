@@ -90,7 +90,7 @@ public class SmpBranchsDto {
 	private String userLoginYn;	//휴면사업장
 	
 	private String contractYn;
-	
+	private String isOrderApproval;
 	
 	
 	public String getContractYn() {
@@ -617,5 +617,11 @@ public class SmpBranchsDto {
 	}
 	public void setLoan(String loan) {
 		this.loan = loan;
+	}
+	public String getIsOrderApproval() {
+		return isOrderApproval;
+	}
+	public void setIsOrderApproval(String isOrderApproval) {
+		this.isOrderApproval = isOrderApproval;
 	}
 }

@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.text.DecimalFormat; 
 import java.text.SimpleDateFormat;
@@ -25,8 +26,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import kr.co.bitcube.common.dto.ActivitiesDto;
 import kr.co.bitcube.common.dto.LoginMenuDto;
@@ -141,27 +143,33 @@ public class CommonUtils {
 	}
 	
 	/**
-     * Object를 받아 문자열 값으로 리턴함.
-     * @param  Object obj
-     * @return String
-     */
+	 * Object를 받아 문자열 값으로 리턴함.
+	 * @param obj
+	 * @return
+	 */
 	public static String getString(Object obj) {
- 		String value = "" + obj;
- 		
+		return getString(obj,"");
+	}
+	
+	/**
+	 * Object를 받아 문자열 값으로 리턴함, 없을경우 DefaultValue 리턴.
+	 * @param obj
+	 * @param defaultValue
+	 * @return
+	 */
+	public static String getString(Object obj, String defaultValue) {
+		String value = "" + obj;
  		try {
- 			if(obj == null){
- 				value = "";
- 			} 
- 			else {
-	 			if(value.equals("null") || value.length() == 0){
-	 				value = ""; 
+ 			if(obj == null) {
+ 				value = defaultValue;
+ 			} else {
+	 			if(value.equals("null") || value.length() == 0) {
+	 				value = defaultValue;
 	 			}
  			}
-    	}
- 		catch(Exception e){
- 			value = "";
+    	} catch(Exception e){
+ 			value = defaultValue;
  		}
- 		
  		return value;
 	}
 	
@@ -1206,5 +1214,17 @@ public class CommonUtils {
 		if(!"".equals(spec_weight_real)) { good_spec_desc += " 실중량(KG):"+spec_weight_real; }
 		
 		return good_spec_desc;
+	}
+	
+	/**
+	 * Json 타입을 List<Map> 으로 변환
+	 * @param json
+	 * @return
+	 */
+	public static List<Map<String,Object>> getListMapByJson(String json) {
+		Gson gson = new Gson();
+		Type type = new TypeToken<ArrayList<Map<String, Object>>>(){}.getType();
+		// Use fromJson method to deserialize json into an ArrayList of Map
+		return gson.fromJson(json , type);
 	}
 }

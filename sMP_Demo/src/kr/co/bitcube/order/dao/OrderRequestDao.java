@@ -201,7 +201,7 @@ public class OrderRequestDao {
 		}
 	}
 
-	
+	@Deprecated
 	public List<UserDto> selectSupervisorUserInfo(Map<String, Object> searchMap) {
 		return sqlSessionTemplate.selectList(this.statement+"selectSupervisorUserInfo", searchMap);
 	}

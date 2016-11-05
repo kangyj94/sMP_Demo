@@ -347,6 +347,7 @@ public class OrganCtl {
 			@RequestParam(value = "sharpMail", defaultValue = "")			String sharpMail,			// 회사샵메일(필수에서 바뀜)
 			@RequestParam(value = "ebillEmail", defaultValue = "")			String ebillEmail,			// 세금계산서 이메일
 			@RequestParam(value = "workId", defaultValue = "")				String workId,				// 공사유형
+			@RequestParam(value = "isOrderApproval", defaultValue = "0")	String isOrderApproval,		// 주문결재 사용여부
 		HttpServletRequest request, ModelAndView modelAndView) throws Exception {
 	
 		LoginUserDto userInfoDto = (LoginUserDto)(request.getSession()).getAttribute(Constances.SESSION_NAME);
@@ -395,6 +396,7 @@ public class OrganCtl {
 		saveMap.put("sharpMail"				, sharpMail);
 		saveMap.put("ebillEmail"			, ebillEmail);
 		saveMap.put("workId"				, workId);
+		saveMap.put("isOrderApproval"		, isOrderApproval);
 		
 		// 사업장의 운영상태가 "종료"로 되었을때만 smpborgs 테이블의 updatedate 컬럼을 update 한다. (사업장 테이블 (smpbranchs 테이블에는 updatedate 칼럼이 없음.))
 		// 또한 사용자도 종료 처리 함.
@@ -914,11 +916,9 @@ public class OrganCtl {
 			@RequestParam(value = "smsByOrdrtReceive"     , defaultValue = "0") String smsByOrdrtreceive,
 			@RequestParam(value = "smsByNotiAuction"      , defaultValue = "0") String smsByNotiauction,
 			@RequestParam(value = "smsByNotiSuccessBid"	  , defaultValue = "0") String smsByNotisuccessbid,
-			@RequestParam(value = "isDirect"	  		  , defaultValue = "") String isDirect,
+			@RequestParam(value = "isOrderApproval"	  	  , defaultValue = "0") String isOrderApproval,
 			@RequestParam(value = "isDefaultBorgs"	  	  , defaultValue = "") String isDefaultBorgs,
 			@RequestParam(value = "isDefaultArr[]", required = false) 		String[] isDefaultArr,
-			@RequestParam(value = "roleIdArr[]", required = false) 			String[] roleIdArr,
-			@RequestParam(value = "userIdArr[]", required = false) 			String[] userIdArr,
 		HttpServletRequest request, ModelAndView modelAndView) throws Exception {
 	
 		Map<String, Object> saveMap = new HashMap<String, Object>();
@@ -950,10 +950,7 @@ public class OrganCtl {
 		saveMap.put("smsByNotiauction"      , smsByNotiauction);
 		saveMap.put("smsByNotisuccessbid"	, smsByNotisuccessbid);
 		saveMap.put("isDefaultArr"			, isDefaultArr);
-		saveMap.put("roleIdArr"				, roleIdArr);
-		saveMap.put("isDirect"				, isDirect);
-		saveMap.put("userIdArr"				, userIdArr);
-		
+		saveMap.put("isOrderApproval"		, isOrderApproval);
 		
 		/*----------------처리수행 및 성공여부 세팅------------*/
 		CustomResponse custResponse = new CustomResponse(true);
@@ -964,12 +961,6 @@ public class OrganCtl {
 			}else if("upd".equals(oper)){
 				saveMap.put("isDefaultBorgs"	, isDefaultBorgs);
 				organSvc.updateOrganUserDetail(saveMap);
-				if("N".equals(isDirect)){
-					saveMap.put("userId"	, "");
-					saveMap.put("branchId"	, borgId);
-					saveMap.put("directorId", userId);
-					organSvc.deleteSmpDirectInfo(saveMap);	
-				}
 			}
 			
 		} catch(Exception e) {
@@ -2785,50 +2776,6 @@ public class OrganCtl {
 		modelAndView.addObject("list"	, selectSmpDirectInfoList);
 		return modelAndView;		
 	}
-
-	/**
-	 * 감독관리사용자 추가/삭제
-	 * @return
-	 * @throws Exception
-	 */
-	@RequestMapping("saveSmpDirectInfo.sys")
-	public ModelAndView saveSmpDirectInfo (
-			@RequestParam(value = "oper", required = true) String oper,	// oper
-			@RequestParam(value = "userIdArr[]", required = false) String[] userIdArr,	// 사용자ID
-			@RequestParam(value = "borgId", required = true) String borgId,	// 조직ID
-			@RequestParam(value = "userId", defaultValue = "") String userId,
-			@RequestParam(value = "directorId", defaultValue = "") String directorId,
-			ModelAndView mav, HttpServletRequest req) throws Exception {
-		
-		/*----------------파라미터 세팅------------*/
-		HashMap<String, Object> saveMap = new HashMap<String, Object>();
-		
-		/*----------------처리수행 및 성공여부 세팅------------*/
-		CustomResponse custResponse = new CustomResponse(true);
-		try {
-			if("del".equals(oper)) {
-				saveMap.put("branchId"		, borgId);
-				saveMap.put("userId"		, userId);
-				saveMap.put("directorId"	, directorId);
-				organSvc.deleteSmpDirectInfo(saveMap);
-			} else if("add".equals(oper)) {
-				for(int i = 0 ; i < userIdArr.length ; i++){
-					saveMap.put("branchId"		, borgId);
-					saveMap.put("userId"		, userIdArr[i]);
-					saveMap.put("directorId"	, directorId);
-					organSvc.insertSmpDirectInfo(saveMap);
-				}
-			} 
-		} catch(Exception e) {
-			logger.error("Exception : "+e);
-			custResponse.setSuccess(false);
-			custResponse.setMessage("System Excute Error!....");
-			custResponse.setMessage(CommonUtils.getErrSubString(e,50));	//Option(To Detail Message)
-		}		
-		mav = new ModelAndView("jsonView");
-		mav.addObject(custResponse);
-		return mav;
-	}
 	
 	@RequestMapping("updateReqSmpBranchs.sys")
 	public ModelAndView updateReqSmpBranchs(
@@ -3320,6 +3267,7 @@ public class OrganCtl {
 	public ModelAndView updateSmpBranchNm(
 			@RequestParam(value = "branchId", required = true)	String branchId,			// 조직ID
 			@RequestParam(value = "branchNm", required = true)	String branchNm,			// 사업장명
+			@RequestParam(value = "isOrderApproval", defaultValue = "0")	String isOrderApproval,		// 주문결재 사용여부
 		HttpServletRequest request, ModelAndView modelAndView) throws Exception {
 		LoginUserDto userInfoDto = (LoginUserDto)(request.getSession()).getAttribute(Constances.SESSION_NAME);
 		
@@ -3327,6 +3275,7 @@ public class OrganCtl {
 		saveMap.put("branchId"				,branchId);
 		saveMap.put("branchNm"				,branchNm);
 		saveMap.put("userId"				,userInfoDto.getUserId());
+		saveMap.put("isOrderApproval"		,isOrderApproval);
 		
 		/*----------------처리수행 및 성공여부 세팅------------*/
 		CustomResponse custResponse = new CustomResponse(true);
@@ -3433,5 +3382,5 @@ public class OrganCtl {
 		modelAndView.addObject("excelFileName", excelFileName);
 		modelAndView.addObject("sheetList", sheetList);
 		return modelAndView;
-	}	
+	}
 }

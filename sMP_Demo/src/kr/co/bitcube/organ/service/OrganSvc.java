@@ -894,20 +894,6 @@ public class OrganSvc {
 			}
 		}
 		
-		Map<String, Object> directMap 	= new HashMap<String, Object>();
-		String[] userIdArr 	= (String[])saveMap.get("userIdArr");
-		String 	 isDirect 	= (String)saveMap.get("isDirect");
-
-		//감독관일경우 추가 Insert
-		if("Y".equals(isDirect)){
-			for (int i = 0; i < userIdArr.length; i++) {
-				directMap.put("userId"		, userIdArr[i]);
-				directMap.put("directorId"	, userId);
-				directMap.put("branchId"	, saveMap.get("borgId"));
-				this.insertSmpDirectInfo(directMap);
-			}			
-		}
-		
 		// SMS/메일 발송여부 등록
 		int receiveCnt = organDao.smpReceiveInfoCnt(userId);
 		if(receiveCnt == 0){
@@ -1013,14 +999,6 @@ public class OrganSvc {
 	
 	public List<SmpUsersDto> selectSmpDirectInfoList (Map<String, Object> params) {
 		return organDao.selectSmpDirectInfoList(params);
-	}
-
-	public void insertSmpDirectInfo(Map<String, Object> saveMap) {
-		organDao.insertSmpDirectInfo(saveMap);
-	}
-	
-	public void deleteSmpDirectInfo(Map<String, Object> saveMap) {
-		organDao.deleteSmpDirectInfo(saveMap);
 	}
 	
 	public String[] sendComp(Map<String, Object> sendMap) throws Exception{

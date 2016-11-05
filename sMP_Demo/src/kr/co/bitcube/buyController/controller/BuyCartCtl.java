@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import kr.co.bitcube.adjust.service.AdjustSvc;
 import kr.co.bitcube.common.dao.GeneralDao;
 import kr.co.bitcube.common.dto.LoginUserDto;
-import kr.co.bitcube.common.dto.UserDto;
 import kr.co.bitcube.common.utils.CommonUtils;
 import kr.co.bitcube.common.utils.Constances;
 import kr.co.bitcube.common.utils.CustomResponse;
@@ -30,14 +30,10 @@ import kr.co.bitcube.order.service.OrderRequestSvc;
 public class BuyCartCtl {
 
 	private Logger logger = Logger.getLogger(getClass());
-	@Autowired
-	private OrderRequestSvc orderRequestSvc;
-
-	@Autowired
-	private CartManageSvc cartManageSvc;
-	
-	@Autowired
-	private GeneralDao generalDao;
+	@Autowired private OrderRequestSvc orderRequestSvc;
+	@Autowired private CartManageSvc cartManageSvc;
+	@Autowired private GeneralDao generalDao;
+	@Autowired private AdjustSvc adjustSvc;
 	
 
 	/**
@@ -69,10 +65,7 @@ public class BuyCartCtl {
 			}
 		}
 		modelAndView.addObject("cartMasterInfo",cmi);
-		List<UserDto> directorList = orderRequestSvc.getSupervisorUserInfo(loginUserDto.getBorgId(),loginUserDto.getUserId());
-		List<Map<String, Object>> cartList = cartManageSvc.getBuyCartInfo(searchParams);
-        modelAndView.addObject("userList", directorList);
-        modelAndView.addObject("cartList", cartList);
+        modelAndView.addObject("cartList", cartManageSvc.getBuyCartInfo(searchParams));
 		// 배송지 정보 조회 
 		modelAndView.setViewName("order/cart/buyCartInfo");
 		return modelAndView;
@@ -254,6 +247,7 @@ public class BuyCartCtl {
 		return modelAndView;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@RequestMapping("buyCommonCartPop.sys")
 	public ModelAndView buyCommonCartPop(
 			@RequestParam(value = "goodIdenNumb"	, defaultValue="")	String goodIdenNumb,
@@ -302,7 +296,6 @@ public class BuyCartCtl {
 		
 		LoginUserDto loginUserDto = (LoginUserDto)(request.getSession()).getAttribute(Constances.SESSION_NAME);
 		CustomResponse custResponse = new CustomResponse(true);
-		List<Map<String, Object>> list = null;
 		try{
 			Map<String, Object> params = new HashMap<String, Object>();
 			
@@ -322,5 +315,97 @@ public class BuyCartCtl {
 		modelAndView.addObject("custResponse", custResponse);
 		return modelAndView;
 	}
+
+	/**
+	 * 결재자 조회
+	 * @param request
+	 * @param modelAndView
+	 * @param paramMap
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("getApprovalUserList")
+	public ModelAndView getApprovalUserList(
+			HttpServletRequest request, ModelAndView modelAndView, ModelMap paramMap) throws Exception {
+		CustomResponse custResponse = new CustomResponse(true);
+		try {
+			modelAndView.addObject("list", generalDao.selectGernalList("order.cart.selectApprovalUserList", paramMap));
+		}catch(Exception e) {
+			logger.error("Exception : "+e);
+			custResponse.setSuccess(false);
+			custResponse.setMessage(CommonUtils.getErrSubString(e,50));	//Option(To Detail Message)
+		}
+		modelAndView.setViewName("jsonView");
+		modelAndView.addObject("custResponse", custResponse);
+		
+		return modelAndView;
+	}
+
+	/**
+	 * 소속된 법인의 사업장 콤보박스
+	 * @param request
+	 * @param modelAndView
+	 * @param paramMap
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("getBranchListByClientId")
+	public ModelAndView getBranchListByClientId(
+			HttpServletRequest request, ModelAndView modelAndView, ModelMap paramMap) throws Exception {
+		LoginUserDto userInfoDto = (LoginUserDto)(request.getSession()).getAttribute(Constances.SESSION_NAME);
+		modelAndView.addObject("list", adjustSvc.selectBranchsByClientId(userInfoDto.getClientId()));
+		modelAndView.setViewName("jsonView");
+		return modelAndView;
+	}
 	
+	
+	/**
+	 * 대상결재자 조회
+	 * @param request
+	 * @param modelAndView
+	 * @param paramMap
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("getApprovalTargetList")
+	public ModelAndView getApprovalTargetList(
+			HttpServletRequest request, ModelAndView modelAndView, ModelMap paramMap) throws Exception {
+		CustomResponse custResponse = new CustomResponse(true);
+		try {
+			modelAndView.addObject("list", generalDao.selectGernalList("order.cart.selectApprovalTargetList", paramMap));
+		}catch(Exception e) {
+			logger.error("Exception : "+e);
+			custResponse.setSuccess(false);
+			custResponse.setMessage(CommonUtils.getErrSubString(e,50));	//Option(To Detail Message)
+		}
+		modelAndView.setViewName("jsonView");
+		modelAndView.addObject("custResponse", custResponse);
+		
+		return modelAndView;
+	}
+	
+	/**
+	 * 장바구니 결재자 저장
+	 * @param request
+	 * @param modelAndView
+	 * @param paramMap
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("saveOrderArpproval")
+	public ModelAndView saveOrderArpproval(
+			HttpServletRequest request, ModelAndView modelAndView, ModelMap paramMap) throws Exception {
+		
+		CustomResponse customResponse = new CustomResponse(true);
+		try {
+			cartManageSvc.saveOrderArpproval(paramMap);
+		}catch(Exception e) {
+			logger.error("Exception : "+e);
+			customResponse.setSuccess(false);
+			customResponse.setMessage(CommonUtils.getErrSubString(e,50));	//Option(To Detail Message)
+		}
+		modelAndView.setViewName("jsonView");
+		modelAndView.addObject("customResponse", customResponse);
+		return modelAndView;
+	}
 }

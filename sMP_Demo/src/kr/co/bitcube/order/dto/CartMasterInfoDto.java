@@ -23,6 +23,9 @@ public class CartMasterInfoDto {
 	private String secondAttachPath;
 	private String thirdAttachPath;
 	private String payBillType;
+	private String isOrderApproval;
+	private String approvalUserIdArr;
+	private String approvalUserNmArr;
 	
 	public String getPayBillType() {
 		return payBillType;
@@ -194,6 +197,30 @@ public class CartMasterInfoDto {
 		stBuffer.append("\n thirdattachseq  value ]["+getThirdattachseq());
 		
 		return stBuffer.toString();
+	}
+
+	public String getIsOrderApproval() {
+		return isOrderApproval;
+	}
+
+	public void setIsOrderApproval(String isOrderApproval) {
+		this.isOrderApproval = isOrderApproval;
+	}
+
+	public String getApprovalUserIdArr() {
+		return approvalUserIdArr;
+	}
+
+	public void setApprovalUserIdArr(String approvalUserIdArr) {
+		this.approvalUserIdArr = approvalUserIdArr;
+	}
+
+	public String getApprovalUserNmArr() {
+		return approvalUserNmArr;
+	}
+
+	public void setApprovalUserNmArr(String approvalUserNmArr) {
+		this.approvalUserNmArr = approvalUserNmArr;
 	}
 	
 }

@@ -498,6 +498,7 @@ public class OrderRequestSvc {
 		return orderRequestDao.selectOrderResultSearchListExcel(params);
 	}
 	
+	@Deprecated
 	public List<UserDto> getSupervisorUserInfo(String branchId, String userId) {
 		Map<String, Object> searchMap = new HashMap<String, Object>();
 		searchMap.put("branchId", branchId);

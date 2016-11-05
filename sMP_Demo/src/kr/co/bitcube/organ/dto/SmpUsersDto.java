@@ -63,7 +63,8 @@ public class SmpUsersDto {
 	
 	//휴면계정
 	private String userLoginYn;
-	
+	private String isOrderApproval;
+	private String isBranchOrderApproval;
 	
 	
 	public String getUserLoginYn() {
@@ -386,5 +387,17 @@ public class SmpUsersDto {
 	}
 	public void setSvcTypeNm(String svcTypeNm) {
 		this.svcTypeNm = svcTypeNm;
+	}
+	public String getIsOrderApproval() {
+		return isOrderApproval;
+	}
+	public void setIsOrderApproval(String isOrderApproval) {
+		this.isOrderApproval = isOrderApproval;
+	}
+	public String getIsBranchOrderApproval() {
+		return isBranchOrderApproval;
+	}
+	public void setIsBranchOrderApproval(String isBranchOrderApproval) {
+		this.isBranchOrderApproval = isBranchOrderApproval;
 	}
 }
