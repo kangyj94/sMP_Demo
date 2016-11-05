@@ -201,7 +201,7 @@ function editRow() {
 			var popurl = "/organ/organUserDetail.sys?borgId=" + selrowContent.borgId + "&userId=" + selrowContent.userId + "&_menuId=<%=_menuId %>";
 			var popproperty = "dialogWidth:600px;dialogHeight=650px;scroll=yes;status=no;resizable=no;";
 // 		    window.showModalDialog(popurl,self,popproperty);
-		    window.open(popurl, 'okplazaPop', 'width=600, height=650, scrollbars=yes, status=no, resizable=no');
+		    window.open(popurl, 'okplazaPop', 'width=600, height=510, scrollbars=yes, status=no, resizable=no');
 		} 
 	}
 }

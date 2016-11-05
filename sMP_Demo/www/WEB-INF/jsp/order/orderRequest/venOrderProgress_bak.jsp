@@ -134,7 +134,7 @@ function fnVenOrderProgressList(page){
 						str += "<tr id='venOrderProgress_"+i+"' class='venOrderProgress'>";
 						str += "<td rowspan='"+deliListCnt+"' class='br_l0'>";
 						str += "<p>"+list[i].ORDE_IDEN_NUMB+"-"+list[i].ORDE_SEQU_NUMB+"</p>";
-						str += "<p class='f11'>공사명  : "+list[i].CONS_IDEN_NAME+"</p>";
+						str += "<p class='f11'>주문명  : "+list[i].CONS_IDEN_NAME+"</p>";
 						str += "<p class='f11'>구매사  : "+list[i].BRANCHNM;
                         if(list[i].ADD_REPRE_SEQU_NUMB != "0"){
                         	
@@ -257,7 +257,7 @@ function fnVenOrderProgressList(page){
 						str += "<tr id='venOrderProgress_"+i+"' class='venOrderProgress'>";
 						str += "<td rowspan='"+deliListCnt+"' class='br_l0'>";
 						str += "<p>"+list[i].ORDE_IDEN_NUMB+"-"+list[i].ORDE_SEQU_NUMB+"</p>";
-						str += "<p class='f11'>공사명  : "+list[i].CONS_IDEN_NAME+"</p>";
+						str += "<p class='f11'>주문명  : "+list[i].CONS_IDEN_NAME+"</p>";
 						str += "<p class='f11'>구매사 : "+list[i].BRANCHNM;
                         if(list[i].ADD_REPRE_SEQU_NUMB != "0"){
                         	

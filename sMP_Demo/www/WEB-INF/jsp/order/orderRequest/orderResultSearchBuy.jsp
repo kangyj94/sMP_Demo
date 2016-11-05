@@ -279,7 +279,7 @@ function fnAllExcelPrintDown(){
 			'규격',						'총중량',				'실중량',		'상품코드',				'단위',			'판매단가',				'수량',					'판매금액', 
 			'공급사',					'인수일',				'세금계산서일',	'매입세금계산서일',		'납품요청일',
 			'고객유형',					'발주차수',				'발주수량',		'출하차수',				'출하수량',
-			'인수차수',					'인수수량',				'매출확정자',	'매입확정자',			'공사명',
+			'인수차수',					'인수수량',				'매출확정자',	'매입확정자',			'주문명',
 			'구매사',					'구매사사업자등록번호',	'권역',			'공급사사업자등록번호',	'주문자',
 			'인수자',					'인수자전화번호',		
 			'고객유형 담당자',			'발주일',				'출하일',
@@ -328,7 +328,7 @@ function fnInitGrid() {
 			'규격',						'상품코드',				'단위',					'판매단가',				'수량',					'판매금액', 
 			'공급사',					'인수일',				'세금<br/>계산서일',	'매입세금<br/>계산서일','납품<br/>요청일',
 			'고객유형',					'발주차수',				'발주수량',				'출하차수',				'출하수량',
-			'인수차수',					'인수수량',				'매출확정자',			'매입확정자',			'공사명',
+			'인수차수',					'인수수량',				'매출확정자',			'매입확정자',			'주문명',
 			'구매사',					'구매사사업자등록번호',	'권역',					'공급사사업자등록번호',	'주문자',
 			'인수자',					'인수자<br/>전화번호',	'disp_good_id',			'vendorid',				//'good_iden_numb',
 			'sum_total_sale_unit_pric',	'sum_quantity',			'고객유형 담당자',		'발주일',				'출하일',
@@ -365,7 +365,7 @@ function fnInitGrid() {
 			{name:'RECE_IDEN_QUAN',           index:'RECE_IDEN_QUAN',           width:60,	sortable:false,     align:"right",  sorttype:'integer', formatter:'integer', formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" ,defaultValue: ''}},
 			{name:'SALE_SEQU_NUMB',           index:'SALE_SEQU_NUMB',           width:70,	sortable:false,     align:"center", hidden:true},//매출 id
 			{name:'BUYI_SEQU_NUMB',           index:'BUYI_SEQU_NUMB',           width:70,	sortable:false,     align:"center", hidden:true},//매입 id
-			{name:'CONS_IDEN_NAME',           index:'CONS_IDEN_NAME',           width:200,	sortable:false,    align:"left"},//공사명
+			{name:'CONS_IDEN_NAME',           index:'CONS_IDEN_NAME',           width:200,	sortable:false,    align:"left"},//주문명
 			
 			{name:'BRANCHNM',                 index:'BRANCHNM',                 width:120,	sortable:false,    align:"left" },//고객사
 			{name:'BCHBUSINESSNUM',           index:'BCHBUSINESSNUM',           width:120,	sortable:false,    align:"center", hidden:true},//고객사사업자등록번호

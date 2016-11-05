@@ -186,7 +186,7 @@ $(function() {
 		mtype: 'POST',
 		colNames:[
 			"<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",	'주문일',			'납품요청일',		'납품예정일',			'고객유형',
-			'공사담당자',																							'주문번호',		'공사명',			'주문유형',			'여신',
+			'공사담당자',																							'주문번호',		'주문명',			'주문유형',			'여신',
 			'선입금',																								'주문상태',		'구매사',			'주문자',				'공급사',
 			'공급사 전화번호',																						'상품명',			'규격',			'판매단가',			'수량',
 			'판매금액',																							'매입단가',		'매입금액',		'긴급여부',			'vendorid',
@@ -202,7 +202,7 @@ $(function() {
 			
 			{name:'WORKUSER',         index:'WORKUSER',          width:60,  align:"center", search:false, sortable:true,  editable:false},							//공사담당자
 			{name:'ORDER_NUMB',       index:'ORDER_NUMB',        width:110, align:"left",   search:false, sortable:true,  editable:false, key:true},				//주문번호
-			{name:'CONS_IDEN_NAME',   index:'CONS_IDEN_NAME',    width:120, align:"left",   search:false, sortable:true,  editable:false },				//공사명
+			{name:'CONS_IDEN_NAME',   index:'CONS_IDEN_NAME',    width:120, align:"left",   search:false, sortable:true,  editable:false },				//주문명
 			{name:'ORDE_TYPE_CLAS',   index:'ORDE_TYPE_CLAS',    width:50,  align:"center", search:false, sortable:true,  editable:false ,hidden:true},			//주문유형
 			{name:'LOAN_YN',          index:'LOAN_YN',           width:40,  align:"center", search:false, sortable:true,  editable:false },							//여신여부
 			
@@ -437,7 +437,7 @@ function fnSearch(){
 <%-- 일괄 엑셀 다운로드 --%>
 function fnAllExcelPrintDown(){
 	var colLabels = [	'주문일',		'납품요청일',		'납품예정일',	'고객유형',			'공사담당자',																							
-	                 	'주문번호',		'공사명',			'여신',			'선입금',			'주문상태',		
+	                 	'주문번호',		'주문명',			'여신',			'선입금',			'주문상태',		
 	                 	'구매사',		'주문자',			'공급사',		'공급사 전화번호',	'상품명',		
 	                 	'규격',			'판매단가',			'수량',			'판매금액',			'매입단가',		
 	                 	'매입금액'

@@ -237,7 +237,7 @@ jq(function() {
 		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/order/delivery/selectReceiveList.sys', 
 		datatype: 'local',
 		mtype: 'POST',
-		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자','납품요청일','출하일자','주문유형', '주문번호','공사명'
+		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자','납품요청일','출하일자','주문유형', '주문번호','주문명'
 		, '출하차수', '배송유형', '송장번호', '고객사', '공급사', '상품명','규격','GOOD_ST_SPEC_DESC', '인수수량', 'disp_good_id',  'good_iden_numb', 'vendorId' , 'deli_type_clas_code', '인수증 출력', 'receipt_num','branchId','is_add', '발주차수'],
 		colModel:[
 			{name:'isCheck',index:'isCheck', width:30,align:"center",search:false,sortable:false, editable:false, formoptions:{rowpos:1,elmprefix:"&nbsp;&nbsp;&nbsp;&nbsp;"},formatter:checkboxFormatter },	//선택
@@ -246,7 +246,7 @@ jq(function() {
 			{name:'deli_degr_date',index:'deli_degr_date', width:70,align:"center",search:false,sortable:true, editable:false },	//주문유형
 			{name:'orde_type_clas',index:'orde_type_clas', width:60,align:"center",search:false,sortable:true, editable:false ,hidden:true},	//주문유형
 			{name:'orde_iden_numb',index:'orde_iden_numb', width:105,align:"center",search:false,sortable:true, editable:false },	//주문번호
-			{name:'cons_iden_name',index:'cons_iden_name', width:200,align:"left",search:false,sortable:true, editable:false },	//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:200,align:"left",search:false,sortable:true, editable:false },	//주문명
 			{name:'deli_iden_numb',index:'deli_iden_numb', width:50,align:"center",search:false,sortable:true, editable:false ,hidden:true},	//출하차수
 			{name:'deli_type_clas',index:'deli_type_clas', width:90,align:"center",search:false,sortable:true, editable:false },	//배송유형
 			{name:'deli_invo_iden',index:'deli_invo_iden', width:80,align:"left",search:false,sortable:true, editable:false },	//송장번호
@@ -397,7 +397,7 @@ function fnSearch() {
 }
 
 function fnSearchReceiveExcelView(){
-	var colLabels = ['주문일자','납품요청일','출하일자','주문유형', '주문번호','공사명', '발주차수', '출하차수', '배송유형', '송장번호', '고객사', '공급사', '상품명', '규격','인수수량'];
+	var colLabels = ['주문일자','납품요청일','출하일자','주문유형', '주문번호','주문명', '발주차수', '출하차수', '배송유형', '송장번호', '고객사', '공급사', '상품명', '규격','인수수량'];
 	var colIds = ['REGI_DATE_TIME', 'REQU_DELI_DATE', 'DELI_DEGR_DATE', 'ORDE_TYPE_CLAS', 'ORDE_IDEN_NUMB','CONS_IDEN_NAME', 'PURC_IDEN_NUMB', 'DELI_IDEN_NUMB', 'DELI_TYPE_CLAS', 'DELI_INVO_IDEN', 'ORDE_CLIENT_NAME', 'VENDORNM', 'GOOD_NAME', 'GOOD_SPEC_DESC','DELI_PROD_QUAN'];
 	var numColIds = ['DELI_PROD_QUAN'];	//숫자표현ID
 	var figureColIds = ['PURC_IDEN_NUMB', 'DELI_IDEN_NUMB'];

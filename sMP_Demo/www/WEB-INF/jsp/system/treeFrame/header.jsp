@@ -84,7 +84,7 @@
 
 function fnAdmUserInfo(){
 	var popurl = "/system/treeFrame/admUserInfo.home";
-   	window.open(popurl, 'okplazaPop', 'width=810, height=650, scrollbars=yes, status=no, resizable=no');	
+   	window.open(popurl, 'okplazaPop', 'width=810, height=650, scrollbars=yes, status=no, resizable=yes');	
 }
 
 /**
@@ -92,7 +92,7 @@ function fnAdmUserInfo(){
  */
 //채팅사용자 조회 팝업
 function msnbgOnClick(){
-	window.open("<%=Constances.SYSTEM_CONTEXT_PATH %>/webChat/moveWebChatPop.sys", "webChat", "width=300,height=400,scrollbars=no,resizable=no");
+	window.open("<%=Constances.SYSTEM_CONTEXT_PATH %>/webChat/moveWebChatPop.sys", "webChat", "width=300,height=400,scrollbars=no,resizable=yes");
 }
 
 $(document).ready(function() {
@@ -147,7 +147,7 @@ function _getWebChatPop(userId, branchId, userNm) {
 	userNmObj.value = userNm;
 	chatFrm.insertBefore(userNmObj, null);
 	
-	window.open("", chatTarget, "width=300,height=400,scrollbars=no,resizable=no");
+	window.open("", chatTarget, "width=300,height=400,scrollbars=no,resizable=yes");
 	document.body.insertBefore(chatFrm, null);
 	chatFrm.submit();
 }
@@ -401,20 +401,20 @@ function goFavoritesMenu(){
 
 function setFavoritesMenu(){
 	//초기화
-	$("#goFavoritesMenu").empty();
-	$("#goFavoritesMenu").append("<option value='0'>즐겨찾기 메뉴</option>");
+// 	$("#goFavoritesMenu").empty();
+// 	$("#goFavoritesMenu").append("<option value='0'>즐겨찾기 메뉴</option>");
 	
-	$.post(
-			"/system/getFavoritesMenu.sys", 
-			{},
-			function(arg){
-				var list = $.parseJSON(arg).list;
+// 	$.post(
+// 			"/system/getFavoritesMenu.sys", 
+// 			{},
+// 			function(arg){
+// 				var list = $.parseJSON(arg).list;
 
-				for(i=0 ; i < list.length ; i++){
-					$("#goFavoritesMenu").append("<option value='"+list[i].menuId+"'>"+ list[i].menuNm+"</option>");
-				}
-			}
-		); 	
+// 				for(i=0 ; i < list.length ; i++){
+// 					$("#goFavoritesMenu").append("<option value='"+list[i].menuId+"'>"+ list[i].menuNm+"</option>");
+// 				}
+// 			}
+// 		); 	
 }
 </script>
 <%----------- /즐겨찾기 메뉴 관련  -----------%>

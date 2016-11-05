@@ -6,23 +6,15 @@
 <%@ page import="kr.co.bitcube.common.dto.LoginUserDto"%>
 <%@ page import="kr.co.bitcube.common.dto.UserDto"%>
 <%@ page import="kr.co.bitcube.common.dto.LoginRoleDto"%>
+<%@ page import="kr.co.bitcube.common.utils.CommonUtils"%>
 <%@ page import="java.util.List"%>
 <%@ page import="java.util.Map"%>
 <%
 	//그리드의 width와 Height을 정의
-	CartMasterInfoDto cartInfoDto = null ; 
-	cartInfoDto = (CartMasterInfoDto)request.getAttribute("cartMasterInfo");
-	@SuppressWarnings("unchecked")
+	CartMasterInfoDto cartInfoDto = (CartMasterInfoDto)request.getAttribute("cartMasterInfo");
 	List<ActivitiesDto> roleList = (List<ActivitiesDto>) request.getAttribute("useActivityList");
-	@SuppressWarnings("unchecked")
-	List<UserDto> userList = (List<UserDto>) request.getAttribute("userList");
-	String mana_user_name = "";
-	String mana_user_id = "";
-	if(userList.size() > 0){
-		mana_user_name = userList.get(0).getUserNm();
-		mana_user_id = userList.get(0).getUserId();
-	}
-	
+	String mana_user_name = CommonUtils.getString(cartInfoDto.getApprovalUserNmArr());
+	String mana_user_id = CommonUtils.getString(cartInfoDto.getApprovalUserIdArr());
 	LoginUserDto userDto = (LoginUserDto)(request.getSession()).getAttribute(Constances.SESSION_NAME);
 	
 	String listHeight = "$(window).height()-435 + Number(gridHeightResizePlus)-45";
@@ -38,17 +30,7 @@
 	if (userDto.getIsLimit() != null && userDto.getIsLimit().equals("1")) {
 		isLimit = true;
 	}  // 주문제한 여부
-	
-	//선입금여부
-	boolean prePay = false;
-// 	if("BUY".equals(userDto.getSvcTypeCd())){
-// 		if("1".equals(userDto.getSmpBranchsDto().getPrePay())){
-// 			prePay = true;
-// 		}
-// 	}
-
 	List<Map<String, Object>> cartList = (List<Map<String, Object>>)request.getAttribute("cartList");
-
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -102,7 +84,7 @@
 							</td>
 						</tr>
 						<tr>
-							<th>공사명(주문명)</th>
+							<th>주문명</th>
 							<td colspan="6">
 								
 							<input id="cons_iden_name" name="cons_iden_name" type="text" value="<%= cartInfoDto.getComp_iden_name() %>" size="" maxlength="250" style="width: 98%;"  onkeydown="javascript:if(event.keyCode==13) return false;"/>
@@ -125,16 +107,24 @@
 						</tr>
 						<tr>
 							<th>
-								<button id='btnAddDeliveryAddress' class="btn btn-darkgray btn-xs" style="">배송지</button>
+								<button id='btnAddDeliveryAddress' class="btn btn-darkgray btn-xs" style="">배송지 관리</button>
 							</th>
+<%	if("1".equals(CommonUtils.getString(cartInfoDto.getIsOrderApproval()))) { %>
 							<td colspan="6">
+<%	} else { %>
+							<td colspan="8">
+<%	} %>
 								<select name="tran_deta_addr_seq" id="tran_deta_addr_seq" style="width:99%;" ></select>
 							</td>
-							<th id="vendorSelect1">감독명(승인자)</th>
+<%	if("1".equals(CommonUtils.getString(cartInfoDto.getIsOrderApproval()))) { %>
+							<th>
+								<button id='btnOrderApproval' class="btn btn-darkgray btn-xs" style="">결재자 관리</button>
+							</th>
 							<td id="vendorSelect2">
 								<%=mana_user_name %>
-								<input id="mana_user_id" name="mana_user_id" type="hidden" value="<%=mana_user_id %>" />
 							</td>
+							<input id="mana_user_id" name="mana_user_id" type="hidden" value="<%=mana_user_id %>" />
+<%	} %>
 						</tr>
 						<tr>
 							<th>첨부파일1</th>
@@ -390,9 +380,9 @@
 	<div id="dialog" title="Feature not supported" style="display:none;">
 		<p>That feature is not supported.</p>
 	</div>
-</body>
+	<div class="jqmWindow" id="orderApprovalPop" style="background: grey; border-style: none; " ></div>
 
-<script>
+<script type="text/javascript">
 $(document).ready(function() {
 	$("#divGnb").mouseover(function () {$("#snb").show();});
 	$("#divGnb").mouseout(function () {$("#snb").hide();});
@@ -404,6 +394,13 @@ $(document).ready(function() {
 	$("#orde_tele_numb").val(  fnSetTelformat( $("#orde_tele_numb").val() ) );
 	$("#tran_tele_numb").val(  fnSetTelformat( $("#tran_tele_numb").val() ) );
 	
+	<%-- //결재자 관리	--%>
+	$("#btnOrderApproval").click(function(e) {
+		$('#orderApprovalPop').html('')
+		.load('/menu/order/cart/approvalManage.sys')
+		.jqmShow();
+	});
+	$('#orderApprovalPop').jqm();
 });
 
 function fnOrderQuanUpdate(idx){
@@ -438,9 +435,9 @@ function fnOrderQuanUpdate(idx){
 }
 
 function fnAllOrder(){
-	var cons_iden_name = $("#cons_iden_name").val();// 공사명
+	var cons_iden_name = $("#cons_iden_name").val();// 주문명
 	if($.trim(cons_iden_name) == "" ) {
-		$('#dialogSelectRow').html('<p>공사명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
+		$('#dialogSelectRow').html('<p>주문명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
 		$("#dialogSelectRow").dialog({
 			title:'Warning',modal:true
 		});
@@ -463,9 +460,9 @@ function fnAllOrder(){
 }
 
 function fnSelOrder(){
-	var cons_iden_name = $("#cons_iden_name").val();// 공사명
+	var cons_iden_name = $("#cons_iden_name").val();// 주문명
 	if($.trim(cons_iden_name) == "" ) {
-		$('#dialogSelectRow').html('<p>공사명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
+		$('#dialogSelectRow').html('<p>주문명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
 		$("#dialogSelectRow").dialog({
 			title:'Warning',modal:true
 		});
@@ -485,9 +482,9 @@ function fnSelOrder(){
 
 function fnOneOrder(idx){
 
-	var cons_iden_name = $("#cons_iden_name").val();// 공사명
+	var cons_iden_name = $("#cons_iden_name").val();// 주문명
 	if($.trim(cons_iden_name) == "" ) {
-		$('#dialogSelectRow').html('<p>공사명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
+		$('#dialogSelectRow').html('<p>주문명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
 		$("#dialogSelectRow").dialog({
 			title:'Warning',modal:true
 		});
@@ -527,7 +524,7 @@ function fnOrder(){
 	var add_good_numbs		= new Array();
 	var repre_good_numbs	= new Array();
 
-	var cons_iden_name  = $("#cons_iden_name").val();                    // 공사명
+	var cons_iden_name  = $("#cons_iden_name").val();                    // 주문명
 	var orde_type_clas  = "10";                                          // 주문유형
 	var orde_tele_numb  = $("#orde_tele_numb").val();                    // 주문자 전화번호
 	var orde_user_id    = $("#orde_user_id").val();                      // 주문자 ID
@@ -1061,10 +1058,10 @@ function fnOrderSheet(){
 
 //장바구니 마스터 정보를 변경한다. 
 function fnUpdateCartMstInfo() {
-	var cons_iden_name = $("#cons_iden_name").val();// 공사명
+	var cons_iden_name = $("#cons_iden_name").val();// 주문명
 	var consIdenName_regex = /([!@#$%^&''""])/;
     if(consIdenName_regex.test(cons_iden_name)){
-        $("#dialog").html("<font size='2'>공사명에 특수문자[!@#$%^&'"+'"'+"]를 \n제거해 주세요.</font>");
+        $("#dialog").html("<font size='2'>주문명에 특수문자[!@#$%^&'"+'"'+"]를 \n제거해 주세요.</font>");
         $("#dialog").dialog({
             title: 'Success',modal: true,
             buttons: {"Ok": function(){$(this).dialog("close");} }
@@ -1086,7 +1083,7 @@ function fnUpdateCartMstInfo() {
 		} 
 	}
 	params = {
-					comp_iden_name:$('#cons_iden_name').val()           // 공사명 
+					comp_iden_name:$('#cons_iden_name').val()           // 주문명 
 				,	orde_type_clas:$('#orde_type_clas').val()           // 주문유형
 				,	tran_deta_addr_seq:$('#tran_deta_addr_seq').val()   // 배송지주소
 				,	tran_user_name:$('#tran_user_name').val()           // 인수자
@@ -1131,4 +1128,5 @@ function fnDatepicker(id){
 }
 </script>
 <script src="<%=Constances.SYSTEM_JSCSS_URL %>/jq/js/typehead.js" type="text/javascript"></script>
+</body>
 </html>

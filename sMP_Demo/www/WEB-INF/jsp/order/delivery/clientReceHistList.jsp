@@ -77,7 +77,7 @@
               </colgroup>
               <tr>
                 <th class="br_l0">주문일(인수일)</th>
-                <th>주문번호(공사명)</th>
+                <th>주문번호(주문명)</th>
                 <th>주문 상품 정보</th>
                 <th>수량정보</th>
                 <th>인수금액</th>

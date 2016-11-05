@@ -86,7 +86,7 @@
 								<label for="checkbox"></label>
 							</th>
 							<th><span class="col02">배송일</span>(주문일)</th>
-							<th>주문번호(공사명)</th>
+							<th>주문번호(주문명)</th>
 							<th>주문상품정보</th>
 							<th>수량정보</th>
 							<th>비고</th>

@@ -236,7 +236,7 @@ function fnInitGrid(){
 			'주문일자',			'납품요청일',				'사업유형',				'고객유형',			'주문번호',
 			'대분류',			'중분류',				'소분류',				'상품구분',			'상품코드','상품명',
 			'규격',				'단위',					'상품담당자',				'발주차수',			'발주수량',
-			'출하차수',			'출하수량',				'인수차수',				'인수수량',			'공사명',
+			'출하차수',			'출하수량',				'인수차수',				'인수수량',			'주문명',
 			'주문상태',			'배송형태',				'구매사',				'구매사사업자등록번호','공급사',			'공급사사업자등록번호',
 			'주문자',			'인수자',				'인수자 전화번호',		'수량',				'판매단가',
 			'판매금액',			<%if(isMng == false){%>'매입단가', 				'매입금액',<%}%>		'disp_good_id',		'vendorid',
@@ -276,7 +276,7 @@ function fnInitGrid(){
 			{name:'receIdenQuan',      index:'receIdenQuan',      width:60,  align:"right",  search:false, sortable:false, editable:false,
 				sorttype:'integer', formatter:'integer', formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" }
 			},
-			{name:'consIdenName',      index:'consIdenName',      width:200, align:"left",   search:false, sortable:false, editable:false},//공사명
+			{name:'consIdenName',      index:'consIdenName',      width:200, align:"left",   search:false, sortable:false, editable:false},//주문명
 			
 			{name:'statFlagName',      index:'statFlagName',      width:70,  align:"center", search:false, sortable:false, editable:false},//주문상태
 			{name:'deliTypeClas',      index:'deliTypeClas',      width:70,  align:"center", search:false, sortable:false, editable:false},//배송형태
@@ -357,7 +357,7 @@ function fnInitGrid(){
 			srcCateId  		   : $("#srcCateId").val(),//카테고리
 			srcPrepay  		   : $("#srcPrepay").val(),//선입금여부
 			srcIsSktManage     : $("#srcIsSktManage").val(),//SKT관리여부
-			srcConsIdenName      : $("#srcConsIdenName").val()//공사명
+			srcConsIdenName      : $("#srcConsIdenName").val()//주문명
 		},
 		rowNum:30, rownumbers: false, rowList:[30,50,100,200], pager: '#pager',
 		height: <%=listHeight%>,width:<%=listWidth%>,
@@ -495,7 +495,7 @@ function fnSearch() {
 	data.srcCateId  		= $("#srcCateId").val();//카테고리
 	data.srcPrepay  		= $("#srcPrepay").val();//선입금여부
 	data.srcIsSktManage  	= $("#srcIsSktManage").val();//SKT관리여부 
-	data.srcConsIdenName  	= $("#srcConsIdenName").val();//공사명
+	data.srcConsIdenName  	= $("#srcConsIdenName").val();//주문명
 	
 	$("#list").jqGrid("setGridParam", {"page":1 , "datatype":"json"});
 	$("#list").jqGrid("setGridParam", { "postData": data });
@@ -508,7 +508,7 @@ function fnAllExcelPrintDown(){
 		'주문일자',		'납품요청일',		'사업유형',			'고객유형',			'주문번호',
 		'대분류',		'중분류',			'소분류',			'상품구분',			'상품코드',			'상품명',
 		'규격',			'총중량',			'실중량',			'재질',				'타입',				'단위',				'상품담당자',			
-		'발주차수',		'발주수량',			'출하차수',			'출하수량',			'인수차수',			'인수수량',			'공사명',
+		'발주차수',		'발주수량',			'출하차수',			'출하수량',			'인수차수',			'인수수량',			'주문명',
 		'주문상태',		'배송형태',			'송장번호/연락처',	'비고',				'구매사',			'권역',				'구매사 사업자번호',	
 		'공급사',		'공급사 사업자번호','주문자',			'인수자',			'수량',				'판매단가',
 		'판매금액',		<%if(isMng == false){%>'매입단가', 			'매입금액',<%}%>		'고객유형 담당자',	'발주일',
@@ -924,7 +924,7 @@ function fnCallBackStandardCategoryChoice(categortId , categortName , categortFu
 							<option value="0">아니오</option>
 						</select>
 					</td>				
-					<td class="table_td_subject" width="100">공사명</td>
+					<td class="table_td_subject" width="100">주문명</td>
 					<td class="table_td_contents">
 						<input id="srcConsIdenName" name="srcConsIdenName" type="text" value="" size="" maxlength="50" style="width: 100px" />
 					</td>				

@@ -772,7 +772,7 @@ function fnOrderRequest(){
     var groupid            = $("#groupId ").val();                          // 그룹 ID
     var clientid           = $("#clientId").val();                          // 법인 ID 
     var branchid           = $("#branchId").val();                          // 사업장 ID
-    var cons_iden_name     = $("#cons_iden_name").val();                    // 공사명
+    var cons_iden_name     = $("#cons_iden_name").val();                    // 주문명
     var orde_type_clas     = "40";                                          // 주문유형
     var orde_tele_numb     = '';                                            // 주문자 전화번호
     var orde_user_id       = $("#orde_user_id").val();                      // 주문자 ID
@@ -799,7 +799,7 @@ function fnOrderRequest(){
     }
     
     if($.trim(cons_iden_name) == "" ) {
-        $('#dialogSelectRow').html('<p>공사명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
+        $('#dialogSelectRow').html('<p>주문명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
         $("#dialogSelectRow").dialog({
             title:'Warning',modal:true
         });
@@ -876,7 +876,7 @@ function fnOrderRequest(){
     msg += "\n 그룹 ID        value ["+groupid             +"]"; 
     msg += "\n 법인 ID        value ["+clientid            +"]"; 
     msg += "\n 사업장 ID       value ["+branchid            +"]"; 
-    msg += "\n 공사명              value ["+cons_iden_name      +"]"; 
+    msg += "\n 주문명              value ["+cons_iden_name      +"]"; 
     msg += "\n 주문유형             value ["+orde_type_clas      +"]"; 
     msg += "\n 주문자 전화번호     value ["+orde_tele_numb      +"]"; 
     msg += "\n 주문자 ID       value ["+orde_user_id        +"]"; 
@@ -1050,7 +1050,7 @@ function vendorManual(){
                      <td colspan="6" height='1' bgcolor="eaeaea"></td>
                   </tr>
                   <tr>
-                     <td class="table_td_subject" width="100" style="white-space:nowrap">공사명</td>
+                     <td class="table_td_subject" width="100" style="white-space:nowrap">주문명</td>
                      <td class="table_td_contents" colspan="3">
                         <input id="cons_iden_name" name="cons_iden_name" type="text" value="" size="" maxlength="250" style="width: 605px;width:98%;" />
                         <input id="orde_type_clas" name="orde_type_clas" type="hidden" value="" size="" maxlength="250"/>

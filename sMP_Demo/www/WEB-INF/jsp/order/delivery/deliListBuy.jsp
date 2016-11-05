@@ -440,7 +440,7 @@ function fnDeliInfoTrace(seq){
 								
 						</tr>
 						<tr>
-							<th>공사명</th>
+							<th>주문명</th>
 							<td> <input id="srcConsIdenName" name="srcConsIdenName" type="text" style="width:300px;" value=""/> </td>
 							<th>주문상태</th>
 							<td>
@@ -476,7 +476,7 @@ function fnDeliInfoTrace(seq){
 								<col width="90px" />
 							</colgroup>
 							<tr>
-								<th rowspan="2" class="br_l0">주문정보<br/>(공사명)</th>
+								<th rowspan="2" class="br_l0">주문정보<br/>(주문명)</th>
 								<th rowspan="2">주문 상품 정보</th>
 								<th rowspan="2">수량<br />(단가) <br />주문금액</th>
 								<th rowspan="2">납품예정일</th>

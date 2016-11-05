@@ -611,7 +611,7 @@ function fnOrderRequMasterUpdate(num){
 			$("#cons_iden_name").focus();
 			return;
 		}
-		if(confirm("공사명을 수정하시겠습니까?")){
+		if(confirm("주문명을 수정하시겠습니까?")){
 			$.post(
 				"<%=Constances.SYSTEM_CONTEXT_PATH %>/order/orderRequest/OrderRequestUpdateTransGrid.sys", 
 				{   
@@ -620,7 +620,7 @@ function fnOrderRequMasterUpdate(num){
 				},
 				function(arg){ 
 					if(fnAjaxTransResult(arg)) {	//성공시
-						alert("공사명이 수정 되었습니다.");
+						alert("주문명이 수정 되었습니다.");
 						refreshThisPage();
 					}
 				}
@@ -1176,7 +1176,7 @@ function orderChangeInfoSave(){
 							<td colspan="6" height='1' bgcolor="eaeaea"></td>
 						</tr>
 						<tr>
-							<td class="table_td_subject" width="100">공사명</td>
+							<td class="table_td_subject" width="100">주문명</td>
 							<td class="table_td_contents">
 <%
 	if(isVen){
@@ -1501,7 +1501,7 @@ function orderChangeInfoSave(){
 	<p>처리할 데이터를 선택 하십시오!</p>
 </div>
 <div id="dialogWriteConsIdenName" title="Warning" style="display:none;font-size: 12px;color: red;">
-   <p>공사명을 입력해주십시오.</p>
+   <p>주문명을 입력해주십시오.</p>
 </div>
 <div id="dialogWriteTranDataAddr" title="Warning" style="display:none;font-size: 12px;color: red;">
    <p>물품도착지를 입력해주십시오.</p>

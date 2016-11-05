@@ -49,7 +49,7 @@ jq(function() {
 		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/order/purchase/purchaseResultListJQGridForPop.sys', 
 		datatype: 'json',
 		mtype: 'POST',
-		colNames:['발주일','납품요청일','고객유형','주문번호','상품명','규격','대표규격','발주차수','출하차수','인수차수','정산번호','공사명','주문유형','주문상태','고객사','공급사','주문자','인수자','인수자 전화번호','발주수량','단가','금액','취소사유'],
+		colNames:['발주일','납품요청일','고객유형','주문번호','상품명','규격','대표규격','발주차수','출하차수','인수차수','정산번호','주문명','주문유형','주문상태','고객사','공급사','주문자','인수자','인수자 전화번호','발주수량','단가','금액','취소사유'],
 		colModel:[
 			{name:'clin_date',index:'clin_date', width:100,align:"center",search:false,sortable:true, editable:false },
             {name:'requ_deli_date',index:'requ_deli_date', width:80,align:"center",search:false,sortable:true, editable:false },
@@ -152,7 +152,7 @@ function fnSearch(){
 }
 /** list Excel Export */
 function exportExcel() {
-	var colLabels = ['발주일','납품요청일','고객유형','주문번호','상품명','규격','발주차수','출하차수','인수차수','정산번호','공사명','주문유형','주문상태','고객사','공급사','주문자','인수자','인수자 전화번호','발주수량','단가','금액','취소사유'];
+	var colLabels = ['발주일','납품요청일','고객유형','주문번호','상품명','규격','발주차수','출하차수','인수차수','정산번호','주문명','주문유형','주문상태','고객사','공급사','주문자','인수자','인수자 전화번호','발주수량','단가','금액','취소사유'];
 	var colIds = ['clin_date', 'requ_deli_date', 'worknm', 'orde_iden_numb', 'good_name', 'good_spec_desc', 'purc_iden_numb', 'deli_iden_numb', 'rece_iden_numb', 'buyi_sequ_numb', 'cons_iden_name', 'orde_type_clas', 'stat_falg', 'branchnm', 'vendornm', 'orde_user_id', 'tran_user_name', 'tran_tele_numb', 'purc_requ_quan', 'sale_unit_pric', 'tot_sale_unit_pric', 'cancel_reason'];
 	var numColIds = ['purc_requ_quan','sale_unit_pric','tot_sale_unit_pric'];	
 	var sheetTitle = "발주이력";	

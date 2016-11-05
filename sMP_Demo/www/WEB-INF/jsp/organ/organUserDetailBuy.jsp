@@ -29,27 +29,33 @@ $(document).ready(function() {
 	//전화번호 형식으로
 	$("#tel").val(  fnSetTelformat($("#tel").val()) );
 	$("#mobile").val( fnSetTelformat($("#mobile").val()) );
-	
-   $("#srcUserNm").keydown(function(e){
-      if(e.keyCode==13) {
-         $("#srcButton").click();
-      }
-   });
-
-   $("#saveButton").click(function(){
-      fnApply();
-   });   
-	$("#isDirect").change(function(){
-		if( $("#isDirect").val() == 'Y' ){
-			$("#mngUserAddButton").show();
-			$("#mngUserDelButton").show();
-		}else{
-			$("#mngUserAddButton").hide();
-			$("#mngUserDelButton").hide();
+	$("#srcUserNm").keydown(function(e){
+		if(e.keyCode==13) {
+			$("#srcButton").click();
 		}
-	})
-});
+	});
 
+	$("#saveButton").click(function(){
+		fnApply();
+	});
+	//주문결제사용여부
+	$("#isOrderApproval").change(function() {
+		if($(this).val()=="0") {
+			$.post(
+				"/organ/selectBranchApprovalOrderCnt/branchApprovalOrderCnt/object.sys", 
+				{ branchId:'<%=userDto.getBorgId() %>',userId:'<%=userDto.getUserId() %>' },
+				function(arg){
+					var result = eval('(' + arg + ')').branchApprovalOrderCnt;
+					var orderCnt = $.number(orderCnt);
+					if(orderCnt!=0) {
+						alert("주문승인중 상태의 주문이 존재합니다.\n주문결제 사용을 미사용 하기 위해서는 모든승인이 완료되어야 합니다.");
+						$("#isOrderApproval").val("1");
+					}
+				}
+			);
+		}
+	});
+});
 </script>
 
 
@@ -135,259 +141,139 @@ function fnIsValidation(){
 	var mobile = $.trim($("#mobile").val());
 	var eMail = $.trim($("#eMail").val());
 	var isUse = $.trim($("#isUse").val());
-	var roleCnt = $("#list").getGridParam('reccount');
 	
-	 if(userNm == ""){
-		 $("#dialog").html("<font size='2'>성명을 입력해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }	
+	if(userNm == ""){
+		$("#dialog").html("<font size='2'>성명을 입력해주세요.</font>");
+		$("#dialog").dialog({
+			title: 'Success',modal: true,
+			buttons: {"Ok": function(){$(this).dialog("close");} }
+		});			 
+		return false;
+	}
 	
 	if(loginId == ""){
-		 $("#dialog").html("<font size='2'>로그인ID를 입력해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }
+		$("#dialog").html("<font size='2'>로그인ID를 입력해주세요.</font>");
+		$("#dialog").dialog({
+			title: 'Success',modal: true,
+			buttons: {"Ok": function(){$(this).dialog("close");} }
+		});			 
+		return false;
+	}
 
-	 if(pwd == ""){
-		 $("#dialog").html("<font size='2'>비밀번호를 입력해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }
+	if(pwd == ""){
+		$("#dialog").html("<font size='2'>비밀번호를 입력해주세요.</font>");
+		$("#dialog").dialog({
+			title: 'Success',modal: true,
+			buttons: {"Ok": function(){$(this).dialog("close");} }
+		});			 
+		return false;
+	}
 
-	 if(pwdConfirm == ""){
-		 $("#dialog").html("<font size='2'>비밀번호확인을 입력해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }else{
-		 if(pwd != pwdConfirm){
-	 		 $("#dialog").html("<font size='2'>입력하신 비밀번호가 다릅니다. \n다시확인해주세요.</font>");
-			 $("#dialog").dialog({
-				 title: 'Success',modal: true,
-				 buttons: {"Ok": function(){$(this).dialog("close");} }
-			 });						 
-			 
-			 return false;
-		 }
-	 }
+	if(pwdConfirm == ""){
+		$("#dialog").html("<font size='2'>비밀번호확인을 입력해주세요.</font>");
+		$("#dialog").dialog({
+			title: 'Success',modal: true,
+			buttons: {"Ok": function(){$(this).dialog("close");} }
+		});			 
+		return false;
+	}else{
+		if(pwd != pwdConfirm){
+	 		$("#dialog").html("<font size='2'>입력하신 비밀번호가 다릅니다. \n다시확인해주세요.</font>");
+			$("#dialog").dialog({
+				title: 'Success',modal: true,
+				buttons: {"Ok": function(){$(this).dialog("close");} }
+			});						 
+			
+			return false;
+		}
+	}
 
-	 if(tel == ""){
-		 $("#dialog").html("<font size='2'>전화번호를 입력해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }
+	if(tel == ""){
+		$("#dialog").html("<font size='2'>전화번호를 입력해주세요.</font>");
+		$("#dialog").dialog({
+			title: 'Success',modal: true,
+			buttons: {"Ok": function(){$(this).dialog("close");} }
+		});			 
+		return false;
+	}
 
-	 if(mobile == ""){
-		 $("#dialog").html("<font size='2'>이동전화번호를 입력해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }
+	if(mobile == ""){
+		$("#dialog").html("<font size='2'>이동전화번호를 입력해주세요.</font>");
+		$("#dialog").dialog({
+			title: 'Success',modal: true,
+			buttons: {"Ok": function(){$(this).dialog("close");} }
+		});			 
+		return false;
+	}
 	 
-	 if(eMail == ""){
-		 $("#dialog").html("<font size='2'>E-MAIL을 입력해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }else{
-		 email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
-		 if(!email_regex.test(eMail)){
-	 		 $("#dialog").html("<font size='2'>E-MAIL 유형을 확인해주세요.</font>");
-			 $("#dialog").dialog({
-				 title: 'Success',modal: true,
-				 buttons: {"Ok": function(){$(this).dialog("close");} }
-			 });				 
-		 	 return false; 
-		 }
-	 }		
+	if(eMail == ""){
+		$("#dialog").html("<font size='2'>E-MAIL을 입력해주세요.</font>");
+		$("#dialog").dialog({
+			title: 'Success',modal: true,
+			buttons: {"Ok": function(){$(this).dialog("close");} }
+		});			 
+		return false;
+	}else{
+		email_regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
+		if(!email_regex.test(eMail)){
+			$("#dialog").html("<font size='2'>E-MAIL 유형을 확인해주세요.</font>");
+			$("#dialog").dialog({
+				title: 'Success',modal: true,
+				buttons: {"Ok": function(){$(this).dialog("close");} }
+			});				 
+			return false; 
+		}
+	}		
 
-	 if(isUse == ""){
-		 $("#dialog").html("<font size='2'>상태를 선택해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }	 
-	 
-	 
-	 var isDirect  = $.trim($("#isDirect").val());
-	 var directCnt = $("#list2").getGridParam('reccount');
-	 if(isDirect == "Y" && directCnt == 0){
-		 $("#dialog").html("<font size='2'>감독관리사용자를 설정해주세요.</font>");
-		 $("#dialog").dialog({
-			 title: 'Success',modal: true,
-			 buttons: {"Ok": function(){$(this).dialog("close");} }
-		 });			 
-		 return false;
-	 }	 
-	 
+	if(isUse == ""){
+		$("#dialog").html("<font size='2'>상태를 선택해주세요.</font>");
+		$("#dialog").dialog({
+			title: 'Success',modal: true,
+			buttons: {"Ok": function(){$(this).dialog("close");} }
+		});			 
+		return false;
+	}
 	return true;
 }
 
 function fnApply(){
 	var isValidation = fnIsValidation();
 	if(isValidation == true){
-		var isDirect  = $.trim($("#isDirect").val());
-		var directCnt = $("#list2").getGridParam('reccount');
-		if(isDirect == "N" && directCnt > 0){
-			if(!confirm("승인여부가 [아니요]로 변경되었습니다.\n해당사용자의 감독관리사용자가 모두 삭제됩니다.\n진행하시겠습니까?")) return;
-		}
 		if(!confirm("수정한 내용을 저장하시겠습니까?")) return;
-	    $.post(
- 	      "<%=Constances.SYSTEM_CONTEXT_PATH %>/organ/saveUserDetail.sys", 
- 	      { 	
- 	    	 oper:"upd", 
- 	         userId:$.trim($("#userId").val()),
- 	         userNm:$.trim($("#userNm").val()),
- 	         loginId:$.trim($("#loginId").val()),
- 	         borgId:'<%=borgId%>',
- 	         pwd:$.trim($("#pwd").val()),
- 	         tel:$.trim($("#tel").val()),
- 	         mobile:$.trim($("#mobile").val()),
- 	         eMail:$.trim($("#eMail").val()),
- 	         isUse:$.trim($("#isUse").val()),
- 	         endCauseDesc:$.trim($("#endCauseDesc").val()),
- 	         userNote:$.trim($("#userNote").val()),
- 	         isEmail:$.trim($("#isEmail").val()),
- 	         isSms:$.trim($("#isSms").val()),
- 	         emailByPurchase:$.trim($("#emailByPurchase").val()),
- 	         emailByDelivery:$.trim($("#emailByDelivery").val()),
- 	         emailByRegisterGood:$.trim($("#emailByRegisterGood").val()),
- 	         smsByPurchase:$.trim($("#smsByPurchase").val()),
- 	         smsByDelivery:$.trim($("#smsByDelivery").val()),
- 	         smsByRegisterGood:$.trim($("#smsByRegisterGood").val()),
- 	         isDirect:isDirect,
- 	         isDefaultBorgs:$.trim($("#isDefaultBorgs").val())
- 	      },
- 	      function(arg){
- 	         if(fnAjaxTransResult(arg)) {
- 	        	if("display:none;"!="<%=CommonUtils.getDisplayRoleButton(roleList, "COMM_SAVE")%>") {
-// 					var opener = window.dialogArguments;
-					try {
-						window.opener.fnSearch();	
-					} catch (e) {
-						window.close();
-					}
-            	}
-				window.close();
- 	         }
- 	      }
- 	   ); 		
+		$.post(
+			"<%=Constances.SYSTEM_CONTEXT_PATH %>/organ/saveUserDetail.sys", 
+			{	
+				oper:"upd", 
+				userId:$.trim($("#userId").val()),
+				userNm:$.trim($("#userNm").val()),
+				loginId:$.trim($("#loginId").val()),
+				borgId:'<%=borgId%>',
+				pwd:$.trim($("#pwd").val()),
+				tel:$.trim($("#tel").val()),
+				mobile:$.trim($("#mobile").val()),
+				eMail:$.trim($("#eMail").val()),
+				isUse:$.trim($("#isUse").val()),
+				endCauseDesc:$.trim($("#endCauseDesc").val()),
+				userNote:$.trim($("#userNote").val()),
+				isEmail:$.trim($("#isEmail").val()),
+				isSms:$.trim($("#isSms").val()),
+				emailByPurchase:$.trim($("#emailByPurchase").val()),
+				emailByDelivery:$.trim($("#emailByDelivery").val()),
+				emailByRegisterGood:$.trim($("#emailByRegisterGood").val()),
+				smsByPurchase:$.trim($("#smsByPurchase").val()),
+				smsByDelivery:$.trim($("#smsByDelivery").val()),
+				smsByRegisterGood:$.trim($("#smsByRegisterGood").val()),
+				isOrderApproval:$("#isOrderApproval").val(),
+				isDefaultBorgs:$.trim($("#isDefaultBorgs").val())
+			},
+			function(arg){
+				if(fnAjaxTransResult(arg)) {
+				}
+			}
+		);
 	}
 }
-
 </script>
-<script type="text/javascript">
-$(document).ready(function(){
-	jq("#list2").jqGrid({
-  		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/organ/selectSmpDirectInfoList.sys',
-    	datatype: 'json',
-      	mtype: 'POST',
-      	colNames:['userId', '로그인ID', '사용자명'],
-      	colModel:[
-         	{name:'userId',index:'userId', width:200,align:"left",search:false,sortable:true, editable:false, hidden:true },
-         	{name:'loginId',index:'loginId', width:80,align:"center",search:false,sortable:true, editable:false , hidden:false},
-         	{name:'userNm',index:'userNm', width:180,align:"left",search:false,sortable:true, editable:false , hidden:false}
-      	],
-      	postData: {borgId:'<%=borgId%>', userId:'<%=userDto.getUserId()%>'},
-      	height: 80, autowidth: true,
-      	sortname: 'isDefault', sortorder: "desc",
-      	viewrecords:true, emptyrecords:'Empty records', loadonce: false, shrinkToFit:false, //해당라인은 그리드 공통으로 들어가면 될거 같음(그냥 갖다 붙이 삼..)
-      	loadComplete: function() {},
-      	onSelectRow: function (rowid, iRow, iCol, e) {},
-      	ondblClickRow: function (rowid, iRow, iCol, e) {
-        	<%-- // 추후 개발시 참조. CommonUtils.isDisplayRole(roleList, "COMM_READ","viewRow();")--%>
-      	},
-      	onCellSelect: function(rowid, iCol, cellcontent, target){},
-      	loadError : function(xhr, st, str){ $("#list2").html(xhr.responseText); },
-      	jsonReader : {root: "list",page: "page",total: "total",records: "records",repeatitems: false,cell: "cell"}
-   	});       
-});
-</script>
-
-<%
-/**------------------------------------사용자팝업(멀티셀렉트) 사용방법---------------------------------
-* fnJqmUserInitSearch(userNm, loginId, svcTypeCd, callbackString, branchId) 을 호출하여 Div팝업을 Display ===
-* userNm : 찾고자하는 사용자명
-* loginId : 찾고자하는 사용자 Login Id
-* svcTypeCd : 찾는사용자의 서비스코드("BUY":고객사, "VEN":공급사, "ADM":운영자)
-* callbackString : 콜백함수(문자열), 콜백함수파라메타는 6개(사용자일련번호, 조직일련번호, 서비스유형명, 사용자명, 로그인아이디, 조직명) 
-*/
-%>
-<%@ include file="/WEB-INF/jsp/common/directMngUserListDiv.jsp" %>
-<!-- 사용자검색 관련 스크립트 -->
-<script type="text/javascript">
-$(function(){
-   	$("#mngUserAddButton").click(function(){
-      	fnJqmUserInitSearch("", "", "BUY", "fnDirectUserCallBack", '<%=borgId%>', "", '<%=userDto.getUserId()%>');
-   	});
-   	$("#mngUserDelButton").click(function(){
-		var id = $("#list2").jqGrid('getGridParam', "selrow" );
-		var selrowContent = jq("#list2").jqGrid('getRowData',id);
-       	if(id == null){
-			alert("삭제할 항목을 선택해주세요.");
-			return;
-        }
-       	
-       	$.post(
-    		'<%=Constances.SYSTEM_CONTEXT_PATH %>/organ/saveSmpDirectInfo.sys',
-   			{oper:'del', userId:selrowContent.userId, borgId:'<%=borgId%>', directorId:'<%=userDto.getUserId()%>'},
-   		   	function(arg){
-   		    	var result = eval('(' + arg + ')').customResponse;
-   		    	if (result.success == false) {
-   		    		var errors = "";
-   		    		for (var i = 0; i < result.message.length; i++) { errors +=  result.message[i]; }
-   		       		alert(errors);
-   		      	} else {
-   		        	$("#list2").trigger("reloadGrid");  
-   		      	}
-   		   	}
-   		);       	
-	});
-});
-/**
- * 사용자검색 Callback Function
- */
-function fnDirectUserCallBack(loginIdArr, userIdArr, userNmArr) {
-	$.post(
-	'<%=Constances.SYSTEM_CONTEXT_PATH %>/organ/saveSmpDirectInfo.sys',
-		{oper:'add', userIdArr:userIdArr, borgId:'<%=borgId%>', directorId:'<%=userDto.getUserId()%>'},
-   		function(arg){
-      		var result = eval('(' + arg + ')').customResponse;
-      		if (result.success == false) {
-         		var errors = "";
-         		for (var i = 0; i < result.message.length; i++) { errors +=  result.message[i]; }
-         		alert(errors);
-      		} else {
-         		$("#list2").trigger("reloadGrid");  
-      		}
-   		}
-	);
-}
-</script>
-<% //------------------------------------------------------------------------------ %>
-
-
 </head>
 <body>
 <form id="frm" name="frm" onsubmit="return false;">
@@ -460,7 +346,6 @@ function fnDirectUserCallBack(loginIdArr, userIdArr, userNmArr) {
 						비밀번호
 						<button class="btn btn-darkgray btn-xs" onClick="window.open('/findPw.jsp','findPw','width=415, height=250')">SMS전송</button>
 					</td>
-<!--                	<td class="table_td_subject9" width="100">비밀번호</td> -->
 					<td class="table_td_contents">
 						<input id="pwd" name="pwd" type="password" value="<%=userDto.getPwd() %>" size="20" maxlength="30" style="ime-mode: disabled;"/>
 					</td>
@@ -507,11 +392,13 @@ function fnDirectUserCallBack(loginIdArr, userIdArr, userNmArr) {
 							<option value="0" <%=userDto.getIsUse().equals("0") ? "selected" : "" %>>종료</option>
 						</select>
 					</td>
-					<td class="table_td_subject" style="background-color:darkgray;">감독여부</td>
+					<td class="table_td_subject9">주문결재자 여부</td>
 					<td class="table_td_contents">
-						<select class="select" id="isDirect" name="isDirect" onchange="javaScript:fnDirectChange();" >
-							<option value="N" <%=userDto.getIsDirect().equals("N") ? "selected" : "" %>>아니요</option>
-							<option value="Y" <%=userDto.getIsDirect().equals("Y") ? "selected" : "" %>>예</option>
+						<select class="select" id="isOrderApproval" name="isOrderApproval">
+							<option value="0">아니요</option>
+<%	if("1".equals(userDto.getIsBranchOrderApproval())) {	//사업장의 주문결재여부가 [예] 인경우	%>
+							<option value="1" <%=("1".equals(userDto.getIsOrderApproval())) ? "selected" : "" %> >예</option>
+<%	} %>
 						</select>
 					</td>
 				</tr>
@@ -636,48 +523,13 @@ function fnDirectUserCallBack(loginIdArr, userIdArr, userNmArr) {
 			<button id='closeButton' class="btn btn-default btn-sm" onclick="javaScript:window.close();"><i class="fa fa-times"></i> 닫기</button>
 		</td>
 	</tr>
-	<tr>
-		<td colspan="3">&nbsp;</td>
-	</tr>
-	 <tr>
-         	<td colspan="3">
-         	<!-- 타이틀 시작 -->
-               <table width="100%" border="0" cellpadding="0" cellspacing="0" style="height: 27px;">
-                  <tr>
-                     <td width="20" valign="top">
-                        <img src="/img/system/bullet_stitle_blue.gif" width="5" height="5" class="bullet_stitle" />
-                     </td>
-                     <td class="stitle">감독관리사용자</td>
-                     <td width="50" class="stitle" style="vertical-align: middle;">
-                        <a href="#">
-                           <img id="mngUserAddButton" name="mngUserAddButton" src="/img/system/btn_icon_plus.gif" width="20" height="18" style="border: 0px; vertical-align: middle; display:<%=userDto.getIsDirect().equals("Y") ? "" : "none" %>;"/> 
-                        </a>
-                        <a href="#">
-                           <img id="mngUserDelButton" name="mngUserDelButton" src="/img/system/btn_icon_minus.gif" width="20" height="18" style="border: 0px; vertical-align: middle;display:<%=userDto.getIsDirect().equals("Y") ? "" : "none" %>;"/>
-                        </a>
-                     </td>
-                  </tr>
-               </table>
-         	</td>
-         </tr>
-         <tr>
-         	<td colspan="3">
-         	   <div id="jqgrid">
-                     <table id="list2"></table>
-               </div>
-         	</td>
-         </tr>
-	<tr>
-		<td>&nbsp;</td>
-	</tr>
-	
 </table>
-      <div id="dialog" title="Feature not supported" style="display:none;">
-         <p>That feature is not supported.</p>
-      </div>      
-      <div id="dialogSelectRow" title="Warning" style="display: none; font-size: 12px; color: red;">
-         <p>처리할 데이터를 선택 하십시오!</p>
-      </div>
-   </form>
+<div id="dialog" title="Feature not supported" style="display:none;">
+	<p>That feature is not supported.</p>
+</div>      
+<div id="dialogSelectRow" title="Warning" style="display: none; font-size: 12px; color: red;">
+	<p>처리할 데이터를 선택 하십시오!</p>
+</div>
+</form>
 </body>
 </html>

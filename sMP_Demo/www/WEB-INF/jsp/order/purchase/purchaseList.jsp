@@ -185,7 +185,7 @@ jq(function() {
 		datatype: 'local',
 		mtype: 'POST',
 		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />", '주문일자', '납품요청일','납품예정일','발주의뢰일','주문유형', '고객유형', '주문번호'
-		, '상품명', '상품규격',  '발주수량', '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처','대표번호', '단가','발주 총금액' ,'비고','공사명', '첨부1','첨부2','첨부3', '공급사명', 'orde_type_clas_code', 'disp_good_id', 'good_iden_numb','vendorid', 'path1', 'path2', 'path3','good_st_spec_desc','공급사 대표번호','주문자 전화번호','branchId', '발주차수'],
+		, '상품명', '상품규격',  '발주수량', '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처','대표번호', '단가','발주 총금액' ,'비고','주문명', '첨부1','첨부2','첨부3', '공급사명', 'orde_type_clas_code', 'disp_good_id', 'good_iden_numb','vendorid', 'path1', 'path2', 'path3','good_st_spec_desc','공급사 대표번호','주문자 전화번호','branchId', '발주차수'],
 		colModel:[
 			{name:'isCheck',index:'isCheck', width:30,align:"center",search:false,sortable:false,editable:false, formoptions:{rowpos:1,elmprefix:"&nbsp;&nbsp;&nbsp;&nbsp;"},formatter:checkboxFormatter},
 			{name:'regi_date_time',index:'regi_date_time', width:70,align:"center",search:false,sortable:true, editable:false },//주문일자
@@ -229,7 +229,7 @@ jq(function() {
 			{name:'total_sale_unit_pric',index:'total_sale_unit_pric', width:80,align:"right",search:false,sortable:true, editable:false ,sorttype:'integer',formatter:'integer',
 				formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" }},//금액
 			{name:'adde_text_desc',index:'adde_text_desc', width:150,align:"left",search:false,sortable:true, editable:false },
-			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:true, editable:false },//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:true, editable:false },//주문명
 			{name:'attach_file_name1',index:'attach_file_name1', width:60,align:"left",search:false,sortable:true, editable:false },
 			{name:'attach_file_name2',index:'attach_file_name2', width:60,align:"left",search:false,sortable:true, editable:false },
 			{name:'attach_file_name3',index:'attach_file_name3', width:60,align:"left",search:false,sortable:true, editable:false },
@@ -605,7 +605,7 @@ function processPurcReject_cancel(){}
 
 /** 일괄 엑셀 다운로드 function*/
 function fnAllExcelPrint(){
-	var colLabels = ['주문일자', '납품요청일','발주의뢰일','주문유형', '주문번호', '발주차수', '상품명', '상품규격',  '발주수량', '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처', '대표번호', '단가','발주 총금액' , '비고','공사명', '공급사명','공급사 대표번호','주문자 전화번호'];  	
+	var colLabels = ['주문일자', '납품요청일','발주의뢰일','주문유형', '주문번호', '발주차수', '상품명', '상품규격',  '발주수량', '배송처주소', '구매사', '주문자명', '인수자명', '인수자 연락처', '대표번호', '단가','발주 총금액' , '비고','주문명', '공급사명','공급사 대표번호','주문자 전화번호'];  	
 	var colIds = ['REGI_DATE_TIME', 'REQU_DELI_DATE', 'CLIN_DATE', 'ORDE_TYPE_CLAS', 'ORDE_IDEN_NUMB', 'PURC_IDEN_NUMB', 'GOOD_NAME', 'GOOD_SPEC_DESC', 'PURC_REQU_QUAN', 'TRAN_DATA_ADDR', 'ORDE_CLIENT_NAME', 'ORDE_USER_NAME', 'TRAN_USER_NAME', 'TRAN_TELE_NUMB', 'PHONENUM', 'SALE_UNIT_PRIC','TOTAL_SALE_UNIT_PRIC','ADDE_TEXT_DESC','CONS_IDEN_NAME', 'VENDORNM','VENDORPHONENUM','ORDERUSERMOBILE'];
 	var numColIds = ['PURC_REQU_QUAN','SALE_UNIT_PRIC','TOTAL_SALE_UNIT_PRIC'];	
 	var figureColIds = ['PURC_IDEN_NUMB'];

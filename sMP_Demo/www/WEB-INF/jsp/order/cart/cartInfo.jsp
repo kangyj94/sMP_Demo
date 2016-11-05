@@ -609,9 +609,9 @@ function fnDeleteTransaction(rowIdx) {
 
 // 장바구니 마스터 정보를 변경한다. 
 function fnUpdateCartMstInfo() {
-	var cons_iden_name = $("#cons_iden_name").val();// 공사명
+	var cons_iden_name = $("#cons_iden_name").val();// 주문명
 	if($.trim(cons_iden_name) == "" ) {
-		$('#dialogSelectRow').html('<p>공사명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
+		$('#dialogSelectRow').html('<p>주문명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
 		$("#dialogSelectRow").dialog({
 			title:'Warning',modal:true
 		});
@@ -620,7 +620,7 @@ function fnUpdateCartMstInfo() {
 	}else{
 		var consIdenName_regex = /([!@#$%^&''""])/;
 		if(consIdenName_regex.test(cons_iden_name)){
-			$("#dialog").html("<font size='2'>공사명에 특수문자[!@#$%^&'"+'"'+"]를 \n제거해 주세요.</font>");
+			$("#dialog").html("<font size='2'>주문명에 특수문자[!@#$%^&'"+'"'+"]를 \n제거해 주세요.</font>");
 			$("#dialog").dialog({
 				title: 'Success',modal: true,
 				buttons: {"Ok": function(){$(this).dialog("close");} }
@@ -643,7 +643,7 @@ function fnUpdateCartMstInfo() {
 		} 
 	}
 	params = {
-					comp_iden_name:$('#cons_iden_name').val()           // 공사명 
+					comp_iden_name:$('#cons_iden_name').val()           // 주문명 
 				,	orde_type_clas:$('#orde_type_clas').val()           // 주문유형
 				,	tran_deta_addr_seq:$('#tran_deta_addr_seq').val()   // 배송지주소
 				,	tran_user_name:$('#tran_user_name').val()           // 인수자
@@ -796,7 +796,7 @@ function fnOrderRequest(){
 	var groupid              = '<%=loginUserDto.getGroupId()%>';              // 그룹 ID
 	var clientid             = '<%=loginUserDto.getClientId()%>';             // 법인 ID 
 	var branchid             = '<%=loginUserDto.getBorgId()%>';               // 사업장 ID
-	var cons_iden_name       = $("#cons_iden_name").val();                    // 공사명
+	var cons_iden_name       = $("#cons_iden_name").val();                    // 주문명
 	var orde_type_clas       = "10";                                          // 주문유형
 	var orde_tele_numb       = $("#orde_tele_numb").val();                    // 주문자 전화번호
 	var orde_user_id         = $("#orde_user_id").val();                      // 주문자 ID
@@ -814,7 +814,7 @@ function fnOrderRequest(){
 	var good_name_array      = new Array();                                   // 상품명
 	
 	if($.trim(cons_iden_name) == "" ) {
-		$('#dialogSelectRow').html('<p>공사명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
+		$('#dialogSelectRow').html('<p>주문명은 필수 입니다. 확인후 이용하시기 바랍니다.</p>');
 		$("#dialogSelectRow").dialog({
 			title:'Warning',modal:true
 		});
@@ -823,7 +823,7 @@ function fnOrderRequest(){
 	}else{
 		consIdenName_regex = /[!@#$%^&]/;
 		if(consIdenName_regex.test(cons_iden_name)){
-			$("#dialog").html("<font size='2'>공사명에 특수문자[!@#$%^&']를 \n제거해 주세요.</font>");
+			$("#dialog").html("<font size='2'>주문명에 특수문자[!@#$%^&']를 \n제거해 주세요.</font>");
 			$("#dialog").dialog({
 				title: 'Success',modal: true,
 				buttons: {"Ok": function(){$(this).dialog("close");} }
@@ -1130,7 +1130,7 @@ function branchManual(){
 						<td colspan="6" height='1' bgcolor="eaeaea"></td>
 					</tr>
 					<tr>
-						<td class="table_td_subject" width="100" style="white-space:nowrap">공사명 (주문명)</td>
+						<td class="table_td_subject" width="100" style="white-space:nowrap">주문명 (주문명)</td>
 						<td class="table_td_contents" colspan="3">
 							<input id="cons_iden_name" name="cons_iden_name" type="text" value="<%= cartInfoDto.getComp_iden_name() %>" size="" maxlength="250" style="width: 605px;width:98%;" />
 							<input id="orde_type_clas" name="orde_type_clas" type="hidden" value="<%= cartInfoDto.getOrde_type_clas() %>" size="" maxlength="250"/>

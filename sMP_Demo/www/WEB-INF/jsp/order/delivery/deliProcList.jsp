@@ -277,7 +277,7 @@ jq(function() {
 		          "<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자', '납품요청일','발주접수일','주문유형','고객유형', '주문번호'
 		          , '상품명', '상품규격',
 		          '발주수량', '배송된수량', '배송할수량', '택배사', '송장(전화)번호', 'tempDeliType', 'tempInvoNumb', '배송처주소', '구매사', '주문자명',
-		          '인수자명', '인수자 연락처', '단가','발주 총금액', '발주일','비고' ,'공사명','첨부1','첨부2','첨부3',
+		          '인수자명', '인수자 연락처', '단가','발주 총금액', '발주일','비고' ,'주문명','첨부1','첨부2','첨부3',
 		          '공급사명', 'vendorId', 'branchId','disp_good_id' , 'good_iden_numb', 'path1', 'path2', 'path3','good_st_spec_desc','is_add', '발주차수'
 		         ],
 		colModel:[
@@ -390,7 +390,7 @@ jq(function() {
 				formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" }},//금액
 			{name:'clin_date',index:'clin_date', width:70,align:"center",search:false,sortable:false, editable:false },
 			{name:'adde_text_desc',index:'adde_text_desc', width:150,align:"left",search:false,sortable:false, editable:false },
-			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:false, editable:false },//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:false, editable:false },//주문명
 			{name:'attach_file_name1',index:'attach_file_name1', width:60,align:"left",search:false,sortable:false, editable:false },
 			{name:'attach_file_name2',index:'attach_file_name2', width:60,align:"left",search:false,sortable:false, editable:false },
 			{name:'attach_file_name3',index:'attach_file_name3', width:60,align:"left",search:false,sortable:false, editable:false },
@@ -787,7 +787,7 @@ function regi_deli_nums(){
 function fnDeliInfoExcel(){
 	var colLabels = [ '주문일자' , '납품요청일' ,'발주접수일' ,'주문유형' ,'고객유형' , '주문번호' , '발주차수' , '상품명' , '상품규격' , '발주수량' 
 	                  , '배송된수량' , '배송처주소' , '구매사' , '주문자명' , '인수자명' , '인수자 연락처' , '단가' ,'발주 총금액' , '발주일' ,'비고' 
-	                  ,'공사명'  , '공급사명' ];
+	                  ,'주문명'  , '공급사명' ];
 	var colIds = [    'REGI_DATE_TIME' ,'REQU_DELI_DATE' ,'PURC_RECE_DATE' ,'ORDE_TYPE_CLAS' ,'WORKNM' ,'ORDE_IDEN_NUMB' ,'PURC_IDEN_NUMB' ,'GOOD_NAME' ,'GOOD_SPEC_DESC' ,'PURC_REQU_QUAN' 
 	                  ,'DELI_PROD_QUAN' ,'TRAN_DATA_ADDR' ,'ORDE_CLIENT_NAME' ,'ORDE_USER_NAME' ,'TRAN_USER_NAME' ,'TRAN_TELE_NUMB' ,'SALE_UNIT_PRIC' ,'TOTAL_SALE_UNIT_PRIC' ,'CLIN_DATE' ,'ADDE_TEXT_DESC' 
 	                  ,'CONS_IDEN_NAME' , 'VENDORNM' ];

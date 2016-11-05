@@ -173,7 +173,7 @@ jq(function() {
 		url:'<%=Constances.SYSTEM_CONTEXT_PATH%>/order/delivery/deliCompleteListJQGrid.sys', 
 		datatype: 'json',
 		mtype: 'POST',
-		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자','납품요청일','주문유형', '고객유형','주문번호', '발주차수', '납품차수', '인수증번호', '상품명', '상품규격', '배송상태',   '출하일','발주수량', '출하수량', '배송유형', '송장(전화)번호', '배송처주소', '주문상태','구매사', '주문자', '인수자', '인수자 연락처', '단가','금액', '발주일', '비고','공사명','첨부1','첨부2','첨부3', '인수완료일시', '공급사'<%if(isShow){ %>, '인수증 파일','인수증 업로드','receipt_img_file', 'receipt_img_file_path'<%} %>, 'disp_good_id', 'good_iden_numb','vendorId', 'tempDeliType', 'tempInvoNumb', 'deli_type_clas_code', 'path1', 'path2', 'path3','good_st_spec_desc','branchId' ], //, 'tempExcelDeliType', 'tempExcelDeliInvoNumb'
+		colNames:["<input id='chkAllOutputField' type='checkbox' style='border:0px;' onclick='checkBox(event)' />",'주문일자','납품요청일','주문유형', '고객유형','주문번호', '발주차수', '납품차수', '인수증번호', '상품명', '상품규격', '배송상태',   '출하일','발주수량', '출하수량', '배송유형', '송장(전화)번호', '배송처주소', '주문상태','구매사', '주문자', '인수자', '인수자 연락처', '단가','금액', '발주일', '비고','주문명','첨부1','첨부2','첨부3', '인수완료일시', '공급사'<%if(isShow){ %>, '인수증 파일','인수증 업로드','receipt_img_file', 'receipt_img_file_path'<%} %>, 'disp_good_id', 'good_iden_numb','vendorId', 'tempDeliType', 'tempInvoNumb', 'deli_type_clas_code', 'path1', 'path2', 'path3','good_st_spec_desc','branchId' ], //, 'tempExcelDeliType', 'tempExcelDeliInvoNumb'
 		colModel:[
 			{name:'isCheck',index:'isCheck', width:30,align:"center",search:false,sortable:false,
 				editable:false,formoptions:{rowpos:1,elmprefix:"&nbsp;&nbsp;&nbsp;&nbsp;"},
@@ -254,7 +254,7 @@ jq(function() {
 				formatoptions:{ decimalSeparator:"", thousandsSeparator:",", decimalPlaces: 0, prefix:"" }},//금액
 			{name:'clin_date',index:'clin_date', width:70,align:"center",search:false,sortable:true, editable:false },
 			{name:'adde_text_desc',index:'adde_text_desc', width:150,align:"left",search:false,sortable:true, editable:false },
-			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:true, editable:false },//공사명
+			{name:'cons_iden_name',index:'cons_iden_name', width:170,align:"left",hidden:false, search:false,sortable:true, editable:false },//주문명
 			{name:'attach_file_name1',index:'attach_file_name1', width:60,align:"left",search:false,sortable:true, editable:false },
 			{name:'attach_file_name2',index:'attach_file_name2', width:60,align:"left",search:false,sortable:true, editable:false },
 			{name:'attach_file_name3',index:'attach_file_name3', width:60,align:"left",search:false,sortable:true, editable:false },
@@ -633,7 +633,7 @@ function deliCompleteProcess(){
  */
 function exportExcel() {
 	
-	var colLabels = ['주문일자','납품요청일','주문유형', '주문번호', '발주차수', '납품차수', '인수증번호', '상품명', '상품규격', '배송상태',   '출하일','발주수량', '출하수량', '배송유형', '송장(전화)번호', '배송처주소', '주문상태','구매사', '주문자', '인수자', '인수자 연락처', '단가','금액', '발주일', '비고','공사명','첨부1','첨부2','첨부3', '인수완료일시', '공급사'<%if(isShow){ %>, '인수증 파일','인수증 업로드'<%} %>];
+	var colLabels = ['주문일자','납품요청일','주문유형', '주문번호', '발주차수', '납품차수', '인수증번호', '상품명', '상품규격', '배송상태',   '출하일','발주수량', '출하수량', '배송유형', '송장(전화)번호', '배송처주소', '주문상태','구매사', '주문자', '인수자', '인수자 연락처', '단가','금액', '발주일', '비고','주문명','첨부1','첨부2','첨부3', '인수완료일시', '공급사'<%if(isShow){ %>, '인수증 파일','인수증 업로드'<%} %>];
 	var colIds = ['regi_date_time', 'requ_deli_date', 'orde_type_clas', 'orde_iden_numb', 'purc_iden_numb', 'deli_iden_numb', 'receipt_num', 'good_name', 'good_spec_desc', 'isdelivery', 'deli_degr_date', 'purc_requ_quan', 'deli_prod_quan', 'deli_type_clas', 'deli_invo_iden', 'tran_data_addr', 'deli_stat_flag', 'orde_client_name', 'orde_user_name', 'tran_user_name', 'tran_tele_numb', 'sale_unit_pric', 'total_sale_unit_pric', 'clin_date', 'adde_text_desc','cons_iden_name','attach_file_name1', 'attach_file_name2', 'attach_file_name3', 'purc_proc_date', 'vendornm' <%if(isShow){ %>	,	'receipt_img_file_name', 'receipt_img_file_upload' <%} %>];
 	var numColIds = ['purc_requ_quan','deli_prod_quan','sale_unit_pric','total_sale_unit_pric'];	//숫자표현ID
 	var figureColIds = ['purc_iden_numb', 'deli_iden_numb', 'receipt_num'];
@@ -643,7 +643,7 @@ function exportExcel() {
 	fnExportExcel(jq("#list"), colLabels, colIds, numColIds, sheetTitle, excelFileName, "<%=Constances.SYSTEM_CONTEXT_PATH %>", figureColIds);	//Grid Object, 컬럼레벨배열, 컬럼ID배열, 숫자표현ID배열, sheet 타이틀, file명
 }
 function fnSearchDeliComplExcelView(){
-	var colLabels = ['주문일자','납품요청일','주문유형', '주문번호', '발주차수', '납품차수', '인수증번호', '상품명', '상품규격', '배송상태',   '출하일','발주수량', '출하수량', '배송유형', '송장(전화)번호', '배송처주소', '주문상태','구매사', '주문자', '인수자', '인수자 연락처', '단가','금액', '발주일', '비고','공사명','첨부1','첨부2','첨부3', '인수완료일시', '공급사'<%if(isShow){ %>, '인수증 파일','인수증 업로드'<%} %>];
+	var colLabels = ['주문일자','납품요청일','주문유형', '주문번호', '발주차수', '납품차수', '인수증번호', '상품명', '상품규격', '배송상태',   '출하일','발주수량', '출하수량', '배송유형', '송장(전화)번호', '배송처주소', '주문상태','구매사', '주문자', '인수자', '인수자 연락처', '단가','금액', '발주일', '비고','주문명','첨부1','첨부2','첨부3', '인수완료일시', '공급사'<%if(isShow){ %>, '인수증 파일','인수증 업로드'<%} %>];
 	var colIds = ['REGI_DATE_TIME', 'REQU_DELI_DATE', 'ORDE_TYPE_CLAS', 'ORDE_IDEN_NUMB', 'PURC_IDEN_NUMB', 'DELI_IDEN_NUMB', 'RECEIPT_NUM', 'GOOD_NAME', 'GOOD_SPEC_DESC', 'ISDELIVERY', 'DELI_DEGR_DATE', 'PURC_REQU_QUAN', 'DELI_PROD_QUAN', 'DELI_TYPE_CLAS', 'DELI_INVO_IDEN', 'TRAN_DATA_ADDR', 'DELI_STAT_FLAG', 'ORDE_CLIENT_NAME', 'ORDE_USER_NAME', 'TRAN_USER_NAME', 'TRAN_TELE_NUMB', 'SALE_UNIT_PRIC', 'TOTAL_SALE_UNIT_PRIC', 'CLIN_DATE', 'ADDE_TEXT_DESC','CONS_IDEN_NAME','ATTACH_FILE_NAME1', 'ATTACH_FILE_NAME2', 'ATTACH_FILE_NAME3', 'PURC_PROC_DATE', 'VENDORNM' <%if(isShow){ %>	,	'RECEIPT_IMG_FILE_NAME', 'RECEIPT_IMG_FILE_UPLOAD' <%} %>];
 	var numColIds = ['PURC_REQU_QUAN','DELI_PROD_QUAN','SALE_UNIT_PRIC','TOTAL_SALE_UNIT_PRIC'];	//숫자표현id
 	var figureColIds = ['PURC_IDEN_NUMB', 'DELI_IDEN_NUMB', 'RECEIPT_NUM'];

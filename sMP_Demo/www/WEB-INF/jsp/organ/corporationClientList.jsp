@@ -273,7 +273,7 @@ function fnUserDetail(str) {
 		var selrowContent = $("#"+str).jqGrid('getRowData',row);        // 선택된 로우의 데이터 객체 조회
 		var popurl = "/organ/organUserDetail.sys?borgId=" + selrowContent.BORGID + "&userId=" + selrowContent.USERID + "&_menuId=<%=_menuId %>";
 		var popproperty = "dialogWidth:600px;dialogHeight=650px;scroll=yes;status=no;resizable=yes;";
-	    window.open(popurl, 'okplazaPopUser', 'width=600, height=650, scrollbars=yes, status=no, resizable=yes');
+	    window.open(popurl, 'okplazaPopUser', 'width=600, height=510, scrollbars=yes, status=no, resizable=yes');
 	} else { $( "#dialogSelectRow" ).dialog(); }	
 }
 

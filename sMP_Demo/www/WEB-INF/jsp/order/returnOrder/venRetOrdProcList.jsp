@@ -323,7 +323,7 @@ function venRetOrdProdListCallbackList(list, records){
             str +=				"</a>";
             str +=			"</p>                              ";
             str += "        <div class=\"f11\">                                                   ";
-            str += "            <p><strong>공사명</strong> : "+list[i].CONS_IDEN_NAME+"</p>  ";
+            str += "            <p><strong>주문명</strong> : "+list[i].CONS_IDEN_NAME+"</p>  ";
             str += "            <p><strong>구매사</strong> : "+list[i].ORDE_CLIENT_NAME+"</p>                         ";
             str += "        </div>                                                              ";
             str += "    </td>                                                                   ";
